@@ -29,161 +29,150 @@ interface Customer {
   updatedAt: string;
 }
 
-interface LoanApplication {
-  applicationRef: string;
-  customerId: string;
-  customerDetails: Customer;
-  applicationDate: string;
-  lastDocumentDate: string;
-  purpose: string;
-  loanType: string;
-  amount: number;
-  period: number;
-  repaymentMode: string;
-  economicSector: string[];
-  loanPurpose: string[];
-  requestDetails: RequestDetail[];
-  mandatoryRequirements: MandatoryRequirement[];
-  legalDocuments: LegalDocument[];
-  shareholders: Shareholder[];
-  creditProfile: CreditProfile;
-  transactionProfile: TransactionProfile;
-  collateralProfile: Collateral[];
-  financialProfile: FinancialProfile[];
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface RequestDetail {
-  type: string;
-  amount: number;
-  period: number;
-  repaymentMode: string;
-  remark: string;
-}
-
-interface MandatoryRequirement {
-  requirement: string;
-  confirmed: boolean;
-  documentUrl?: string;
-}
-
-interface LegalDocument {
-  documentType: string;
-  isProvided: boolean;
-  documentUrl?: string;
-}
-
-interface Shareholder {
-  name: string;
-  shareValue: number;
-  sharePercentage: number;
-  documentUrl?: string;
-}
-
-interface CreditProfile {
-  creditScore: number;
-  existingLoans: number;
-  repaymentHistory: string;
-  documentUrl?: string;
-}
-
-interface TransactionProfile {
-  averageBalance: number;
-  transactionFrequency: string;
-  documentUrl?: string;
-}
-
 interface Collateral {
+  id: string;
   type: string;
   description: string;
   estimatedValue: number;
   titleDeedNo: string;
   taxCustomsCharge: number;
   netValue: number;
-  engineeringRemark: string;
-  collateralDeclaration: string;
   documentUrl?: string;
 }
 
-interface FinancialProfile {
-  year: number;
-  revenue: number;
-  profit: number;
-  assets: number;
-  liabilities: number;
-  documentUrl?: string;
+interface LoanApplication {
+  applicationRef: string;
+  customerId: string;
+  purpose: string;
+  loanType: string;
+  amount: number;
+  period: number;
+  repaymentMode: string;
+  economicSector: string[];
+  collaterals: Collateral[];
+  status: string;
+  createdAt: string;
 }
 
-export default function LoanOriginationPage() {
+export default function LoanOriginationSystem() {
+  const [step, setStep] = useState(1);
   const [customerId, setCustomerId] = useState("");
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [application, setApplication] = useState<LoanApplication | null>(null);
-  const [step, setStep] = useState(1);
+  const [collaterals, setCollaterals] = useState<Collateral[]>([]);
 
-  // Fetch customer data when ID is provided
-  useEffect(() => {
-    if (customerId.length > 5) {
-      fetchCustomerData();
-    }
-  }, [customerId]);
+  // Form state
+  const [purpose, setPurpose] = useState("");
+  const [loanType, setLoanType] = useState("");
+  const [amount, setAmount] = useState(0);
+  const [period, setPeriod] = useState(0);
+  const [repaymentMode, setRepaymentMode] = useState("");
+  const [economicSector, setEconomicSector] = useState<string[]>([]);
+
+  // Collateral form state
+  const [collateralType, setCollateralType] = useState("");
+  const [collateralDescription, setCollateralDescription] = useState("");
+  const [estimatedValue, setEstimatedValue] = useState(0);
+  const [titleDeedNo, setTitleDeedNo] = useState("");
+  const [taxCustomsCharge, setTaxCustomsCharge] = useState(0);
 
   const fetchCustomerData = async () => {
+    if (!customerId.trim()) {
+      setError("Please enter a customer ID");
+      return;
+    }
+
     setLoading(true);
+    setError("");
     try {
-      const res = await fetch(`http://localhost:3000/api/loan?customerNumber=${customerId}`);
-      const data = await res.json();
-      if (data.success) {
-        setCustomer(data.data);
-        initializeApplication(data.data);
-      } else {
-        alert("Customer not found");
-        setCustomer(null);
-      }
-    } catch (error) {
-      console.error("Error fetching customer:", error);
-      alert("Error fetching customer data");
+      // Simulating API call with mock data
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const mockCustomer: Customer = {
+        id: customerId,
+        customerNumber: `CUST-${customerId}`,
+        tinNumber: `TIN-${customerId}-123`,
+        firstName: "John",
+        middleName: "Robert",
+        lastName: "Doe",
+        mothersName: "Jane Smith",
+        gender: "Male",
+        maritalStatus: "Married",
+        dateOfBirth: "1985-05-15",
+        nationalId: `ID-${customerId}-456`,
+        phone: "+251911223344",
+        email: "john.doe@example.com",
+        region: "Addis Ababa",
+        zone: "Central",
+        city: "Addis Ababa",
+        subcity: "Kirkos",
+        woreda: "04",
+        monthlyIncome: 25000,
+        status: "active",
+        nationalidUrl: "/documents/national-id.pdf",
+        agreementFormUrl: "/documents/agreement.pdf",
+        createdAt: "2023-01-15T08:30:00Z",
+        updatedAt: "2023-12-20T14:45:00Z"
+      };
+      
+      setCustomer(mockCustomer);
+      setStep(2); // Move to next step after successful customer fetch
+    } catch (err) {
+      console.error("Error fetching customer:", err);
+      setError("Failed to fetch customer data. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const initializeApplication = (customerData: Customer) => {
+  const handleAddCollateral = () => {
+    const netValue = estimatedValue - taxCustomsCharge;
+    const newCollateral: Collateral = {
+      id: Date.now().toString(),
+      type: collateralType,
+      description: collateralDescription,
+      estimatedValue,
+      titleDeedNo,
+      taxCustomsCharge,
+      netValue
+    };
+    
+    setCollaterals([...collaterals, newCollateral]);
+    
+    // Reset form
+    setCollateralType("");
+    setCollateralDescription("");
+    setEstimatedValue(0);
+    setTitleDeedNo("");
+    setTaxCustomsCharge(0);
+  };
+
+  const handleRemoveCollateral = (id: string) => {
+    setCollaterals(collaterals.filter(c => c.id !== id));
+  };
+
+  const handleSubmitApplication = () => {
     const newApplication: LoanApplication = {
       applicationRef: generateApplicationRef(),
-      customerId: customerData.id,
-      customerDetails: customerData,
-      applicationDate: new Date().toISOString().split('T')[0],
-      lastDocumentDate: new Date().toISOString().split('T')[0],
-      purpose: "",
-      loanType: "",
-      amount: 0,
-      period: 0,
-      repaymentMode: "",
-      economicSector: [],
-      loanPurpose: [],
-      requestDetails: [],
-      mandatoryRequirements: [],
-      legalDocuments: [],
-      shareholders: [],
-      creditProfile: {
-        creditScore: 0,
-        existingLoans: 0,
-        repaymentHistory: ""
-      },
-      transactionProfile: {
-        averageBalance: 0,
-        transactionFrequency: ""
-      },
-      collateralProfile: [],
-      financialProfile: [],
-      status: "draft",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      customerId: customer?.id || "",
+      purpose,
+      loanType,
+      amount,
+      period,
+      repaymentMode,
+      economicSector,
+      collaterals,
+      status: "submitted",
+      createdAt: new Date().toISOString()
     };
+    
     setApplication(newApplication);
+    setStep(4); // Move to confirmation step
+    
+    // In a real application, you would send this to your backend
+    console.log("Loan application submitted:", newApplication);
   };
 
   const generateApplicationRef = () => {
@@ -192,637 +181,530 @@ export default function LoanOriginationPage() {
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const day = now.getDate().toString().padStart(2, '0');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return `DB/LFF/${year}${month}${day}-${random}`;
+    return `DB/LFF/ADD/KIR/JD/${random}/${year}`;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    if (!application) return;
-    
-    const { name, value } = e.target;
-    setApplication({
-      ...application,
-      [name]: value
-    });
-  };
+  const economicSectors = [
+    "Agriculture",
+    "Construction",
+    "Domestic Service",
+    "Domestic Trade",
+    "Export",
+    "Import",
+    "Manufacturing",
+    "Mining",
+    "Real Estate",
+    "Transport",
+    "Personal Loan/Finance",
+    "Staff Mortgage Loan/Finance",
+    "Staff Personal Loan/Finance"
+  ];
 
-  const handleArrayInputChange = (section: keyof LoanApplication, index: number, field: string, value: any) => {
-    if (!application) return;
-    
-    const sectionData = [...(application[section] as any[])];
-    sectionData[index] = {
-      ...sectionData[index],
-      [field]: value
-    };
-    
-    setApplication({
-      ...application,
-      [section]: sectionData
-    });
-  };
+  const loanTypes = [
+    "Term Loan",
+    "Overdraft Facility",
+    "Murabaha",
+    "Qard",
+    "Kafalah (Guarantee)",
+    "Letter of Credit",
+    "Advance on LC",
+    "Merchandise Loan",
+    "ECG Loan",
+    "Export Pre-shipment Loan",
+    "Export Post-shipment Loan",
+    "Warehouse Financing"
+  ];
 
-  const addArrayItem = (section: keyof LoanApplication, template: any) => {
-    if (!application) return;
-    
-    const sectionData = [...(application[section] as any[])];
-    sectionData.push(template);
-    
-    setApplication({
-      ...application,
-      [section]: sectionData
-    });
-  };
+  const repaymentModes = [
+    "Monthly Installment",
+    "Quarterly Installment",
+    "Bi-Annual Installment",
+    "Annual Installment",
+    "Bullet Payment",
+    "Grace Period + Installment"
+  ];
 
-  const removeArrayItem = (section: keyof LoanApplication, index: number) => {
-    if (!application) return;
-    
-    const sectionData = [...(application[section] as any[])];
-    sectionData.splice(index, 1);
-    
-    setApplication({
-      ...application,
-      [section]: sectionData
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!application) return;
-    
-    try {
-      const res = await fetch('/api/loan-applications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(application),
-      });
-      
-      if (res.ok) {
-        alert('Loan application submitted successfully!');
-        // Reset form or redirect
-      } else {
-        alert('Error submitting application');
-      }
-    } catch (error) {
-      console.error('Error submitting application:', error);
-      alert('Error submitting application');
-    }
-  };
-
-  if (!customer) {
-    return (
-      <div className="p-6 bg-gray-50 min-h-screen">
-        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">Loan Origination</h1>
-          <div className="mb-6">
-            <label htmlFor="customerId" className="block text-sm font-medium text-gray-700 mb-2">
-              Enter Customer ID
-            </label>
-            <input
-              type="text"
-              id="customerId"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Customer ID or TIN Number"
-              value={customerId}
-              onChange={(e) => setCustomerId(e.target.value)}
-            />
-          </div>
-          {loading && (
-            <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+  const collateralTypes = [
+    "Land and Building",
+    "Vehicle",
+    "Machinery",
+    "Equipment",
+    "Inventory",
+    "Receivables",
+    "Time Deposit",
+    "Guarantee",
+    "Other"
+  ];
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">Loan Origination Form</h1>
-            <div className="text-sm text-gray-600">
-              Application Ref: <span className="font-semibold">{application?.applicationRef}</span>
-            </div>
-          </div>
-
-          {/* Progress Steps */}
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Dashen Bank Loan Origination System</h1>
+          <p className="text-gray-600 mb-6">Complete your loan application in a few simple steps</p>
+          
+          {/* Progress Indicator */}
           <div className="mb-8">
-            <div className="flex justify-between mb-2">
-              {[1, 2, 3, 4, 5].map((stepNum) => (
-                <button
-                  key={stepNum}
-                  onClick={() => setStep(stepNum)}
-                  className={`px-4 py-2 rounded-md ${
-                    step === stepNum
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  Step {stepNum}
-                </button>
+            <div className="flex items-center">
+              {[1, 2, 3, 4].map((stepNumber, index) => (
+                <div key={stepNumber} className="flex items-center">
+                  <div className={`rounded-full h-8 w-8 flex items-center justify-center ${
+                    step === stepNumber ? "bg-blue-600 text-white" : 
+                    step > stepNumber ? "bg-green-500 text-white" : "bg-gray-300 text-gray-600"
+                  }`}>
+                    {step > stepNumber ? "✓" : stepNumber}
+                  </div>
+                  {index < 3 && (
+                    <div className={`h-1 w-16 ${step > stepNumber ? "bg-green-500" : "bg-gray-300"}`}></div>
+                  )}
+                </div>
               ))}
             </div>
-            <div className="text-center text-sm text-gray-600">
-              {step === 1 && "Customer & Application Details"}
-              {step === 2 && "Financial Information"}
-              {step === 3 && "Collateral Details"}
-              {step === 4 && "Documents Upload"}
-              {step === 5 && "Review & Submit"}
+            <div className="flex justify-between mt-2 text-xs text-gray-600">
+              <span>Customer Verification</span>
+              <span>Loan Details</span>
+              <span>Collateral</span>
+              <span>Confirmation</span>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Step 1: Customer & Application Details */}
-            {step === 1 && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Customer Information</h3>
-                    <div className="space-y-2">
-                      <p><span className="font-medium">Name:</span> {customer.firstName} {customer.middleName} {customer.lastName}</p>
-                      <p><span className="font-medium">Customer ID:</span> {customer.customerNumber}</p>
-                      <p><span className="font-medium">TIN:</span> {customer.tinNumber || "N/A"}</p>
-                      <p><span className="font-medium">Phone:</span> {customer.phone}</p>
-                      <p><span className="font-medium">Email:</span> {customer.email || "N/A"}</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Application Details</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label htmlFor="applicationDate" className="block text-sm font-medium text-gray-700 mb-1">
-                          Application Date
-                        </label>
-                        <input
-                          type="date"
-                          id="applicationDate"
-                          name="applicationDate"
-                          value={application?.applicationDate || ""}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label htmlFor="purpose" className="block text-sm font-medium text-gray-700 mb-1">
-                          Purpose of Loan
-                        </label>
-                        <input
-                          type="text"
-                          id="purpose"
-                          name="purpose"
-                          value={application?.purpose || ""}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label htmlFor="loanType" className="block text-sm font-medium text-gray-700 mb-1">
-                          Type of Loan
-                        </label>
-                        <select
-                          id="loanType"
-                          name="loanType"
-                          value={application?.loanType || ""}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          <option value="">Select Loan Type</option>
-                          <option value="term">Term Loan</option>
-                          <option value="overdraft">Overdraft Facility</option>
-                          <option value="murabaha">Murabaha</option>
-                          <option value="qard">Qard</option>
-                          <option value="kafalah">Kafalah</option>
-                          <option value="lc">Letter of Credit</option>
-                          <option value="guarantee">Guarantee Facility</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
+          {/* Step 1: Customer Verification */}
+          {step === 1 && (
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Step 1: Customer Verification</h2>
+              <form onSubmit={(e) => { e.preventDefault(); fetchCustomerData(); }} className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">Request Details</h3>
-                  {application?.requestDetails.map((detail, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border rounded">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                        <input
-                          type="text"
-                          value={detail.type}
-                          onChange={(e) => handleArrayInputChange('requestDetails', index, 'type', e.target.value)}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-                        <input
-                          type="number"
-                          value={detail.amount}
-                          onChange={(e) => handleArrayInputChange('requestDetails', index, 'amount', parseFloat(e.target.value))}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Period (months)</label>
-                        <input
-                          type="number"
-                          value={detail.period}
-                          onChange={(e) => handleArrayInputChange('requestDetails', index, 'period', parseInt(e.target.value))}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                      <div className="flex items-end">
-                        <button
-                          type="button"
-                          onClick={() => removeArrayItem('requestDetails', index)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addArrayItem('requestDetails', { type: '', amount: 0, period: 0, repaymentMode: '', remark: '' })}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Add Request Detail
-                  </button>
+                  <label htmlFor="customerId" className="block text-sm font-medium text-gray-700 mb-2">
+                    Enter Your Customer ID or TIN Number
+                  </label>
+                  <input
+                    type="text"
+                    id="customerId"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., CUST-12345 or TIN-123456789"
+                    value={customerId}
+                    onChange={(e) => setCustomerId(e.target.value)}
+                    required
+                  />
                 </div>
-              </div>
-            )}
-
-            {/* Step 2: Financial Information */}
-            {step === 2 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold mb-4">Financial Information</h3>
                 
-                <div>
-                  <h4 className="font-medium mb-2">Financial Profiles</h4>
-                  {application?.financialProfile.map((profile, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 p-4 border rounded">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                        <input
-                          type="number"
-                          value={profile.year}
-                          onChange={(e) => handleArrayInputChange('financialProfile', index, 'year', parseInt(e.target.value))}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Revenue</label>
-                        <input
-                          type="number"
-                          value={profile.revenue}
-                          onChange={(e) => handleArrayInputChange('financialProfile', index, 'revenue', parseFloat(e.target.value))}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Profit</label>
-                        <input
-                          type="number"
-                          value={profile.profit}
-                          onChange={(e) => handleArrayInputChange('financialProfile', index, 'profit', parseFloat(e.target.value))}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Assets</label>
-                        <input
-                          type="number"
-                          value={profile.assets}
-                          onChange={(e) => handleArrayInputChange('financialProfile', index, 'assets', parseFloat(e.target.value))}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                      <div className="flex items-end">
-                        <button
-                          type="button"
-                          onClick={() => removeArrayItem('financialProfile', index)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addArrayItem('financialProfile', { year: new Date().getFullYear(), revenue: 0, profit: 0, assets: 0, liabilities: 0 })}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Add Financial Year
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-medium mb-2">Credit Profile</h4>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Credit Score</label>
-                        <input
-                          type="number"
-                          value={application?.creditProfile.creditScore || 0}
-                          onChange={(e) => setApplication({
-                            ...application!,
-                            creditProfile: {
-                              ...application!.creditProfile,
-                              creditScore: parseFloat(e.target.value)
-                            }
-                          })}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Existing Loans</label>
-                        <input
-                          type="number"
-                          value={application?.creditProfile.existingLoans || 0}
-                          onChange={(e) => setApplication({
-                            ...application!,
-                            creditProfile: {
-                              ...application!.creditProfile,
-                              existingLoans: parseFloat(e.target.value)
-                            }
-                          })}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium mb-2">Transaction Profile</h4>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Average Balance</label>
-                        <input
-                          type="number"
-                          value={application?.transactionProfile.averageBalance || 0}
-                          onChange={(e) => setApplication({
-                            ...application!,
-                            transactionProfile: {
-                              ...application!.transactionProfile,
-                              averageBalance: parseFloat(e.target.value)
-                            }
-                          })}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Transaction Frequency</label>
-                        <select
-                          value={application?.transactionProfile.transactionFrequency || ""}
-                          onChange={(e) => setApplication({
-                            ...application!,
-                            transactionProfile: {
-                              ...application!.transactionProfile,
-                              transactionFrequency: e.target.value
-                            }
-                          })}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        >
-                          <option value="">Select Frequency</option>
-                          <option value="daily">Daily</option>
-                          <option value="weekly">Weekly</option>
-                          <option value="monthly">Monthly</option>
-                          <option value="quarterly">Quarterly</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Collateral Details */}
-            {step === 3 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold mb-4">Collateral Details</h3>
-                
-                {application?.collateralProfile.map((collateral, index) => (
-                  <div key={index} className="border rounded p-4 mb-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Collateral Type</label>
-                        <input
-                          type="text"
-                          value={collateral.type}
-                          onChange={(e) => handleArrayInputChange('collateralProfile', index, 'type', e.target.value)}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Value</label>
-                        <input
-                          type="number"
-                          value={collateral.estimatedValue}
-                          onChange={(e) => handleArrayInputChange('collateralProfile', index, 'estimatedValue', parseFloat(e.target.value))}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Title Deed No.</label>
-                        <input
-                          type="text"
-                          value={collateral.titleDeedNo}
-                          onChange={(e) => handleArrayInputChange('collateralProfile', index, 'titleDeedNo', e.target.value)}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Tax & Customs Charge</label>
-                        <input
-                          type="number"
-                          value={collateral.taxCustomsCharge}
-                          onChange={(e) => handleArrayInputChange('collateralProfile', index, 'taxCustomsCharge', parseFloat(e.target.value))}
-                          className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                      <textarea
-                        value={collateral.description}
-                        onChange={(e) => handleArrayInputChange('collateralProfile', index, 'description', e.target.value)}
-                        className="w-full px-3 py-1 border border-gray-300 rounded-md"
-                        rows={3}
-                      />
-                    </div>
-                    
-                    <button
-                      type="button"
-                      onClick={() => removeArrayItem('collateralProfile', index)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      Remove Collateral
-                    </button>
-                  </div>
-                ))}
+                {error && <p className="text-red-500 text-sm">{error}</p>}
                 
                 <button
-                  type="button"
-                  onClick={() => addArrayItem('collateralProfile', {
-                    type: '',
-                    description: '',
-                    estimatedValue: 0,
-                    titleDeedNo: '',
-                    taxCustomsCharge: 0,
-                    netValue: 0,
-                    engineeringRemark: '',
-                    collateralDeclaration: ''
-                  })}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  type="submit"
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center"
+                  disabled={loading}
                 >
-                  Add Collateral
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                      Verifying...
+                    </>
+                  ) : (
+                    "Verify Customer"
+                  )}
                 </button>
+              </form>
+              
+              <div className="mt-6 p-4 bg-blue-50 rounded-md">
+                <h3 className="font-medium text-blue-800 mb-2">Don't have a customer ID?</h3>
+                <p className="text-blue-700 text-sm">
+                  If you're not yet a Dashen Bank customer, please visit your nearest branch to open an account first.
+                </p>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Step 4: Documents Upload */}
-            {step === 4 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold mb-4">Required Documents</h3>
+          {/* Step 2: Loan Details */}
+          {step === 2 && customer && (
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Step 2: Loan Details</h2>
+              
+              <div className="mb-6 p-4 bg-gray-50 rounded-md">
+                <h3 className="font-medium mb-2">Customer Information</h3>
+                <p className="text-sm">{customer.firstName} {customer.middleName} {customer.lastName}</p>
+                <p className="text-sm">ID: {customer.customerNumber} | TIN: {customer.tinNumber}</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="purpose" className="block text-sm font-medium text-gray-700 mb-2">
+                    Purpose of Loan
+                  </label>
+                  <input
+                    type="text"
+                    id="purpose"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Describe what you need the loan for"
+                    value={purpose}
+                    onChange={(e) => setPurpose(e.target.value)}
+                    required
+                  />
+                </div>
                 
                 <div>
-                  <h4 className="font-medium mb-2">Mandatory Requirements</h4>
-                  <div className="space-y-4">
-                    {[
-                      "Formal loan application",
-                      "Business license",
-                      "Tax clearance certificate",
-                      "Financial statements",
-                      "Project feasibility study",
-                      "Collateral documents"
-                    ].map((req, index) => (
-                      <div key={index} className="flex items-center">
+                  <label htmlFor="loanType" className="block text-sm font-medium text-gray-700 mb-2">
+                    Type of Loan
+                  </label>
+                  <select
+                    id="loanType"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    value={loanType}
+                    onChange={(e) => setLoanType(e.target.value)}
+                    required
+                  >
+                    <option value="">Select Loan Type</option>
+                    {loanTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+                      Loan Amount (ETB)
+                    </label>
+                    <input
+                      type="number"
+                      id="amount"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="0.00"
+                      value={amount || ""}
+                      onChange={(e) => setAmount(parseFloat(e.target.value))}
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="period" className="block text-sm font-medium text-gray-700 mb-2">
+                      Repayment Period (Months)
+                    </label>
+                    <input
+                      type="number"
+                      id="period"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="e.g., 12, 24, 36"
+                      value={period || ""}
+                      onChange={(e) => setPeriod(parseInt(e.target.value))}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label htmlFor="repaymentMode" className="block text-sm font-medium text-gray-700 mb-2">
+                    Repayment Mode
+                  </label>
+                  <select
+                    id="repaymentMode"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    value={repaymentMode}
+                    onChange={(e) => setRepaymentMode(e.target.value)}
+                    required
+                  >
+                    <option value="">Select Repayment Mode</option>
+                    {repaymentModes.map(mode => (
+                      <option key={mode} value={mode}>{mode}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Economic Sector(s)
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {economicSectors.map(sector => (
+                      <div key={sector} className="flex items-center">
                         <input
                           type="checkbox"
-                          id={`req-${index}`}
-                          checked={application?.mandatoryRequirements.some(r => r.requirement === req) || false}
+                          id={`sector-${sector}`}
+                          checked={economicSector.includes(sector)}
                           onChange={(e) => {
-                            if (!application) return;
-                            
-                            const requirements = [...application.mandatoryRequirements];
                             if (e.target.checked) {
-                              requirements.push({ requirement: req, confirmed: true });
+                              setEconomicSector([...economicSector, sector]);
                             } else {
-                              const idx = requirements.findIndex(r => r.requirement === req);
-                              if (idx > -1) requirements.splice(idx, 1);
+                              setEconomicSector(economicSector.filter(s => s !== sector));
                             }
-                            
-                            setApplication({
-                              ...application,
-                              mandatoryRequirements: requirements
-                            });
                           }}
                           className="mr-2"
                         />
-                        <label htmlFor={`req-${index}`} className="text-sm">
-                          {req}
+                        <label htmlFor={`sector-${sector}`} className="text-sm">
+                          {sector}
                         </label>
                       </div>
                     ))}
                   </div>
                 </div>
                 
-                <div>
-                  <h4 className="font-medium mb-2">Upload Documents</h4>
-                  <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p className="mt-1 text-sm text-gray-600">
-                      Drag and drop documents here, or click to select files
-                    </p>
-                    <input
-                      type="file"
-                      multiple
-                      className="hidden"
-                      // Handle file uploads here
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 5: Review & Submit */}
-            {step === 5 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold mb-4">Review Application</h3>
-                
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <h4 className="font-medium mb-2">Application Summary</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm"><span className="font-medium">Application Ref:</span> {application?.applicationRef}</p>
-                      <p className="text-sm"><span className="font-medium">Customer:</span> {customer.firstName} {customer.lastName}</p>
-                      <p className="text-sm"><span className="font-medium">Loan Type:</span> {application?.loanType}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm"><span className="font-medium">Purpose:</span> {application?.purpose}</p>
-                      <p className="text-sm"><span className="font-medium">Amount:</span> ETB {application?.requestDetails.reduce((sum, detail) => sum + detail.amount, 0).toLocaleString()}</p>
-                      <p className="text-sm"><span className="font-medium">Collateral Value:</span> ETB {application?.collateralProfile.reduce((sum, collateral) => sum + collateral.estimatedValue, 0).toLocaleString()}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between">
+                <div className="flex justify-between pt-4">
                   <button
-                    type="button"
-                    onClick={() => setStep(4)}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                    onClick={() => setStep(1)}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
                   >
                     Back
                   </button>
                   <button
-                    type="submit"
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    onClick={() => setStep(3)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                   >
-                    Submit Application
+                    Next: Add Collateral
                   </button>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Navigation Buttons */}
-            {step < 5 && (
-              <div className="flex justify-between pt-6">
+          {/* Step 3: Collateral Information */}
+          {step === 3 && customer && (
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Step 3: Collateral Information</h2>
+              
+              <div className="mb-6 p-4 bg-blue-50 rounded-md">
+                <h3 className="font-medium text-blue-800 mb-2">Important Note</h3>
+                <p className="text-blue-700 text-sm">
+                  All collateral documents must be verified and registered. Please provide accurate information about any assets you're using to secure your loan.
+                </p>
+              </div>
+              
+              <div className="space-y-4 mb-6">
+                <h3 className="font-medium">Add New Collateral</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="collateralType" className="block text-sm font-medium text-gray-700 mb-2">
+                      Collateral Type
+                    </label>
+                    <select
+                      id="collateralType"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      value={collateralType}
+                      onChange={(e) => setCollateralType(e.target.value)}
+                    >
+                      <option value="">Select Collateral Type</option>
+                      {collateralTypes.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="estimatedValue" className="block text-sm font-medium text-gray-700 mb-2">
+                      Estimated Value (ETB)
+                    </label>
+                    <input
+                      type="number"
+                      id="estimatedValue"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="0.00"
+                      value={estimatedValue || ""}
+                      onChange={(e) => setEstimatedValue(parseFloat(e.target.value))}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label htmlFor="collateralDescription" className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    id="collateralDescription"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    rows={2}
+                    placeholder="Describe the collateral in detail"
+                    value={collateralDescription}
+                    onChange={(e) => setCollateralDescription(e.target.value)}
+                  ></textarea>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="titleDeedNo" className="block text-sm font-medium text-gray-700 mb-2">
+                      Title Deed/Serial Number
+                    </label>
+                    <input
+                      type="text"
+                      id="titleDeedNo"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="e.g., TD-123456"
+                      value={titleDeedNo}
+                      onChange={(e) => setTitleDeedNo(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="taxCustomsCharge" className="block text-sm font-medium text-gray-700 mb-2">
+                      Tax & Customs Charge (ETB)
+                    </label>
+                    <input
+                      type="number"
+                      id="taxCustomsCharge"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="0.00"
+                      value={taxCustomsCharge || ""}
+                      onChange={(e) => setTaxCustomsCharge(parseFloat(e.target.value))}
+                    />
+                  </div>
+                </div>
+                
                 <button
-                  type="button"
-                  onClick={() => setStep(step - 1)}
-                  disabled={step === 1}
-                  className={`px-4 py-2 rounded-md ${step === 1 ? 'bg-gray-300 text-gray-500' : 'bg-gray-600 text-white hover:bg-gray-700'}`}
-                >
-                  Previous
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStep(step + 1)}
+                  onClick={handleAddCollateral}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  disabled={!collateralType || !estimatedValue}
                 >
-                  Next
+                  Add Collateral
                 </button>
               </div>
-            )}
-          </form>
+              
+              {/* List of Collaterals */}
+              {collaterals.length > 0 ? (
+                <div className="mb-6">
+                  <h3 className="font-medium mb-4">Your Collaterals</h3>
+                  <div className="space-y-4">
+                    {collaterals.map(collateral => (
+                      <div key={collateral.id} className="border rounded-md p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium">{collateral.type}</h4>
+                            <p className="text-sm text-gray-600">{collateral.description}</p>
+                            <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <span className="font-medium">Value:</span> ETB {collateral.estimatedValue.toLocaleString()}
+                              </div>
+                              <div>
+                                <span className="font-medium">Net Value:</span> ETB {collateral.netValue.toLocaleString()}
+                              </div>
+                              <div>
+                                <span className="font-medium">Title Deed:</span> {collateral.titleDeedNo || "N/A"}
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveCollateral(collateral.id)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-6 p-4 bg-yellow-50 rounded-md">
+                  <p className="text-yellow-700 text-sm">
+                    No collateral added yet. Adding collateral may improve your loan approval chances.
+                  </p>
+                </div>
+              )}
+              
+              <div className="flex justify-between">
+                <button
+                  onClick={() => setStep(2)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleSubmitApplication}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  disabled={!purpose || !loanType || !amount || !period || !repaymentMode}
+                >
+                  Submit Application
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Confirmation */}
+          {step === 4 && application && (
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Application Submitted Successfully!</h2>
+              
+              <div className="p-4 bg-green-50 rounded-md mb-6">
+                <div className="flex items-center">
+                  <svg className="h-6 w-6 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <p className="text-green-700 font-medium">Your loan application has been submitted for processing.</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4 mb-6">
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-2">Application Reference Number</h3>
+                  <p className="text-lg font-mono bg-gray-100 p-2 rounded">{application.applicationRef}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Please save this reference number for future inquiries about your application.
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-2">Loan Details</h3>
+                    <div className="space-y-1 text-sm">
+                      <p><span className="font-medium">Purpose:</span> {application.purpose}</p>
+                      <p><span className="font-medium">Type:</span> {application.loanType}</p>
+                      <p><span className="font-medium">Amount:</span> ETB {application.amount.toLocaleString()}</p>
+                      <p><span className="font-medium">Period:</span> {application.period} months</p>
+                      <p><span className="font-medium">Repayment:</span> {application.repaymentMode}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-2">Next Steps</h3>
+                    <ul className="list-disc list-inside text-sm space-y-1">
+                      <li>Your application will be reviewed by our credit team</li>
+                      <li>We may contact you for additional information</li>
+                      <li>You will receive updates via SMS and email</li>
+                      <li>Approval process typically takes 3-5 business days</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                {collaterals.length > 0 && (
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-2">Collateral Summary</h3>
+                    <div className="text-sm">
+                      <p className="mb-2">You have provided {collaterals.length} collateral item(s) with total value of ETB {collaterals.reduce((sum, c) => sum + c.netValue, 0).toLocaleString()}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-between">
+                <button
+                  onClick={() => {
+                    setStep(1);
+                    setCustomerId("");
+                    setCustomer(null);
+                    setApplication(null);
+                    setCollaterals([]);
+                  }}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                >
+                  Start New Application
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Print Application
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Information Panel */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Need Help?</h2>
+          <div className="space-y-2 text-sm text-gray-600">
+            <p>Visit your nearest Dashen Bank branch for assistance with your loan application.</p>
+            <p>Call our customer service: +251 11 5 75 75 75</p>
+            <p>Email: info@dashenbanksc.com</p>
+          </div>
         </div>
       </div>
     </div>

@@ -1,15 +1,103 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id               String   @id @default(cuid())
+  customerNumber   String   @unique
+  tinNumber        String?  @unique
+  firstName        String
+  middleName       String?
+  lastName         String
+  mothersName      String
+  gender           String
+  maritalStatus    String
+  dateOfBirth      DateTime
+  nationalId       String   @unique
+  phone            String
+  email            String?
+  region           String
+  zone             String
+  city             String
+  subcity          String
+  woreda           String
+  monthlyIncome    Float
+  status           String   @default("active")
+  nationalidUrl    String?
+  agreementFormUrl String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  loanApplications LoanApplication[]
+}
+
+model LoanApplication {
+  id              String       @id @default(cuid())
+  applicationRef  String       @unique
+  customerId      String
+  purpose         String
+  loanType        String
+  amount          Float
+  period          Int
+  repaymentMode   String
+  economicSector  String[]
+  status          String       @default("submitted")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  customer        Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  collaterals     Collateral[]
+  documents       Document[]
+  approvals       Approval[]
+  transactions    Transaction[]
+}
+
+model Collateral {
+  id                String   @id @default(cuid())
+  loanApplicationId String
+  type              String
+  description       String
+  estimatedValue    Float
+  titleDeedNo       String
+  taxCustomsCharge  Float
+  netValue          Float
+  documentUrl       String?
+  createdAt         DateTime @default(now())
+  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+}
+
+model Document {
+  id                String   @id @default(cuid())
+  loanApplicationId String
+  type              String
+  name              String
+  url               String
+  uploadedAt        DateTime @default(now())
+  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+}
+
+model Approval {
+  id                String   @id @default(cuid())
+  loanApplicationId String
+  approverId        String
+  approverName      String
+  status            String   // approved, rejected, pending
+  comments          String?
+  approvedAt        DateTime?
+  createdAt         DateTime @default(now())
+  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id                String   @id @default(cuid())
+  loanApplicationId String
+  type              String   // status_change, document_upload, etc.
+  description       String
+  performedBy       String
+  performedAt       DateTime @default(now())
+  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
 }
