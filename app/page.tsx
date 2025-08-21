@@ -41,6 +41,7 @@ interface Collateral {
 }
 
 interface LoanApplication {
+  id: string;
   applicationRef: string;
   customerId: string;
   purpose: string;
@@ -78,54 +79,35 @@ export default function LoanOriginationSystem() {
   const [titleDeedNo, setTitleDeedNo] = useState("");
   const [taxCustomsCharge, setTaxCustomsCharge] = useState(0);
 
-  const fetchCustomerData = async () => {
-    if (!customerId.trim()) {
-      setError("Please enter a customer ID");
-      return;
-    }
+const fetchCustomerData = async () => {
+  if (!customerId.trim()) {
+    setError("Please enter a customer ID");
+    return;
+  }
 
-    setLoading(true);
-    setError("");
-    try {
-      // Simulating API call with mock data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockCustomer: Customer = {
-        id: customerId,
-        customerNumber: `CUST-${customerId}`,
-        tinNumber: `TIN-${customerId}-123`,
-        firstName: "John",
-        middleName: "Robert",
-        lastName: "Doe",
-        mothersName: "Jane Smith",
-        gender: "Male",
-        maritalStatus: "Married",
-        dateOfBirth: "1985-05-15",
-        nationalId: `ID-${customerId}-456`,
-        phone: "+251911223344",
-        email: "john.doe@example.com",
-        region: "Addis Ababa",
-        zone: "Central",
-        city: "Addis Ababa",
-        subcity: "Kirkos",
-        woreda: "04",
-        monthlyIncome: 25000,
-        status: "active",
-        nationalidUrl: "/documents/national-id.pdf",
-        agreementFormUrl: "/documents/agreement.pdf",
-        createdAt: "2023-01-15T08:30:00Z",
-        updatedAt: "2023-12-20T14:45:00Z"
-      };
-      
-      setCustomer(mockCustomer);
+  setLoading(true);
+  setError("");
+  try {
+    const response = await fetch(
+      `/api/loan?customerNumber=${encodeURIComponent(customerId)}`
+    );
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      setCustomer(data.data);
       setStep(2); // Move to next step after successful customer fetch
-    } catch (err) {
-      console.error("Error fetching customer:", err);
-      setError("Failed to fetch customer data. Please try again.");
-    } finally {
-      setLoading(false);
+    } else {
+      setError(data.error || "Customer not found");
     }
-  };
+  } catch (err) {
+    console.error("Error fetching customer:", err);
+    setError("Failed to fetch customer data. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleAddCollateral = () => {
     const netValue = estimatedValue - taxCustomsCharge;
@@ -153,26 +135,46 @@ export default function LoanOriginationSystem() {
     setCollaterals(collaterals.filter(c => c.id !== id));
   };
 
-  const handleSubmitApplication = () => {
-    const newApplication: LoanApplication = {
-      applicationRef: generateApplicationRef(),
-      customerId: customer?.id || "",
-      purpose,
-      loanType,
-      amount,
-      period,
-      repaymentMode,
-      economicSector,
-      collaterals,
-      status: "submitted",
-      createdAt: new Date().toISOString()
-    };
+  const handleSubmitApplication = async () => {
+    setLoading(true);
+    setError("");
     
-    setApplication(newApplication);
-    setStep(4); // Move to confirmation step
-    
-    // In a real application, you would send this to your backend
-    console.log("Loan application submitted:", newApplication);
+    try {
+      const response = await fetch('/api/loan-applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerId: customer?.id,
+          purpose,
+          loanType,
+          amount,
+          period,
+          repaymentMode,
+          economicSector,
+          collaterals
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setApplication(data.data);
+        setStep(4); // Move to confirmation step
+      } else {
+        setError(data.error || "Failed to submit application");
+      }
+    } catch (err) {
+      console.error("Error submitting application:", err);
+      setError("Failed to submit application. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const generateApplicationRef = () => {
@@ -268,6 +270,18 @@ export default function LoanOriginationSystem() {
             </div>
           </div>
 
+          {/* Error Display */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className="flex items-center">
+                <svg className="h-5 w-5 text-red-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-red-700">{error}</p>
+              </div>
+            </div>
+          )}
+
           {/* Step 1: Customer Verification */}
           {step === 1 && (
             <div>
@@ -287,8 +301,6 @@ export default function LoanOriginationSystem() {
                     required
                   />
                 </div>
-                
-                {error && <p className="text-red-500 text-sm">{error}</p>}
                 
                 <button
                   type="submit"
@@ -324,6 +336,7 @@ export default function LoanOriginationSystem() {
                 <h3 className="font-medium mb-2">Customer Information</h3>
                 <p className="text-sm">{customer.firstName} {customer.middleName} {customer.lastName}</p>
                 <p className="text-sm">ID: {customer.customerNumber} | TIN: {customer.tinNumber}</p>
+                <p className="text-sm">Phone: {customer.phone} | Email: {customer.email || "N/A"}</p>
               </div>
               
               <div className="space-y-4">
@@ -373,6 +386,7 @@ export default function LoanOriginationSystem() {
                       value={amount || ""}
                       onChange={(e) => setAmount(parseFloat(e.target.value))}
                       required
+                      min="0"
                     />
                   </div>
                   
@@ -388,6 +402,7 @@ export default function LoanOriginationSystem() {
                       value={period || ""}
                       onChange={(e) => setPeriod(parseInt(e.target.value))}
                       required
+                      min="1"
                     />
                   </div>
                 </div>
@@ -414,7 +429,7 @@ export default function LoanOriginationSystem() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Economic Sector(s)
                   </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                     {economicSectors.map(sector => (
                       <div key={sector} className="flex items-center">
                         <input
@@ -448,6 +463,7 @@ export default function LoanOriginationSystem() {
                   <button
                     onClick={() => setStep(3)}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    disabled={!purpose || !loanType || !amount || !period || !repaymentMode}
                   >
                     Next: Add Collateral
                   </button>
@@ -500,6 +516,7 @@ export default function LoanOriginationSystem() {
                       placeholder="0.00"
                       value={estimatedValue || ""}
                       onChange={(e) => setEstimatedValue(parseFloat(e.target.value))}
+                      min="0"
                     />
                   </div>
                 </div>
@@ -544,6 +561,7 @@ export default function LoanOriginationSystem() {
                       placeholder="0.00"
                       value={taxCustomsCharge || ""}
                       onChange={(e) => setTaxCustomsCharge(parseFloat(e.target.value))}
+                      min="0"
                     />
                   </div>
                 </div>
@@ -609,9 +627,16 @@ export default function LoanOriginationSystem() {
                 <button
                   onClick={handleSubmitApplication}
                   className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                  disabled={!purpose || !loanType || !amount || !period || !repaymentMode}
+                  disabled={!purpose || !loanType || !amount || !period || !repaymentMode || loading}
                 >
-                  Submit Application
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    "Submit Application"
+                  )}
                 </button>
               </div>
             </div>
@@ -681,6 +706,12 @@ export default function LoanOriginationSystem() {
                     setCustomer(null);
                     setApplication(null);
                     setCollaterals([]);
+                    setPurpose("");
+                    setLoanType("");
+                    setAmount(0);
+                    setPeriod(0);
+                    setRepaymentMode("");
+                    setEconomicSector([]);
                   }}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
                 >
