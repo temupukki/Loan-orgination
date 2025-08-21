@@ -133,7 +133,7 @@ export default function LoanOriginationPage() {
   const fetchCustomerData = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/loan/${customerId}`);
+      const res = await fetch(`http://localhost:3000/api/loan?customerNumber=${customerId}`);
       const data = await res.json();
       if (data.success) {
         setCustomer(data.data);
