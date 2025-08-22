@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,95 +8,165 @@ datasource db {
 }
 
 model Customer {
-  id               String   @id @default(cuid())
-  customerNumber   String   @unique
-  tinNumber        String?  @unique
-  firstName        String
-  middleName       String?
-  lastName         String
-  mothersName      String
-  gender           String
-  maritalStatus    String
-  dateOfBirth      DateTime
-  nationalId       String   @unique
-  phone            String
-  email            String?
-  region           String
-  zone             String
-  city             String
-  subcity          String
-  woreda           String
-  monthlyIncome    Float
-  status           String   @default("active")
-  nationalidUrl    String?
-  agreementFormUrl String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  loanApplications LoanApplication[]
+  id                          String    @id @default(cuid())
+  customerNumber              String    @unique
+  tinNumber                   String    @unique
+  firstName                   String
+  middleName                  String?
+  lastName                    String
+  mothersName                 String?
+  gender                      String
+  maritalStatus               String
+  dateOfBirth                 DateTime
+  nationalId                  String
+  phone                       String
+  email                       String
+  region                      String
+  zone                        String
+  city                        String
+  subcity                     String
+  woreda                      String
+  monthlyIncome               Float
+  status                      String    @default("active")
+  accountType                 String
+  nationalidUrl               String?
+  agreementFormUrl            String?
+  
+  // Business Information
+  majorLineBusiness           String?
+  majorLineBusinessUrl        String?
+  otherLineBusiness           String?
+  otherLineBusinessUrl        String?
+  dateOfEstablishmentMLB      DateTime?
+  dateOfEstablishmentOLB      DateTime?
+  
+  // Loan Application Fields
+  purposeOfLoan               String?
+  loanType                    String?
+  loanAmount                  Float?
+  loanPeriod                  Int?
+  modeOfRepayment             String?
+  economicSector              String?
+  customerSegmentation        String?
+  creditInitiationCenter      String?
+  applicationReferenceNumber  String?   @unique
+  applicationDate             DateTime?
+  lastDocumentReceivedDate    DateTime?
+  
+  // Additional Documents
+  applicationFormUrl          String?
+  shareholdersDetailsUrl      String?
+  creditProfileUrl            String?
+  transactionProfileUrl       String?
+  collateralProfileUrl        String?
+  financialProfileUrl         String?
+  
+  // Relations
+  shareholders                Shareholder[]
+  loanRequests                LoanRequest[]
+  documents                   Document[]
+  
+  // Timestamps
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+  
+  @@map("customers")
 }
 
-model LoanApplication {
-  id              String       @id @default(cuid())
-  applicationRef  String       @unique
+model Shareholder {
+  id              String   @id @default(cuid())
   customerId      String
-  purpose         String
-  loanType        String
+  companyName     String   @default("Main Company")
+  name            String
+  shareValue      Float
+  sharePercentage Float
+  nationality     String?
+  idNumber        String?
+  address         String?
+  phone           String?
+  email           String?
+  isDirector      Boolean  @default(false)
+  position        String?
+  dateOfBirth     DateTime?
+  
+  // Relations
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("shareholders")
+}
+
+model LoanRequest {
+  id              String   @id @default(cuid())
+  customerId      String
+  type            String
   amount          Float
   period          Int
   repaymentMode   String
-  economicSector  String[]
-  status          String       @default("submitted")
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  customer        Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  collaterals     Collateral[]
-  documents       Document[]
-  approvals       Approval[]
-  transactions    Transaction[]
-}
-
-model Collateral {
-  id                String   @id @default(cuid())
-  loanApplicationId String
-  type              String
-  description       String
-  estimatedValue    Float
-  titleDeedNo       String
-  taxCustomsCharge  Float
-  netValue          Float
-  documentUrl       String?
-  createdAt         DateTime @default(now())
-  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+  remark          String?
+  status          String   @default("pending")
+  
+  // Relations
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("loan_requests")
 }
 
 model Document {
-  id                String   @id @default(cuid())
-  loanApplicationId String
-  type              String
-  name              String
-  url               String
-  uploadedAt        DateTime @default(now())
-  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  customerId  String
+  type        String   // e.g., "nationalId", "agreementForm", "creditProfile", etc.
+  name        String
+  url         String
+  size        Int?
+  mimeType    String?
+  
+  // Relations
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("documents")
 }
 
-model Approval {
-  id                String   @id @default(cuid())
-  loanApplicationId String
-  approverId        String
-  approverName      String
-  status            String   // approved, rejected, pending
-  comments          String?
-  approvedAt        DateTime?
-  createdAt         DateTime @default(now())
-  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String   // e.g., "CREATE", "UPDATE", "DELETE"
+  entity      String   // e.g., "Customer", "LoanRequest"
+  entityId    String
+  description String?
+  userId      String?
+  ipAddress   String?
+  userAgent   String?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  
+  @@map("audit_logs")
 }
 
-model Transaction {
-  id                String   @id @default(cuid())
-  loanApplicationId String
-  type              String   // status_change, document_upload, etc.
-  description       String
-  performedBy       String
-  performedAt       DateTime @default(now())
-  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  role          String    @default("user") // "admin", "user", "manager"
+  status        String    @default("active")
+  lastLogin     DateTime?
+  
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@map("users")
 }
