@@ -1,4 +1,15 @@
+import { ReactNode } from "react";
+
 export interface LoanApplication {
+  purposeOfLoan: string;
+  loanPeriod: number;
+  phone: string;
+  tinNumber: string;
+  region: string;
+  zone: string;
+  city: string;
+  monthlyIncome: number;
+  email: ReactNode;
   id: string;
   customerNumber: string;
   firstName: string;

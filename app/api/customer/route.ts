@@ -1,66 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { parseDateSafe, isValidDate } from '@/app/utils/dateUtils';
-import { PrismaClient } from "@prisma/client"; 
-const prisma = new PrismaClient();
+import { parseDateSafe } from '@/app/utils/dateUtils';
+import { PrismaClient } from "@prisma/client"; const prisma = new PrismaClient();
 
-// Helper function to safely parse shareholders data
-const parseShareholders = (shareholders: any): any[] => {
-  if (!shareholders) return [];
-  
-  // If it's already an array, return it
-  if (Array.isArray(shareholders)) {
-    return shareholders;
-  }
-  
-  // If it's an object, try to convert it to array
-  if (typeof shareholders === 'object' && shareholders !== null) {
-    // Check if it's an object with numeric keys (like {0: {...}, 1: {...}})
-    if (Object.keys(shareholders).every(key => !isNaN(Number(key)))) {
-      return Object.values(shareholders);
-    }
-    
-    // If it's a single shareholder object, wrap it in an array
-    if (shareholders.name && shareholders.shareValue !== undefined) {
-      return [shareholders];
-    }
-  }
-  
-  return [];
-};
-
-// Helper function to safely parse loan requests data
-const parseLoanRequests = (loanRequests: any): any[] => {
-  if (!loanRequests) return [];
-  
-  // If it's already an array, return it
-  if (Array.isArray(loanRequests)) {
-    return loanRequests;
-  }
-  
-  // If it's an object, try to convert it to array
-  if (typeof loanRequests === 'object' && loanRequests !== null) {
-    // Check if it's an object with numeric keys
-    if (Object.keys(loanRequests).every(key => !isNaN(Number(key)))) {
-      return Object.values(loanRequests);
-    }
-    
-    // If it's a single loan request object, wrap it in an array
-    if (loanRequests.type && loanRequests.amount !== undefined) {
-      return [loanRequests];
-    }
-  }
-  
-  return [];
-};
-
-// POST - Create new customer
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Received request body:', JSON.stringify(body, null, 2));
     
     const {
+      // Customer basic info (all required in your schema)
       customerNumber,
       tinNumber,
       firstName,
@@ -79,13 +27,18 @@ export async function POST(request: NextRequest) {
       subcity,
       woreda,
       monthlyIncome,
+      status,
       accountType,
-      // Business fields
+      
+      // Business information (all required except optional fields)
       majorLineBusiness,
+      majorLineBusinessUrl,
       otherLineBusiness,
+      otherLineBusinessUrl,
       dateOfEstablishmentMLB,
       dateOfEstablishmentOLB,
-      // Loan fields
+      
+      // Loan application details (all required)
       purposeOfLoan,
       loanType,
       loanAmount,
@@ -95,9 +48,8 @@ export async function POST(request: NextRequest) {
       customerSegmentation,
       creditInitiationCenter,
       applicationReferenceNumber,
-      applicationDate,
-      lastDocumentReceivedDate,
-      // Document URLs
+      
+      // Document URLs (all required except shareholdersDetailsUrl)
       nationalidUrl,
       agreementFormUrl,
       applicationFormUrl,
@@ -106,151 +58,166 @@ export async function POST(request: NextRequest) {
       transactionProfileUrl,
       collateralProfileUrl,
       financialProfileUrl,
-      // Relations
-      shareholders,
-      loanRequests,
+      
     } = body;
 
-    // Validate required fields
-    if (!customerNumber || !tinNumber || !firstName || !lastName || !dateOfBirth) {
-      return NextResponse.json(
-        { error: 'Customer number, TIN, first name, last name, and date of birth are required' },
-        { status: 400 }
-      );
-    }
+    // Validate all required fields based on your schema
+    const requiredFields = [
+      'customerNumber', 'tinNumber', 'firstName', 'lastName', 'gender',
+      'maritalStatus', 'dateOfBirth', 'nationalId', 'phone', 'region',
+      'zone', 'city', 'subcity', 'woreda', 'monthlyIncome', 'status',
+      'accountType', 'nationalidUrl', 'agreementFormUrl', 'majorLineBusiness',
+      'majorLineBusinessUrl', 'dateOfEstablishmentMLB', 'purposeOfLoan',
+      'loanType', 'loanAmount', 'loanPeriod', 'modeOfRepayment', 'economicSector',
+      'customerSegmentation', 'creditInitiationCenter', 'applicationFormUrl',
+      'creditProfileUrl', 'transactionProfileUrl', 'collateralProfileUrl',
+      'financialProfileUrl'
+    ];
 
-    // Validate date of birth
-    if (!isValidDate(dateOfBirth)) {
+    const missingFields = requiredFields.filter(field => !body[field]);
+    
+    if (missingFields.length > 0) {
       return NextResponse.json(
-        { error: 'Valid date of birth is required' },
+        { 
+          error: 'Missing required fields',
+          missingFields: missingFields
+        },
         { status: 400 }
       );
     }
 
     // Check if customer already exists
     const existingCustomer = await prisma.customer.findUnique({
-      where: { customerNumber },
+      where: { customerNumber }
     });
 
     if (existingCustomer) {
       return NextResponse.json(
-        { error: 'Customer already exists' },
+        { error: 'Customer with this customer number already exists' },
         { status: 400 }
       );
     }
 
-    // Parse date fields safely
+    // Check if TIN number already exists
+    const existingTin = await prisma.customer.findUnique({
+      where: { tinNumber }
+    });
+
+    if (existingTin) {
+      return NextResponse.json(
+        { error: 'Customer with this TIN number already exists' },
+        { status: 400 }
+      );
+    }
+
+    // Parse date fields
     const parsedDateOfBirth = parseDateSafe(dateOfBirth);
     const parsedDateEstablishmentMLB = parseDateSafe(dateOfEstablishmentMLB);
     const parsedDateEstablishmentOLB = parseDateSafe(dateOfEstablishmentOLB);
-    const parsedApplicationDate = parseDateSafe(applicationDate);
-    const parsedLastDocumentDate = parseDateSafe(lastDocumentReceivedDate);
 
-    // Safely parse shareholders and loan requests
-    const parsedShareholders = parseShareholders(shareholders);
-    const parsedLoanRequests = parseLoanRequests(loanRequests);
+    if (!parsedDateOfBirth) {
+      return NextResponse.json(
+        { error: 'Invalid date of birth format' },
+        { status: 400 }
+      );
+    }
 
-    console.log('Parsed shareholders:', parsedShareholders);
-    console.log('Parsed loan requests:', parsedLoanRequests);
+    if (!parsedDateEstablishmentMLB) {
+      return NextResponse.json(
+        { error: 'Invalid major business establishment date format' },
+        { status: 400 }
+      );
+    }
 
-    // Create customer with nested relations
+    // Generate application reference number if not provided
+    const finalApplicationRef = applicationReferenceNumber || generateApplicationReference();
+
+    // Create customer with all data according to your schema
     const customer = await prisma.customer.create({
       data: {
+        // Customer basic info (all required)
         customerNumber,
         tinNumber,
         firstName,
         middleName: middleName || null,
         lastName,
         mothersName: mothersName || null,
-        gender: gender || 'Unknown',
-        maritalStatus: maritalStatus || 'Unknown',
-        dateOfBirth: parsedDateOfBirth!,
-        nationalId: nationalId || '',
-        phone: phone || '',
-        email: email || '',
-        region: region || '',
-        zone: zone || '',
-        city: city || '',
-        subcity: subcity || '',
-        woreda: woreda || '',
-        monthlyIncome: monthlyIncome ? parseFloat(monthlyIncome) : 0,
-        accountType: accountType || 'Personal',
+        gender,
+        maritalStatus,
+        dateOfBirth: parsedDateOfBirth,
+        nationalId,
+        phone,
+        email: email || null,
+        region,
+        zone,
+        city,
+        subcity,
+        woreda,
+        monthlyIncome: parseFloat(monthlyIncome),
+        status,
+        accountType,
         
-        // Business fields
-        majorLineBusiness: majorLineBusiness || null,
+        // Business information
+        majorLineBusiness,
+        majorLineBusinessUrl,
         otherLineBusiness: otherLineBusiness || null,
+        otherLineBusinessUrl: otherLineBusinessUrl || null,
         dateOfEstablishmentMLB: parsedDateEstablishmentMLB,
         dateOfEstablishmentOLB: parsedDateEstablishmentOLB,
         
-        // Loan fields
-        purposeOfLoan: purposeOfLoan || null,
-        loanType: loanType || null,
-        loanAmount: loanAmount ? parseFloat(loanAmount) : null,
-        loanPeriod: loanPeriod ? parseInt(loanPeriod) : null,
-        modeOfRepayment: modeOfRepayment || null,
-        economicSector: economicSector || null,
-        customerSegmentation: customerSegmentation || null,
-        creditInitiationCenter: creditInitiationCenter || null,
-        applicationReferenceNumber: applicationReferenceNumber || null,
-        applicationDate: parsedApplicationDate,
-        lastDocumentReceivedDate: parsedLastDocumentDate,
+        // Loan application details (all required)
+        purposeOfLoan,
+        loanType,
+        loanAmount: parseFloat(loanAmount),
+        loanPeriod: parseInt(loanPeriod),
+        modeOfRepayment,
+        economicSector,
+        customerSegmentation,
+        creditInitiationCenter,
+        applicationReferenceNumber: finalApplicationRef,
         
         // Document URLs
-        nationalidUrl: nationalidUrl || null,
-        agreementFormUrl: agreementFormUrl || null,
-        applicationFormUrl: applicationFormUrl || null,
+        nationalidUrl,
+        agreementFormUrl,
+        applicationFormUrl,
         shareholdersDetailsUrl: shareholdersDetailsUrl || null,
-        creditProfileUrl: creditProfileUrl || null,
-        transactionProfileUrl: transactionProfileUrl || null,
-        collateralProfileUrl: collateralProfileUrl || null,
-        financialProfileUrl: financialProfileUrl || null,
+        creditProfileUrl,
+        transactionProfileUrl,
+        collateralProfileUrl,
+        financialProfileUrl,
         
-        // Relations
-        shareholders: {
-          create: parsedShareholders.map((sh: any) => ({
-            companyName: sh.companyName || 'Main Company',
-            name: sh.name || '',
-            shareValue: sh.shareValue ? parseFloat(sh.shareValue) : 0,
-            sharePercentage: sh.sharePercentage ? parseFloat(sh.sharePercentage) : 0,
-            nationality: sh.nationality || null,
-            idNumber: sh.idNumber || null,
-            address: sh.address || null,
-            phone: sh.phone || null,
-            email: sh.email || null,
-            isDirector: sh.isDirector || false,
-            position: sh.position || null,
-            dateOfBirth: parseDateSafe(sh.dateOfBirth),
-          })),
-        },
-        loanRequests: {
-          create: parsedLoanRequests.map((lr: any) => ({
-            type: lr.type || '',
-            amount: lr.amount ? parseFloat(lr.amount) : 0,
-            period: lr.period ? parseInt(lr.period) : 0,
-            repaymentMode: lr.repaymentMode || '',
-            remark: lr.remark || null,
-            status: 'pending',
-          })),
-        },
-      },
-      include: {
-        shareholders: true,
-        loanRequests: true,
-      },
+        // Application status (defaults to PENDING from schema)
+        applicationStatus: 'PENDING',
+      }
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: 'Customer created successfully',
-      customer 
+      message: 'Customer and loan application created successfully',
+      data: {
+        id: customer.id,
+        customerNumber: customer.customerNumber,
+        applicationReferenceNumber: customer.applicationReferenceNumber,
+        applicationStatus: customer.applicationStatus,
+        createdAt: customer.createdAt
+      }
     }, { status: 201 });
+
   } catch (error) {
     console.error('Error creating customer:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error. Please try again.' },
       { status: 500 }
     );
   }
+}
+
+// Helper function to generate application reference
+function generateApplicationReference(): string {
+  const prefix = "PUKKI";
+  const timestamp = Date.now().toString().slice(-6);
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `${prefix}-${timestamp}-${random}`;
 }
 
 // Handle other methods

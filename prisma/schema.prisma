@@ -9,6 +9,7 @@ datasource db {
 
 model Customer {
   id                          String    @id @default(cuid())
+  applicationReferenceNumber  String    @unique
   customerNumber              String    @unique
   tinNumber                   String    @unique
   firstName                   String
@@ -20,153 +21,50 @@ model Customer {
   dateOfBirth                 DateTime
   nationalId                  String
   phone                       String
-  email                       String
+  email                       String?
   region                      String
   zone                        String
   city                        String
   subcity                     String
   woreda                      String
   monthlyIncome               Float
-  status                      String    @default("active")
+  status                      String
   accountType                 String
-  nationalidUrl               String?
-  agreementFormUrl            String?
-  
-  // Business Information
-  majorLineBusiness           String?
-  majorLineBusinessUrl        String?
-  otherLineBusiness           String?
-  otherLineBusinessUrl        String?
-  dateOfEstablishmentMLB      DateTime?
-  dateOfEstablishmentOLB      DateTime?
-  
-  // Loan Application Fields
-  purposeOfLoan               String?
-  loanType                    String?
-  loanAmount                  Float?
-  loanPeriod                  Int?
-  modeOfRepayment             String?
-  economicSector              String?
-  customerSegmentation        String?
-  creditInitiationCenter      String?
-  applicationReferenceNumber  String?   @unique
-  applicationDate             DateTime?
-  lastDocumentReceivedDate    DateTime?
-  
-  // Additional Documents
-  applicationFormUrl          String?
-  shareholdersDetailsUrl      String?
-  creditProfileUrl            String?
-  transactionProfileUrl       String?
-  collateralProfileUrl        String?
-  financialProfileUrl         String?
-  
-  // Relations
-  shareholders                Shareholder[]
-  loanRequests                LoanRequest[]
-  documents                   Document[]
-  
-  // Timestamps
+  nationalidUrl               String
+  agreementFormUrl            String
+  majorLineBusiness           String 
+  majorLineBusinessUrl        String 
+  otherLineBusiness           String? 
+  otherLineBusinessUrl        String? 
+  dateOfEstablishmentMLB      DateTime 
+  dateOfEstablishmentOLB      DateTime? 
+  purposeOfLoan               String
+  loanType                    String 
+  loanAmount                  Float 
+  loanPeriod                  Int 
+  modeOfRepayment             String 
+  economicSector              String 
+  customerSegmentation        String 
+  creditInitiationCenter      String 
+  applicationFormUrl          String 
+  shareholdersDetailsUrl      String? 
+  creditProfileUrl            String
+  transactionProfileUrl       String
+  collateralProfileUrl        String
+  financialProfileUrl         String
+  applicationStatus           ApplicationStatus @default(PENDING)
   createdAt                   DateTime  @default(now())
   updatedAt                   DateTime  @updatedAt
-  
   @@map("customers")
 }
 
-model Shareholder {
-  id              String   @id @default(cuid())
-  customerId      String
-  companyName     String   @default("Main Company")
-  name            String
-  shareValue      Float
-  sharePercentage Float
-  nationality     String?
-  idNumber        String?
-  address         String?
-  phone           String?
-  email           String?
-  isDirector      Boolean  @default(false)
-  position        String?
-  dateOfBirth     DateTime?
-  
-  // Relations
-  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  
-  // Timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  @@map("shareholders")
-}
 
-model LoanRequest {
-  id              String   @id @default(cuid())
-  customerId      String
-  type            String
-  amount          Float
-  period          Int
-  repaymentMode   String
-  remark          String?
-  status          String   @default("pending")
-  
-  // Relations
-  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  
-  // Timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  @@map("loan_requests")
-}
-
-model Document {
-  id          String   @id @default(cuid())
-  customerId  String
-  type        String   // e.g., "nationalId", "agreementForm", "creditProfile", etc.
-  name        String
-  url         String
-  size        Int?
-  mimeType    String?
-  
-  // Relations
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  
-  // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@map("documents")
-}
-
-model AuditLog {
-  id          String   @id @default(cuid())
-  action      String   // e.g., "CREATE", "UPDATE", "DELETE"
-  entity      String   // e.g., "Customer", "LoanRequest"
-  entityId    String
-  description String?
-  userId      String?
-  ipAddress   String?
-  userAgent   String?
-  
-  // Timestamps
-  createdAt   DateTime @default(now())
-  
-  @@map("audit_logs")
-}
-
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String
-  firstName     String
-  lastName      String
-  role          String    @default("user") // "admin", "user", "manager"
-  status        String    @default("active")
-  lastLogin     DateTime?
-  
-
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  @@map("users")
+enum ApplicationStatus {
+  PENDING      // Application submitted, awaiting review
+  UNDER_REVIEW // Currently being reviewed by staff
+  APPROVED     // Application approved
+  REJECTED     // Application rejected
+  MORE_INFO    // Requires additional information from customer
+  CONDITIONAL  // Approved with conditions
+  WITHDRAWN    // Customer withdrew application
 }
