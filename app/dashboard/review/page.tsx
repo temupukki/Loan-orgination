@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Customer } from "@/app/types/loan";
 import { formatCurrency} from "@/app/utils/formatters";
-import { formatDateForDisplay } from "../utils/dateUtils";
+import { formatDateForDisplay } from "../../utils/dateUtils";
 
 export default function ReviewPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -29,7 +29,7 @@ export default function ReviewPage() {
       setCustomer(customerObj);
       localStorage.setItem('currentCustomer', JSON.stringify(customerObj));
     } else {
-      window.location.href = '/';
+      window.location.href = '/dashboard';
     }
   }, []);
 
@@ -71,7 +71,7 @@ export default function ReviewPage() {
       
       // Redirect to home after 2 seconds
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = '/dashboard';
       }, 2000);
     } catch (err: any) {
       setError(err.message);
@@ -81,7 +81,7 @@ export default function ReviewPage() {
   };
 
   const goBack = () => {
-    window.location.href = '/documents';
+    window.location.href = '/dashboard/documents';
   };
 
   const getDocumentStatus = (url: string | undefined): string => {

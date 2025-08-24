@@ -229,12 +229,12 @@ export default function LoanDetailsPage() {
 
     if (customer) {
       localStorage.setItem('currentCustomer', JSON.stringify(customer));
-      window.location.href = '/documents';
+      window.location.href = '/dashboard/documents';
     }
   };
 
   const goBack = () => {
-    window.location.href = '/business-info';
+    window.location.href = '/dashboard/business-info';
   };
 
   if (!customer) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;

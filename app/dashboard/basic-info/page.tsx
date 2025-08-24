@@ -115,12 +115,12 @@ export default function BasicInfoPage() {
 
     if (customer) {
       localStorage.setItem("currentCustomer", JSON.stringify(customer));
-      window.location.href = "/business-info";
+      window.location.href = "/dashboard/business-info";
     }
   };
 
   const goBack = () => {
-    window.location.href = "/";
+    window.location.href = "/dashboard";
   };
 
   if (!customer)

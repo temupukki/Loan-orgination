@@ -198,12 +198,12 @@ export default function DocumentsPage() {
 
     if (customer) {
       localStorage.setItem('currentCustomer', JSON.stringify(customer));
-      window.location.href = '/review';
+      window.location.href = '/dashboard/review';
     }
   };
 
   const goBack = () => {
-    window.location.href = '/shareholders';
+    window.location.href = '/dashboard/shareholders';
   };
 
   if (!customer) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;

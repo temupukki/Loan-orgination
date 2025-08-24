@@ -212,12 +212,12 @@ export default function BusinessInfoPage() {
         ...lineOfBusiness
       };
       localStorage.setItem('currentCustomer', JSON.stringify(updatedCustomer));
-      window.location.href = '/loan-details';
+      window.location.href = '/dashboard/loan-details';
     }
   };
 
   const goBack = () => {
-    window.location.href = '/basic-info';
+    window.location.href = '/dashboard/basic-info';
   };
 
   if (!customer) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
