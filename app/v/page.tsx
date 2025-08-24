@@ -1,40 +1,76 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { loanApi, LoanApplication } from "@/lib/api/loan";
-import { formatAddress, formatCurrency } from "@/app/utils/formatters";
+import { formatCurrency } from "@/app/utils/formatters";
 import { formatDateForDisplay } from "../utils/dateUtils";
 
-interface ReviewDecision {
-  applicationId: string;
-  decision: "approved" | "rejected" | "pending";
-  notes: string;
-  conditions?: string[];
-  approvedAmount?: number;
-  approvedTerm?: number;
+interface Application {
+  id: string;
+  customerNumber: string;
+  firstName: string;
+  lastName: string;
+  tinNumber: string;
+  applicationReferenceNumber: string;
+  loanAmount: number;
+  loanType: string;
+  purposeOfLoan: string;
+  applicationStatus: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export default function LoanReviewDashboard() {
-  const [applications, setApplications] = useState<LoanApplication[]>([]);
-  const [selectedApplication, setSelectedApplication] = useState<LoanApplication | null>(null);
+interface ApiResponse {
+  error: string;
+  success: boolean;
+  data: Application[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+export default function PendingApplicationsPage() {
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
-  const [reviewing, setReviewing] = useState(false);
   const [error, setError] = useState("");
-  const [decision, setDecision] = useState<ReviewDecision>({
-    applicationId: "",
-    decision: "pending",
-    notes: "",
-    conditions: [],
-    approvedAmount: 0,
-    approvedTerm: 0
+  const [filters, setFilters] = useState({
+    page: 1,
+    limit: 10,
+    search: ""
+  });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    totalCount: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false
   });
 
-  const fetchApplications = async () => {
+  const fetchPendingApplications = async () => {
     setLoading(true);
     setError("");
     try {
-      const result = await loanApi.getApplications({ status: "pending", limit: 50 });
+      const params = new URLSearchParams();
+      params.append('page', filters.page.toString());
+      params.append('limit', filters.limit.toString());
+      if (filters.search) {
+        params.append('search', filters.search);
+      }
+
+      const response = await fetch(`/api/pending?${params.toString()}`);
+      const result: ApiResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to fetch applications");
+      }
+
       setApplications(result.data);
+      setPagination(result.pagination);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -43,66 +79,37 @@ export default function LoanReviewDashboard() {
   };
 
   useEffect(() => {
-    fetchApplications();
-  }, []);
+    fetchPendingApplications();
+  }, [filters.page, filters.limit, filters.search]);
 
-  const handleSelectApplication = (application: LoanApplication) => {
-    setSelectedApplication(application);
-    setDecision({
-      applicationId: application.id,
-      decision: "pending",
-      notes: "",
-      conditions: [],
-      approvedAmount: application.loanAmount || 0,
-      approvedTerm: application.loanPeriod || 0
-    });
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFilters(prev => ({ ...prev, page: 1 }));
   };
 
-  const handleDecisionSubmit = async () => {
-    if (!selectedApplication) return;
-    
-    setReviewing(true);
-    try {
-      // API call to update application status
- 
-      
-      // Refresh applications list
-      await fetchApplications();
-      setSelectedApplication(null);
-      setDecision({
-        applicationId: "",
-        decision: "pending",
-        notes: "",
-        conditions: [],
-        approvedAmount: 0,
-        approvedTerm: 0
-      });
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setReviewing(false);
-    }
-  };
+ const handleFilterChange = (key: string, value: string | number) => {
+  setFilters(prev => ({
+    ...prev,
+    [key]: key === "page" ? Number(value) : value,
+    page: key === "page" ? Number(value) : 1
+  }));
+};
 
-  const addCondition = () => {
-    setDecision(prev => ({
-      ...prev,
-      conditions: [...(prev.conditions || []), ""]
-    }));
-  };
+  const getStatusBadge = (status: string) => {
+    const statusClasses: { [key: string]: string } = {
+      PENDING: "bg-yellow-100 text-yellow-800",
+      UNDER_REVIEW: "bg-blue-100 text-blue-800",
+      APPROVED: "bg-green-100 text-green-800",
+      REJECTED: "bg-red-100 text-red-800",
+      MORE_INFO: "bg-orange-100 text-orange-800",
+      CONDITIONAL: "bg-purple-100 text-purple-800"
+    };
 
-  const updateCondition = (index: number, value: string) => {
-    setDecision(prev => ({
-      ...prev,
-      conditions: prev.conditions?.map((cond, i) => i === index ? value : cond) || []
-    }));
-  };
-
-  const removeCondition = (index: number) => {
-    setDecision(prev => ({
-      ...prev,
-      conditions: prev.conditions?.filter((_, i) => i !== index) || []
-    }));
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClasses[status] || "bg-gray-100 text-gray-800"}`}>
+        {status.replace('_', ' ')}
+      </span>
+    );
   };
 
   if (loading) {
@@ -110,7 +117,7 @@ export default function LoanReviewDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center h-64">
-            <div className="text-lg">Loading applications for review...</div>
+            <div className="text-lg">Loading pending applications...</div>
           </div>
         </div>
       </div>
@@ -120,291 +127,183 @@ export default function LoanReviewDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Loan Application Review</h1>
-          <p className="text-gray-600">Review and make decisions on pending loan applications</p>
-        </div>
-
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
-            <div className="text-red-700">{error}</div>
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">Pending Loan Applications</h1>
+            <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+              {pagination.totalCount} Pending
+            </span>
           </div>
-        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Applications List */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Pending Applications ({applications.length})</h2>
-            
-            <div className="space-y-3">
-              {applications.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No pending applications for review
-                </div>
-              ) : (
-                applications.map((application) => (
-                  <div
-                    key={application.id}
-                    className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                      selectedApplication?.id === application.id
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200"
-                    }`}
-                    onClick={() => handleSelectApplication(application)}
+          {/* Search and Filters */}
+          <div className="mb-6">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Items per page</label>
+                  <select
+                    value={filters.limit}
+                    onChange={(e) => handleFilterChange("limit", parseInt(e.target.value))}
+                    className="p-2 border border-gray-300 rounded-md"
                   >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold">
-                          {application.firstName} {application.lastName}
-                        </h3>
-                        <p className="text-sm text-gray-600">{application.customerNumber}</p>
-                        <p className="text-sm">
-                          Requested: {formatCurrency(application.loanAmount || 0)}
-                        </p>
-                      </div>
-                      <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">
-                        PENDING
-                      </span>
-                    </div>
-                    <div className="mt-2 text-sm text-gray-500">
-                      Applied: {formatDateForDisplay(application.applicationDate || "")}
-                    </div>
-                  </div>
-                ))
-              )}
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                  </select>
+                </div>
+              </div>
+
+              <form onSubmit={handleSearch} className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Search by name, customer number, TIN, or reference..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
+                  className="p-2 border border-gray-300 rounded-md min-w-64"
+                />
+                <button
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+                >
+                  Search
+                </button>
+              </form>
             </div>
           </div>
 
-          {/* Application Review Panel */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            {selectedApplication ? (
-              <>
-                <h2 className="text-xl font-semibold mb-4">Review Application</h2>
-                
-                {/* Customer Information */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium mb-3">Customer Information</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Name:</span>
-                      <p className="font-medium">
-                        {selectedApplication.firstName} {selectedApplication.lastName}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Customer #:</span>
-                      <p className="font-medium">{selectedApplication.customerNumber}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Email:</span>
-                      <p className="font-medium">{selectedApplication.email}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Phone:</span>
-                      <p className="font-medium">{selectedApplication.phone}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Monthly Income:</span>
-                      <p className="font-medium">
-                        {formatCurrency(selectedApplication.monthlyIncome || 0)}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Location:</span>
-                      <p className="font-medium">
-                        {formatAddress(selectedApplication)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
+              <div className="text-red-700">{error}</div>
+            </div>
+          )}
 
-                {/* Loan Details */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium mb-3">Loan Details</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Requested Amount:</span>
-                      <p className="font-medium">
-                        {formatCurrency(selectedApplication.loanAmount || 0)}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Loan Type:</span>
-                      <p className="font-medium">{selectedApplication.loanType || "N/A"}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Term:</span>
-                      <p className="font-medium">
-                        {selectedApplication.loanPeriod ? `${selectedApplication.loanPeriod} months` : "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Purpose:</span>
-                      <p className="font-medium">{selectedApplication.purposeOfLoan || "N/A"}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Decision Panel */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium mb-3">Decision</h3>
-                  
-                  <div className="grid grid-cols-3 gap-4 mb-4">
-                    <button
-                      onClick={() => setDecision(prev => ({ ...prev, decision: "approved" }))}
-                      className={`p-3 rounded-lg border-2 transition-all ${
-                        decision.decision === "approved"
-                          ? "border-green-500 bg-green-50 text-green-700"
-                          : "border-gray-200 hover:border-green-300"
-                      }`}
-                    >
-                      ✅ Approve
-                    </button>
-                    <button
-                      onClick={() => setDecision(prev => ({ ...prev, decision: "rejected" }))}
-                      className={`p-3 rounded-lg border-2 transition-all ${
-                        decision.decision === "rejected"
-                          ? "border-red-500 bg-red-50 text-red-700"
-                          : "border-gray-200 hover:border-red-300"
-                      }`}
-                    >
-                      ❌ Reject
-                    </button>
-                    <button
-                      onClick={() => setDecision(prev => ({ ...prev, decision: "pending" }))}
-                      className={`p-3 rounded-lg border-2 transition-all ${
-                        decision.decision === "pending"
-                          ? "border-yellow-500 bg-yellow-50 text-yellow-700"
-                          : "border-gray-200 hover:border-yellow-300"
-                      }`}
-                    >
-                      ⏳ More Info Needed
-                    </button>
-                  </div>
-
-                  {decision.decision === "approved" && (
-                    <div className="mb-4 p-3 bg-green-50 rounded-lg">
-                      <h4 className="font-medium mb-2">Approval Details</h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-sm text-gray-600 mb-1">Approved Amount</label>
-                          <input
-                            type="number"
-                            value={decision.approvedAmount}
-                            onChange={(e) => setDecision(prev => ({ 
-                              ...prev, 
-                              approvedAmount: Number(e.target.value) 
-                            }))}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                          />
+          {/* Applications Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Application Ref
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Customer Number
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    TIN Number
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Loan Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Loan Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Applied On
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {applications.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
+                      {filters.search ? "No pending applications match your search" : "No pending applications found"}
+                    </td>
+                  </tr>
+                ) : (
+                  applications.map((application) => (
+                    <tr key={application.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-mono text-sm text-gray-900">
+                          {application.applicationReferenceNumber}
                         </div>
-                        <div>
-                          <label className="block text-sm text-gray-600 mb-1">Term (months)</label>
-                          <input
-                            type="number"
-                            value={decision.approvedTerm}
-                            onChange={(e) => setDecision(prev => ({ 
-                              ...prev, 
-                              approvedTerm: Number(e.target.value) 
-                            }))}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                          />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-medium text-gray-900">
+                          {application.firstName} {application.lastName}
                         </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Conditions */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="text-sm text-gray-600">Conditions</label>
-                      <button
-                        type="button"
-                        onClick={addCondition}
-                        className="text-blue-600 text-sm hover:text-blue-800"
-                      >
-                        + Add Condition
-                      </button>
-                    </div>
-                    {decision.conditions?.map((condition, index) => (
-                      <div key={index} className="flex gap-2 mb-2">
-                        <input
-                          type="text"
-                          value={condition}
-                          onChange={(e) => updateCondition(index, e.target.value)}
-                          placeholder="Condition requirement"
-                          className="flex-1 p-2 border border-gray-300 rounded-md"
-                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {application.customerNumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {application.tinNumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {formatCurrency(application.loanAmount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {application.loanType}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(application.applicationStatus)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {formatDateForDisplay(application.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <button
-                          type="button"
-                          onClick={() => removeCondition(index)}
-                          className="p-2 text-red-600 hover:text-red-800"
+                          onClick={() => window.location.href = `/review-application/${application.id}`}
+                          className="text-blue-600 hover:text-blue-800 mr-3 text-sm"
                         >
-                          ×
+                          Review
                         </button>
-                      </div>
-                    ))}
-                  </div>
+                        <button
+                          onClick={() => window.location.href = `/application-details/${application.id}`}
+                          className="text-gray-600 hover:text-gray-800 text-sm"
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-                  {/* Notes */}
-                  <div className="mb-4">
-                    <label className="block text-sm text-gray-600 mb-2">Review Notes</label>
-                    <textarea
-                      value={decision.notes}
-                      onChange={(e) => setDecision(prev => ({ ...prev, notes: e.target.value }))}
-                      placeholder="Add your review notes and comments..."
-                      rows={4}
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleDecisionSubmit}
-                      disabled={reviewing}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md disabled:opacity-50"
-                    >
-                      {reviewing ? "Processing..." : "Submit Decision"}
-                    </button>
-                    <button
-                      onClick={() => setSelectedApplication(null)}
-                      className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-md"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <div className="text-6xl mb-4">📋</div>
-                <h3 className="text-lg font-medium mb-2">Select an Application</h3>
-                <p>Choose a pending application from the list to begin review</p>
+          {/* Pagination */}
+          {pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-gray-700">
+                Showing {((pagination.page - 1) * pagination.limit) + 1} to{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.totalCount)} of{" "}
+                {pagination.totalCount} results
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl shadow-lg p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{applications.length}</div>
-            <div className="text-sm text-gray-600">Pending Review</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-4 text-center">
-            <div className="text-2xl font-bold text-gray-600">0</div>
-            <div className="text-sm text-gray-600">Reviewed Today</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">0</div>
-            <div className="text-sm text-gray-600">Approved Today</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">0</div>
-            <div className="text-sm text-gray-600">Rejected Today</div>
-          </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleFilterChange("page", pagination.page - 1)}
+                  disabled={!pagination.hasPrev}
+                  className={`px-3 py-1 rounded-md ${
+                    pagination.hasPrev
+                      ? "bg-gray-200 hover:bg-gray-300"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => handleFilterChange("page", pagination.page + 1)}
+                  disabled={!pagination.hasNext}
+                  className={`px-3 py-1 rounded-md ${
+                    pagination.hasNext
+                      ? "bg-gray-200 hover:bg-gray-300"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { parseDateSafe } from '@/app/utils/dateUtils';
-import { PrismaClient } from "@prisma/client"; const prisma = new PrismaClient();
+import { PrismaClient } from "@prisma/client"; 
+const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
   try {
