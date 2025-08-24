@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,63 +9,131 @@ datasource db {
 }
 
 model Customer {
-  id                          String    @id @default(cuid())
-  applicationReferenceNumber  String    @unique
-  customerNumber              String    @unique
-  tinNumber                   String    @unique
-  firstName                   String
-  middleName                  String?
-  lastName                    String
-  mothersName                 String?
-  gender                      String
-  maritalStatus               String
-  dateOfBirth                 DateTime
-  nationalId                  String
-  phone                       String
-  email                       String?
-  region                      String
-  zone                        String
-  city                        String
-  subcity                     String
-  woreda                      String
-  monthlyIncome               Float
-  status                      String
-  accountType                 String
-  nationalidUrl               String
-  agreementFormUrl            String
-  majorLineBusiness           String 
-  majorLineBusinessUrl        String 
-  otherLineBusiness           String? 
-  otherLineBusinessUrl        String? 
-  dateOfEstablishmentMLB      DateTime 
-  dateOfEstablishmentOLB      DateTime? 
-  purposeOfLoan               String
-  loanType                    String 
-  loanAmount                  Float 
-  loanPeriod                  Int 
-  modeOfRepayment             String 
-  economicSector              String 
-  customerSegmentation        String 
-  creditInitiationCenter      String 
-  applicationFormUrl          String 
-  shareholdersDetailsUrl      String? 
-  creditProfileUrl            String
-  transactionProfileUrl       String
-  collateralProfileUrl        String
-  financialProfileUrl         String
-  applicationStatus           ApplicationStatus @default(PENDING)
-  createdAt                   DateTime  @default(now())
-  updatedAt                   DateTime  @updatedAt
+  id                         String            @id @default(cuid())
+  applicationReferenceNumber String            @unique
+  customerNumber             String            @unique
+  tinNumber                  String            @unique
+  firstName                  String
+  middleName                 String?
+  lastName                   String
+  mothersName                String?
+  gender                     String
+  maritalStatus              String
+  dateOfBirth                DateTime
+  nationalId                 String
+  phone                      String
+  email                      String?
+  region                     String
+  zone                       String
+  city                       String
+  subcity                    String
+  woreda                     String
+  monthlyIncome              Float
+  status                     String
+  accountType                String
+  nationalidUrl              String
+  agreementFormUrl           String
+  majorLineBusiness          String
+  majorLineBusinessUrl       String
+  otherLineBusiness          String?
+  otherLineBusinessUrl       String?
+  dateOfEstablishmentMLB     DateTime
+  dateOfEstablishmentOLB     DateTime?
+  purposeOfLoan              String
+  loanType                   String
+  loanAmount                 Float
+  loanPeriod                 Int
+  modeOfRepayment            String
+  economicSector             String
+  customerSegmentation       String
+  creditInitiationCenter     String
+  applicationFormUrl         String
+  shareholdersDetailsUrl     String?
+  creditProfileUrl           String
+  transactionProfileUrl      String
+  collateralProfileUrl       String
+  financialProfileUrl        String
+  applicationStatus          ApplicationStatus @default(PENDING)
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
+
   @@map("customers")
 }
 
-
 enum ApplicationStatus {
-  PENDING      // Application submitted, awaiting review
+  PENDING // Application submitted, awaiting review
   UNDER_REVIEW // Currently being reviewed by staff
-  APPROVED     // Application approved
-  REJECTED     // Application rejected
-  MORE_INFO    // Requires additional information from customer
-  CONDITIONAL  // Approved with conditions
-  WITHDRAWN    // Customer withdrew application
+  APPROVED // Application approved
+  REJECTED // Application rejected
+  MORE_INFO // Requires additional information from customer
+  CONDITIONAL // Approved with conditions
+  WITHDRAWN // Customer withdrew application
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  role          Userrole @default(RELATIONSHIP_MANAGER)
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+enum Userrole {
+  ADMIN
+  RELATIONSHIP_MANAGER
+  CREDIT_ANALYST
+  SUPERVISOR
+  COMMITTE_MEMBER
 }
