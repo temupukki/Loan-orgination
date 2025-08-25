@@ -66,6 +66,26 @@ export default async function Navbar() {
               >
                 loan Applications
               </Link>
+              <Link
+                href="/dashboard/credit/analysis"
+                className="text-white font-medium hover:bg-blue-600 px-3 py-2 rounded-lg transition-colors duration-200"
+              >
+                Analysis
+              </Link>
+             
+           
+            </>
+          )}
+
+                 
+          {userRole === "SUPERVISOR" && (
+            <>
+              <Link
+                href="/dashboard/supervisor"
+                className="text-white font-medium hover:bg-blue-600 px-3 py-2 rounded-lg transition-colors duration-200"
+              >
+              Review Credit Analysis
+              </Link>
              
            
             </>

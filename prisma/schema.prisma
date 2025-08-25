@@ -58,6 +58,7 @@ model Customer {
   updatedAt                  DateTime          @updatedAt
 
   @@map("customers")
+  LoanAnalysis LoanAnalysis[]
 }
 
 enum ApplicationStatus {
@@ -129,6 +130,24 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model LoanAnalysis {
+  id                   String            @id @default(cuid())
+  applicationReferenceNumber String            @unique @map("application_reference_number")
+
+
+  customer             Customer @relation(fields: [applicationReferenceNumber], references: [applicationReferenceNumber])
+ 
+  swotAnalysisUrl      String?          @map("swot_analysis_url")
+  pestelAnalysisUrl    String?          @map("pestel_analysis_url")
+  riskAssessmentUrl    String?          @map("risk_assessment_url")
+  esgAssessmentUrl     String?          @map("esg_assessment_url")
+  financialNeedUrl     String?          @map("financial_need_url")
+  analystConclusion    String?          @map("analyst_conclusion")
+  analystRecommendation String?          @map("analyst_recommendation")
+  rmRecommendation String?       @map("rm_reccommendation")
+
 }
 enum Userrole {
   ADMIN

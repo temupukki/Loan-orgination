@@ -17,8 +17,8 @@ export async function GET(request: NextRequest) {
       case "PENDING":
         status = ApplicationStatus.PENDING;
         break;
-      case "APPROVED":
-        status = ApplicationStatus.APPROVED;
+      case "UNDER_REVIEW":
+        status = ApplicationStatus.UNDER_REVIEW;
         break;
       case "REJECTED":
         status = ApplicationStatus.REJECTED;
