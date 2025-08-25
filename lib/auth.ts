@@ -13,20 +13,15 @@ export const auth = betterAuth({
     enabled: true,
     autoSignIn: false,
   },
-  user: {
-    additionalFields: {
-      role: {
-        type: "string",
-        enum: [
-          "USER",
-          "ADMIN",
-          "RELATIONSHIP_MANAGER",
-          "CREDIT_ANALYST",
-          "SUPERVISOR",
-          "COMMITTE_MEMBER",
-        ],
-        required: false, // optional, if you want it mandatory
-      },
+ 
+      user:{
+        additionalFields:{
+            role:{
+                type:["RELATIONSHIP_MANAGER","ADMIN","CREDIT_ANALYST","SUPERVISOR","COMMITTE_MEMBER"]
+            }
+        }
+    }, 
     },
-  },
-});
+
+  )
+  

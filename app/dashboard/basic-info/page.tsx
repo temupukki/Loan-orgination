@@ -34,37 +34,33 @@ export default function BasicInfoPage() {
       [name]: value,
     });
 
-    // Clear error when field is updated
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ""
+        [name]: "",
       }));
     }
   };
 
   const handleBlur = (fieldName: string) => {
-    setTouched(prev => ({
+    setTouched((prev) => ({
       ...prev,
-      [fieldName]: true
+      [fieldName]: true,
     }));
-    
-    // Validate the field when it loses focus
     validateField(fieldName, customer?.[fieldName as keyof Customer] as string);
   };
 
   const validateField = (fieldName: string, value: string | undefined) => {
     if (!value || value.trim() === "") {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [fieldName]: "This field is required"
+        [fieldName]: "This field is required",
       }));
       return false;
     }
-    
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      [fieldName]: ""
+      [fieldName]: "",
     }));
     return true;
   };
@@ -75,7 +71,6 @@ export default function BasicInfoPage() {
     const newErrors: Record<string, string> = {};
     let isValid = true;
 
-    // Validate all required fields
     if (!customer.customerSegmentation?.trim()) {
       newErrors.customerSegmentation = "Customer segmentation is required";
       isValid = false;
@@ -96,19 +91,17 @@ export default function BasicInfoPage() {
   };
 
   const saveAndContinue = () => {
-    // Mark all fields as touched to show errors
     setTouched({
       customerSegmentation: true,
       creditInitiationCenter: true,
-      economicSector: true
+      economicSector: true,
     });
 
     if (!validateForm()) {
-      // Scroll to first error
       const firstErrorField = Object.keys(errors)[0];
       if (firstErrorField) {
         const element = document.querySelector(`[name="${firstErrorField}"]`);
-        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element?.scrollIntoView({ behavior: "smooth", block: "center" });
       }
       return;
     }
@@ -131,12 +124,55 @@ export default function BasicInfoPage() {
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">
-            Basic Information
-          </h1>
+        {/* Stepper Header */}
+        <div className="flex items-center justify-center mb-10">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center opacity-70">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
+                1
+              </div>
+              <span className="ml-2 font-semibold text-blue-700">
+                Search Customer
+              </span>
+            </div>
+            <div className="w-12 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
+                2
+              </div>
+              <span className="ml-2 font-semibold text-blue-700">
+                Basic Info
+              </span>
+            </div>
+            <div className="w-12 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center opacity-40">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold">
+                3
+              </div>
+              <span className="ml-2 text-gray-500">Business Info</span>
+            </div>
+            <div className="w-12 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center opacity-40">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold">
+                4
+              </div>
+              <span className="ml-2 text-gray-500">Documents</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">
+              Loan Origination – Step 2
+            </h1>
+            <p className="text-gray-600">
+              Provide the customer’s basic information to continue
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Customer Segmentation */}
@@ -149,7 +185,7 @@ export default function BasicInfoPage() {
                 value={customer.customerSegmentation || ""}
                 onChange={handleFieldChange}
                 onBlur={() => handleBlur("customerSegmentation")}
-                className={`w-full p-2 border rounded-md ${
+                className={`w-full p-3 border rounded-lg ${
                   errors.customerSegmentation && touched.customerSegmentation
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                     : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
@@ -163,9 +199,12 @@ export default function BasicInfoPage() {
                   </option>
                 ))}
               </select>
-              {errors.customerSegmentation && touched.customerSegmentation && (
-                <p className="mt-1 text-sm text-red-600">{errors.customerSegmentation}</p>
-              )}
+              {errors.customerSegmentation &&
+                touched.customerSegmentation && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.customerSegmentation}
+                  </p>
+                )}
             </div>
 
             {/* Credit Initiation Center */}
@@ -178,8 +217,9 @@ export default function BasicInfoPage() {
                 value={customer.creditInitiationCenter || ""}
                 onChange={handleFieldChange}
                 onBlur={() => handleBlur("creditInitiationCenter")}
-                className={`w-full p-2 border rounded-md ${
-                  errors.creditInitiationCenter && touched.creditInitiationCenter
+                className={`w-full p-3 border rounded-lg ${
+                  errors.creditInitiationCenter &&
+                  touched.creditInitiationCenter
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                     : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 }`}
@@ -192,9 +232,12 @@ export default function BasicInfoPage() {
                   </option>
                 ))}
               </select>
-              {errors.creditInitiationCenter && touched.creditInitiationCenter && (
-                <p className="mt-1 text-sm text-red-600">{errors.creditInitiationCenter}</p>
-              )}
+              {errors.creditInitiationCenter &&
+                touched.creditInitiationCenter && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.creditInitiationCenter}
+                  </p>
+                )}
             </div>
 
             {/* Economic Sector */}
@@ -207,7 +250,7 @@ export default function BasicInfoPage() {
                 value={customer.economicSector || ""}
                 onChange={handleFieldChange}
                 onBlur={() => handleBlur("economicSector")}
-                className={`w-full p-2 border rounded-md ${
+                className={`w-full p-3 border rounded-lg ${
                   errors.economicSector && touched.economicSector
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                     : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
@@ -222,7 +265,9 @@ export default function BasicInfoPage() {
                 ))}
               </select>
               {errors.economicSector && touched.economicSector && (
-                <p className="mt-1 text-sm text-red-600">{errors.economicSector}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.economicSector}
+                </p>
               )}
             </div>
           </div>
@@ -230,10 +275,12 @@ export default function BasicInfoPage() {
           {/* Required fields note */}
           <div className="mt-4 p-3 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-700">
-              <span className="font-medium">Note:</span> Fields marked with * are required.
+              <span className="font-medium">Note:</span> Fields marked with * are
+              required.
             </p>
           </div>
 
+          {/* Actions */}
           <div className="flex justify-between mt-8">
             <button
               onClick={goBack}
@@ -244,7 +291,10 @@ export default function BasicInfoPage() {
             <button
               onClick={saveAndContinue}
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={Object.values(errors).some(error => error) && Object.keys(touched).length > 0}
+              disabled={
+                Object.values(errors).some((error) => error) &&
+                Object.keys(touched).length > 0
+              }
             >
               Next: Business Information
             </button>

@@ -203,25 +203,73 @@ export default function DocumentsPage() {
   };
 
   const goBack = () => {
-    window.location.href = '/dashboard/shareholders';
+    window.location.href = '/dashboard/loan-details';
   };
 
   if (!customer) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">Required Documents</h1>
+        {/* Stepper Header */}
+        <div className="flex items-center justify-center mb-10">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center opacity-40">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold">
+                1
+              </div>
+              <span className="ml-2 text-gray-500">Search Customer</span>
+            </div>
+            <div className="w-12 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center opacity-40">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold">
+                2
+              </div>
+              <span className="ml-2 text-gray-500">Basic Info</span>
+            </div>
+            <div className="w-12 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center opacity-40">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold">
+                3
+              </div>
+              <span className="ml-2 text-gray-500">Business Info</span>
+            </div>
+            <div className="w-12 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center opacity-40">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold">
+                4
+              </div>
+              <span className="ml-2 text-gray-500">Loan Details</span>
+            </div>
+            <div className="w-12 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
+                5
+              </div>
+              <span className="ml-2 font-semibold text-blue-700">Documents</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Card */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">
+              Loan Origination – Step 5
+            </h1>
+            <p className="text-gray-600">
+              Upload all required documents to continue
+            </p>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Left Column */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Credit Profile Document */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-100">
+                <h3 className="text-lg font-medium mb-3">
                   Credit Profile Document *
-                </label>
+                </h3>
                 <input
                   type="file"
                   onChange={(e) => handleDocumentUpload(e, 'creditProfile')}
@@ -245,10 +293,10 @@ export default function DocumentsPage() {
               </div>
 
               {/* Transaction Profile Document */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-100">
+                <h3 className="text-lg font-medium mb-3">
                   Transaction Profile Document *
-                </label>
+                </h3>
                 <input
                   type="file"
                   onChange={(e) => handleDocumentUpload(e, 'transactionProfile')}
@@ -272,10 +320,10 @@ export default function DocumentsPage() {
               </div>
 
               {/* National ID Document */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-100">
+                <h3 className="text-lg font-medium mb-3">
                   National ID Document *
-                </label>
+                </h3>
                 <input
                   type="file"
                   onChange={(e) => handleDocumentUpload(e, 'nationalid')}
@@ -300,12 +348,12 @@ export default function DocumentsPage() {
             </div>
 
             {/* Right Column */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Collateral Profile Document */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-100">
+                <h3 className="text-lg font-medium mb-3">
                   Collateral Profile Document *
-                </label>
+                </h3>
                 <input
                   type="file"
                   onChange={(e) => handleDocumentUpload(e, 'collateralProfile')}
@@ -329,10 +377,10 @@ export default function DocumentsPage() {
               </div>
 
               {/* Financial Profile Document */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-100">
+                <h3 className="text-lg font-medium mb-3">
                   Financial Profile Document *
-                </label>
+                </h3>
                 <input
                   type="file"
                   onChange={(e) => handleDocumentUpload(e, 'financialProfile')}
@@ -356,10 +404,10 @@ export default function DocumentsPage() {
               </div>
 
               {/* Agreement Form */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-100">
+                <h3 className="text-lg font-medium mb-3">
                   Agreement Form *
-                </label>
+                </h3>
                 <input
                   type="file"
                   onChange={(e) => handleDocumentUpload(e, 'agreementForm')}
@@ -392,6 +440,7 @@ export default function DocumentsPage() {
             </p>
           </div>
 
+          {/* Actions */}
           <div className="flex justify-between mt-8">
             <button
               onClick={goBack}

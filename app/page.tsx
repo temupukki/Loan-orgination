@@ -1,93 +1,190 @@
 "use client";
 
-import { useState } from "react";
-import { Customer } from "./types/loan";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
+import { Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { SigninSchema } from "@/lib/auth-schema";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function HomePage() {
-  const [customerNumber, setCustomerNumber] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+type SigninFormData = z.infer<typeof SigninSchema>;
 
-  const fetchCustomer = async () => {
-    if (!customerNumber.trim()) {
-      setError("Please enter a customer number");
-      return;
-    }
+export default function BankSignin() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+  const router = useRouter();
 
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch(
-        `http://localhost:3000/api/loan?customerNumber=${customerNumber}`
-      );
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to fetch");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SigninFormData>({
+    resolver: zodResolver(SigninSchema),
+    defaultValues: {
+      lastName: "",
+      password: "",
+    },
+  });
+
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        const { data: session } = await authClient.getSession()
+        if (session) {
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
+      } finally {
+        setIsCheckingSession(false);
       }
-      const customer: Customer = await res.json();
-      
-      // Store customer data and navigate to basic info
-      localStorage.setItem('currentCustomer', JSON.stringify(customer));
-      // Use window.location for navigation instead of useRouter
-      window.location.href = '/basic-info';
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
     }
-  };
+    checkSession();
+  }, [router]);
+
+  async function onSubmit(values: SigninFormData) {
+    const { lastName, password } = values;
+
+    try {
+      await authClient.signIn.email(
+        {
+          email: `${lastName}@dashenbank.com`,
+          password,
+          callbackURL: "/dashboard",
+        },
+        {
+          onRequest: () => {
+            toast.info("Authenticating...", {
+              description: "Please wait while we sign you in",
+            });
+          },
+          onSuccess: () => {
+            toast.success("Welcome!", {
+              description: "You've been signed in successfully",
+            });
+            router.push("/dashboard");
+          },
+          onError: (ctx) => {
+            toast.error("Sign in failed", {
+              description:
+                ctx.error.message || "Please check your credentials and try again",
+            });
+          },
+        }
+      );
+    } catch (err) {
+      toast.error("An unexpected error occurred", {
+        description: "Please try again later",
+      });
+      console.error("Sign-in error →", err);
+    }
+  }
+
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Loan Origination System
-          </h1>
-          <p className="text-gray-600">
-            Start by searching for a customer
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 p-4 sm:p-6">
+      <title>Sign In </title>
+      <Card className="w-full max-w-md p-6 sm:p-8 bg-white rounded-2xl shadow-lg border border-blue-200">
+        <CardHeader className="text-center space-y-2 mb-4 sm:mb-6">
+          <CardTitle className="text-3xl sm:text-4xl font-extrabold text-blue-700">
+          Sign in
+          </CardTitle>
+          <CardDescription className="text-blue-500 text-base sm:text-lg">
+            Sign in to your account
+          </CardDescription>
+        </CardHeader>
 
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Customer Number
-            </label>
-            <input
-              type="text"
-              placeholder="Enter customer number"
-              value={customerNumber}
-              onChange={(e) => setCustomerNumber(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") fetchCustomer();
-              }}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+            {/* Bank Code Input */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="bankCode"
+                className="font-semibold text-blue-700 text-sm sm:text-base"
+              >
+                Enter lastname
+              </Label>
+              <Input
+                id="lastName"
+                {...register("lastName")}
+                placeholder="Enter your last name"
+                className="placeholder-blue-300 text-blue-700 focus:ring-2 focus:ring-blue-400"
+              />
+              {errors.lastName && (
+                <p className="text-xs sm:text-sm text-blue-600 mt-1">{errors.lastName.message}</p>
+              )}
+            </div>
 
-          {error && (
-            <div className="mb-4 text-red-600 text-sm">{error}</div>
-          )}
+            {/* Password Input */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label
+                  htmlFor="password"
+                  className="font-semibold text-blue-700 text-sm sm:text-base"
+                >
+                  Password
+                </Label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-xs sm:text-sm text-blue-600 hover:text-blue-800"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                {...register("password")}
+                placeholder="Enter your password"
+                className="placeholder-blue-300 text-blue-700 focus:ring-2 focus:ring-blue-400"
+              />
+              {errors.password && (
+                <p className="text-xs sm:text-sm text-blue-600 mt-1">{errors.password.message}</p>
+              )}
+            </div>
 
-          <button
-            onClick={fetchCustomer}
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50"
-          >
-            {loading ? "Searching..." : "Search Customer"}
-          </button>
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 font-semibold text-white rounded-lg shadow-sm active:scale-[0.98] transition-transform"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="animate-spin h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign In"
+              )}
+            </Button>
+          </form>
+        </CardContent>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Don't have a customer number?{" "}
-              <a href="/new-customer" className="text-blue-600 hover:underline">
-                Create new customer
-              </a>
-            </p>
-          </div>
-        </div>
-      </div>
+      </Card>
     </div>
   );
 }
