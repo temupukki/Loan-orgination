@@ -11,6 +11,7 @@ import { toast, Toaster } from 'sonner';
 
 // Import Supabase client from your library
 import { supabase } from '@/lib/supabase';
+import { SaveButton } from '@/components/SaveButton';
 
 // Define the interface for the LoanAnalysis model
 interface LoanAnalysis {
@@ -25,6 +26,9 @@ interface LoanAnalysis {
   analystConclusion?: string;
   analystRecommendation?: string;
   rmRecommendation?: string;
+ 
+ 
+
 }
 
 // Update the Customer interface to include the LoanAnalysis relation
@@ -174,29 +178,7 @@ export default function PendingCustomersPage() {
     }
   };
 
-  const handleSaveAnalysis = async (refNumber: string) => {
-    const analysisPayload = analysisData[refNumber];
-    
-    try {
-      const response = await fetch('/api/save-analysis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          applicationReferenceNumber: refNumber,
-          ...analysisPayload,
-        }),
-      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save analysis data.');
-      }
-      
-      toast.success("Analysis data saved successfully!");
-    } catch (err: any) {
-      toast.error(err.message || 'An unexpected error occurred.');
-    }
-  };
 
   const formatData = (value: string | number | undefined | null) => {
     if (value === undefined || value === null || value === "") {
@@ -397,10 +379,17 @@ export default function PendingCustomersPage() {
               </CardContent>
               <CardFooter className="flex justify-between items-center">
               
-                <Button onClick={() => handleSaveAnalysis(customer.applicationReferenceNumber)}>
-                  Save Analysis
-                </Button>
-              </CardFooter>
+            <SaveButton
+  customerId={customer.id}
+  refNumber={customer.applicationReferenceNumber}   // required for saveAnalysis
+  analysisData={analysisData}                       // required for saveAnalysis
+  onSuccess={() => {
+    console.log("Analysis saved successfully");
+  }}
+  actionType="saveAnalysis"
+/>
+        
+                   </CardFooter>
 
             </Card>
           ))}

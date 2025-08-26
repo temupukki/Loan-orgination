@@ -68,6 +68,8 @@ enum ApplicationStatus {
   REJECTED // Application rejected
   MORE_INFO // Requires additional information from customer
   CONDITIONAL // Approved with conditions
+  SUPERVISED
+  COMMITTE_REVIEW
   WITHDRAWN // Customer withdrew application
 }
 
@@ -147,6 +149,13 @@ model LoanAnalysis {
   analystConclusion    String?          @map("analyst_conclusion")
   analystRecommendation String?          @map("analyst_recommendation")
   rmRecommendation String?       @map("rm_reccommendation")
+  pestelanalysisScore Int? 
+  swotanalysisScore Int? 
+   riskassesmentScore Int? 
+  esgassesmentScore Int? 
+  financialneedScore Int? 
+   overallScore Float?  
+  reviewNotes String? 
 
 }
 enum Userrole {

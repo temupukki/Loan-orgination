@@ -8,14 +8,13 @@ export async function POST(req: NextRequest) {
     const {
       applicationReferenceNumber,
       
-      pestelAnalysisUrl,
-      swotAnalysisUrl,
-      riskAssessmentUrl,
-      esgAssessmentUrl,
-      financialNeedUrl,
-      analystConclusion,
-      analystRecommendation,
-      rmRecommendation,
+      pestelanalysisScore,
+        swotanalysisScore,
+        riskassesmentScore,
+        esgassesmentScore,
+        financialneedScore,
+        overallScore,
+        reviewNotes,
     } = body;
 
     if (!applicationReferenceNumber) {
@@ -41,25 +40,23 @@ export async function POST(req: NextRequest) {
         applicationReferenceNumber,
         
        
-        pestelAnalysisUrl,
-        swotAnalysisUrl,
-        riskAssessmentUrl,
-        esgAssessmentUrl,
-        financialNeedUrl,
-        analystConclusion,
-        analystRecommendation,
-        rmRecommendation,
+        pestelanalysisScore,
+        swotanalysisScore,
+        riskassesmentScore,
+        esgassesmentScore,
+        financialneedScore,
+        overallScore,
+        reviewNotes,
       },
       update: {
    
-        pestelAnalysisUrl,
-        swotAnalysisUrl,
-        riskAssessmentUrl,
-        esgAssessmentUrl,
-        financialNeedUrl,
-        analystConclusion,
-        analystRecommendation,
-        rmRecommendation,
+        pestelanalysisScore,
+        swotanalysisScore,
+        riskassesmentScore,
+        esgassesmentScore,
+        financialneedScore,
+        overallScore,
+        reviewNotes,
       },
     });
 

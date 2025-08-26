@@ -6,7 +6,6 @@ import { headers } from "next/headers";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/dashboard/document", label: "View Document" },
   
 ];
 
@@ -71,6 +70,12 @@ export default async function Navbar() {
                 className="text-white font-medium hover:bg-blue-600 px-3 py-2 rounded-lg transition-colors duration-200"
               >
                 Analysis
+              </Link>
+                 <Link
+                href="/dashboard/revised"
+                className="text-white font-medium hover:bg-blue-600 px-3 py-2 rounded-lg transition-colors duration-200"
+              >
+                Revised Applications
               </Link>
              
            

@@ -20,8 +20,11 @@ export async function GET(request: NextRequest) {
       case "UNDER_REVIEW":
         status = ApplicationStatus.UNDER_REVIEW;
         break;
-      case "REJECTED":
-        status = ApplicationStatus.REJECTED;
+      case "CONDITIONAL":
+        status = ApplicationStatus.CONDITIONAL;
+        break;
+      case "SUPERVISED":
+        status = ApplicationStatus.SUPERVISED;
         break;
       default:
         return NextResponse.json({ error: "Invalid status" }, { status: 400 });
