@@ -26,6 +26,9 @@ export async function GET(request: NextRequest) {
       case "SUPERVISED":
         status = ApplicationStatus.SUPERVISED;
         break;
+      case "COMMITTE_REVIEW":
+        status = ApplicationStatus.COMMITTE_REVIEW;
+        break;
       default:
         return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }

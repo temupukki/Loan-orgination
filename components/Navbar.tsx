@@ -50,12 +50,19 @@ export default async function Navbar() {
                 href="/dashboard/fetch"
                 className="text-white font-medium hover:bg-blue-600 px-3 py-2 rounded-lg transition-colors duration-200"
               >
-                Start loan Application
+                Start
+              </Link>
+               <Link
+                href="/dashboard/manage"
+                className="text-white font-medium hover:bg-blue-600 px-3 py-2 rounded-lg transition-colors duration-200"
+              >
+                Manage
               </Link>
              
            
             </>
           )}
+          
              
           {userRole === "CREDIT_ANALYST" && (
             <>
@@ -90,6 +97,19 @@ export default async function Navbar() {
                 className="text-white font-medium hover:bg-blue-600 px-3 py-2 rounded-lg transition-colors duration-200"
               >
               Review Credit Analysis
+              </Link>
+             
+           
+            </>
+          )}
+                    
+          {userRole === "COMMITTE_MEMBER" && (
+            <>
+              <Link
+                href="/dashboard/committe"
+                className="text-white font-medium hover:bg-blue-600 px-3 py-2 rounded-lg transition-colors duration-200"
+              >
+              Review Loan Application
               </Link>
              
            

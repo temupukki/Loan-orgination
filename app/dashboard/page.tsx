@@ -222,23 +222,19 @@ export default function Dashboard() {
 
       {/* Admin-specific features */}
       {userRole === "ADMIN" && (
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="bg-blue-50 border-blue-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Admin Tools</CardTitle>
               <Shield className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <Link href="/admin/users">
+              <Link href="/dashboard/user">
                 <Button variant="outline" size="sm" className="w-full mb-2">
                   User Management
                 </Button>
               </Link>
-              <Link href="/admin/settings">
-                <Button variant="outline" size="sm" className="w-full">
-                  System Settings
-                </Button>
-              </Link>
+              
             </CardContent>
           </Card>
 
@@ -248,37 +244,16 @@ export default function Dashboard() {
               <UserCheck className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <Link href="/admin/register-employee">
+              <Link href="/dashboard/new">
                 <Button variant="outline" size="sm" className="w-full mb-2">
                   Register Employee
                 </Button>
               </Link>
-              <Link href="/admin/audit-logs">
-                <Button variant="outline" size="sm" className="w-full">
-                  View Audit Log
-                </Button>
-              </Link>
+             
             </CardContent>
           </Card>
 
-          <Card className="bg-purple-50 border-purple-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Reports</CardTitle>
-              <BarChart3 className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <Link href="/admin/reports">
-                <Button variant="outline" size="sm" className="w-full mb-2">
-                  Generate Reports
-                </Button>
-              </Link>
-              <Link href="/admin/analytics">
-                <Button variant="outline" size="sm" className="w-full">
-                  System Analytics
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+        
         </div>
       )}
 

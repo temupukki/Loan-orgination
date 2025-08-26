@@ -59,6 +59,7 @@ model Customer {
 
   @@map("customers")
   LoanAnalysis LoanAnalysis[]
+  Decision Decision[]
 }
 
 enum ApplicationStatus {
@@ -158,6 +159,25 @@ model LoanAnalysis {
   reviewNotes String? 
 
 }
+model Decision {
+  id          String   @id @default(cuid())
+  customerId  String
+  applicationReferenceNumber String            @unique @map("application_reference_number")
+
+
+  customer             Customer @relation(fields: [applicationReferenceNumber], references: [applicationReferenceNumber])
+  decision    String
+  decisionReason String?
+ 
+  decisionDate DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("decisions")
+}
+
+
+
 enum Userrole {
   ADMIN
   RELATIONSHIP_MANAGER
