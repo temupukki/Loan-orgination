@@ -72,8 +72,10 @@ enum ApplicationStatus {
   MORE_INFO // Requires additional information from customer
   CONDITIONAL // Approved with conditions
   SUPERVISOR_REVIEWING
+  FINAL_ANALYSIS
   SUPERVISED
   COMMITTE_REVIEW
+  COMMITTE_REVERSED
   WITHDRAWN // Customer withdrew application
 }
 

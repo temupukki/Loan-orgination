@@ -1,25 +1,40 @@
-// components/CreditEdit.tsx
+// components/CreditEdit
+// .tsx
 'use client';
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
+import { authClient } from "@/lib/auth-client" // import the auth client
+ 
+const { data: session, error } = await authClient.getSession()
 
 interface CreditEditProps {
   customerId: string;
   onSuccess: () => void;
 }
 
-export function CreditEdit({ customerId, onSuccess }: CreditEditProps) {
+export function CreditEdit
+({ customerId, onSuccess }: CreditEditProps) {
   const [isLoading, setIsLoading] = useState(false);
 
+  const userId= session?.user.id;
+
   const handleTake = async () => {
+    if (!userId) {
+      toast.error("You must be logged in to take an application.");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/customer/${customerId}/take`, {
+      const response = await fetch(`/api/customer/${customerId}/final`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newStatus: "UNDER_REVIEW" }),
+        body: JSON.stringify({ 
+          newStatus: "FINAL_ANALYSIS",
+          creditAnalystID: userId   // <-- pass session user id here
+        }),
       });
 
       if (!response.ok) {
@@ -38,7 +53,7 @@ export function CreditEdit({ customerId, onSuccess }: CreditEditProps) {
 
   return (
     <Button onClick={handleTake} disabled={isLoading}>
-      {isLoading ? "Updating..." : "Edit Credit"}
+      {isLoading ? "Updating..." : "Edit Analysis"}
     </Button>
   );
 }
