@@ -257,16 +257,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Search Bar */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder={`Search ${userRole === "ADMIN" ? "users" : "clients"}, applications, or loans...`}
-            className="pl-10"
-          />
-        </div>
-      </div>
+   
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

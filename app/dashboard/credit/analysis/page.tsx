@@ -117,7 +117,7 @@ export default function PendingCustomersPage() {
   useEffect(() => {
     const fetchPendingCustomers = async () => {
       try {
-        const response = await fetch(`/api/get?status=UNDER_REVIEW`);
+        const response = await fetch(`/api/credit?status=UNDER_REVIEW`);
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to fetch pending customers');

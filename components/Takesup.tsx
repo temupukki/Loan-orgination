@@ -1,4 +1,4 @@
-// components/TakeButton.tsx
+// components/Takesup.tsx
 'use client';
 
 import { useState } from 'react';
@@ -8,12 +8,12 @@ import { authClient } from "@/lib/auth-client" // import the auth client
  
 const { data: session, error } = await authClient.getSession()
 
-interface TakeButtonProps {
+interface TakesupProps {
   customerId: string;
   onSuccess: () => void;
 }
 
-export function TakeButton({ customerId, onSuccess }: TakeButtonProps) {
+export function Takesup({ customerId, onSuccess }: TakesupProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const userId= session?.user.id;
@@ -26,12 +26,12 @@ export function TakeButton({ customerId, onSuccess }: TakeButtonProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/customer/${customerId}/poka`, {
+      const response = await fetch(`/api/customer/${customerId}/oka`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          newStatus: "UNDER_REVIEW",
-          creditAnalystID: userId   // <-- pass session user id here
+          newStatus: "SUPERVISOR_REVIEWING",
+          supervisorID: userId   // <-- pass session user id here
         }),
       });
 

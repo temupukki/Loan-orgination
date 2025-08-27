@@ -53,6 +53,8 @@ model Customer {
   transactionProfileUrl      String
   collateralProfileUrl       String
   financialProfileUrl        String
+  creditAnalystID            String?
+  supervisorID                String?
   applicationStatus          ApplicationStatus @default(PENDING)
   createdAt                  DateTime          @default(now())
   updatedAt                  DateTime          @updatedAt
@@ -69,6 +71,7 @@ enum ApplicationStatus {
   REJECTED // Application rejected
   MORE_INFO // Requires additional information from customer
   CONDITIONAL // Approved with conditions
+  SUPERVISOR_REVIEWING
   SUPERVISED
   COMMITTE_REVIEW
   WITHDRAWN // Customer withdrew application
