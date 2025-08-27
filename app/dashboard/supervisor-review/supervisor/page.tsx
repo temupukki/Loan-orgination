@@ -5,8 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast, Toaster } from 'sonner';
-import { CreditEdit } from '@/components/CreditEdit';
-import { CreditFinish } from '@/components/CreditFinish';
+import { SaveReviewButton } from '@/components/Savereview';
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   RefreshCw,
@@ -28,8 +27,6 @@ import {
   Star,
   Percent,
   FileEdit,
-  Check,
-  Clock,
 } from 'lucide-react';
 
 // Define the interface for the LoanAnalysis model
@@ -112,6 +109,7 @@ export default function PendingCustomersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loanAnalyses, setLoanAnalyses] = useState<Record<string, LoanAnalysis>>({});
+  const [reviewData, setReviewData] = useState<Record<string, Partial<LoanAnalysis>>>({});
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -121,7 +119,7 @@ export default function PendingCustomersPage() {
   const fetchPendingCustomers = async () => {
     try {
       setRefreshing(true);
-      const response = await fetch(`/api/revised?status=SUPERVISED`);
+      const response = await fetch(`/api/supervisor?status=SUPERVISOR_REVIEWING`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch pending customers');
@@ -129,6 +127,7 @@ export default function PendingCustomersPage() {
       const data = await response.json();
       setCustomers(data);
       
+      // Fetch loan analyses for all customers
       await fetchAllLoanAnalyses(data);
       setError(null);
     } catch (err: any) {
@@ -140,6 +139,7 @@ export default function PendingCustomersPage() {
     }
   };
 
+  // Function to fetch loan analysis for a specific application reference number
   const fetchLoanAnalysis = async (applicationReferenceNumber: string) => {
     try {
       const response = await fetch(`/api/loan-analysis/${applicationReferenceNumber}`);
@@ -152,21 +152,81 @@ export default function PendingCustomersPage() {
     }
   };
 
+  // Function to fetch all loan analyses
   const fetchAllLoanAnalyses = async (customersData: Customer[]) => {
     try {
       const analyses: Record<string, LoanAnalysis> = {};
+      const reviewDataTemp: Record<string, Partial<LoanAnalysis>> = {};
       
+      // Fetch analyses for each customer
       for (const customer of customersData) {
         const analysis = await fetchLoanAnalysis(customer.applicationReferenceNumber);
         if (analysis) {
           analyses[customer.applicationReferenceNumber] = analysis;
+          // Initialize review data with existing analysis values
+          reviewDataTemp[customer.applicationReferenceNumber] = {
+            pestelanalysisScore: analysis.pestelanalysisScore,
+            swotanalysisScore: analysis.swotanalysisScore,
+            riskassesmentScore: analysis.riskassesmentScore,
+            esgassesmentScore: analysis.esgassesmentScore,
+            financialneedScore: analysis.financialneedScore,
+            overallScore: analysis.overallScore,
+            reviewNotes: analysis.reviewNotes || '',
+           
+          };
+        } else {
+          // Initialize empty review data
+          reviewDataTemp[customer.applicationReferenceNumber] = {
+            pestelanalysisScore: undefined,
+            swotanalysisScore: undefined,
+            riskassesmentScore: undefined,
+            esgassesmentScore: undefined,
+            financialneedScore: undefined,
+            overallScore: undefined,
+            reviewNotes: '',
+            
+          };
         }
       }
       
       setLoanAnalyses(analyses);
+      setReviewData(reviewDataTemp);
     } catch (err: any) {
       console.error('Error fetching loan analyses:', err);
     }
+  };
+
+  const handleReviewChange = (refNumber: string, field: keyof LoanAnalysis, value: string | number) => {
+    setReviewData(prev => {
+      const newState = { ...prev[refNumber] };
+      const isScoreField = ['pestelanalysisScore', 'swotanalysisScore', 'riskassesmentScore', 'esgassesmentScore', 'financialneedScore'].includes(field);
+
+      if (isScoreField) {
+        let numericValue = typeof value === 'string' ? parseInt(value) : value;
+        if (isNaN(numericValue) || numericValue < 0) {
+          newState[field] = undefined;
+        } else if (numericValue > 100) {
+          newState[field] = 100;
+        } else {
+          newState[field] = numericValue;
+        }
+
+        // Auto-calculate overall score
+        const pestelanalysisScore = newState.pestelanalysisScore || 0;
+        const swotanalysisScore = newState.swotanalysisScore || 0;
+        const riskassesmentScore = newState.riskassesmentScore || 0;
+        const esgassesmentScore = newState.esgassesmentScore || 0;
+        const financialneedScore = newState.financialneedScore || 0;
+        newState.overallScore = (pestelanalysisScore + swotanalysisScore + riskassesmentScore + esgassesmentScore + financialneedScore) / 5;
+      } else {
+        newState[field] = value;
+      }
+
+      return {
+        ...prev,
+        [refNumber]: newState,
+      };
+    });
   };
 
   const handleRefreshAnalyses = async () => {
@@ -209,22 +269,11 @@ export default function PendingCustomersPage() {
     return 'text-red-600 font-bold';
   };
 
-  const getScoreBadge = (score: number | undefined) => {
-    if (score === undefined) {
-      return <Badge variant="outline" className="bg-gray-100 text-gray-700">N/A</Badge>;
-    }
-    if (score >= 80) return <Badge className="bg-green-100 text-green-800 border-green-200">{score}</Badge>;
-    if (score >= 60) return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">{score}</Badge>;
-    return <Badge className="bg-red-100 text-red-800 border-red-200">{score}</Badge>;
-  };
-
-  const getOverallScoreBadge = (score: number | undefined) => {
-    if (score === undefined) {
-      return <Badge variant="outline" className="bg-gray-100 text-gray-700 text-lg px-4 py-2 border-gray-300">Overall: N/A</Badge>;
-    }
-    if (score >= 80) return <Badge className="bg-green-100 text-green-800 text-lg px-4 py-2 border-green-300">Overall: {score.toFixed(1)}</Badge>;
-    if (score >= 60) return <Badge className="bg-yellow-100 text-yellow-800 text-lg px-4 py-2 border-yellow-300">Overall: {score.toFixed(1)}</Badge>;
-    return <Badge className="bg-red-100 text-red-800 text-lg px-4 py-2 border-red-300">Overall: {score.toFixed(1)}</Badge>;
+  const getScoreBgColor = (score: number | undefined) => {
+    if (score === undefined) return 'bg-gray-100 text-gray-800';
+    if (score >= 80) return 'bg-green-100 text-green-800';
+    if (score >= 60) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-red-100 text-red-800';
   };
 
   const CardSkeleton = () => (
@@ -273,10 +322,10 @@ export default function PendingCustomersPage() {
     <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col items-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-2">
-          Supervised Applications 📋
+          Supervisor Review Dashboard
         </h1>
         <p className="text-gray-600 text-center max-w-2xl">
-          Review and monitor customer loan applications that have been supervised.
+          Review and score loan applications. Provide your assessment and final decision.
         </p>
         
         <div className="flex gap-4 mt-6">
@@ -289,8 +338,7 @@ export default function PendingCustomersPage() {
             <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
             {refreshing ? "Refreshing..." : "Refresh Applications"}
           </Button>
-       
-      
+        
         </div>
       </div>
 
@@ -301,7 +349,7 @@ export default function PendingCustomersPage() {
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">All Clear!</h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
-           No supervised applications at the moment. Check back later for new submissions.
+            No applications pending supervisor review. Check back later for new submissions.
           </p>
           <Button
             onClick={fetchPendingCustomers}
@@ -321,7 +369,7 @@ export default function PendingCustomersPage() {
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">All Clear!</h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
-            No supervised applications at the moment. Check back later for new submissions.
+            No applications pending supervisor review. Check back later for new submissions.
           </p>
           <Button
             onClick={fetchPendingCustomers}
@@ -337,6 +385,7 @@ export default function PendingCustomersPage() {
         <div className="grid grid-cols-1 gap-6">
           {customers.map((customer) => {
             const analysis = loanAnalyses[customer.applicationReferenceNumber];
+            const review = reviewData[customer.applicationReferenceNumber] || {};
             
             return (
               <Card key={customer.id} className="max-w-6xl mx-auto overflow-hidden border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -602,90 +651,153 @@ export default function PendingCustomersPage() {
                             <span className="font-medium text-gray-800">{formatData(analysis.analystRecommendation)}</span>
                           </div>
                         </div>
-                        <div className="col-span-2">
-                          <div className="flex flex-col text-sm">
-                            <span className="text-gray-600 mb-1">Supervisor Comment:</span>
-                            <span className="font-medium text-gray-800">{formatData(analysis.reviewNotes)}</span>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Review Scores Section */}
-                  {analysis && (
-                    <div className="space-y-4 md:col-span-2">
-                      <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
-                        <ClipboardCheck size={18} className="text-blue-600" />
-                        Review Scores
-                      </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        {[
-                          { label: 'PESTEL', score: analysis.pestelanalysisScore },
-                          { label: 'SWOT', score: analysis.swotanalysisScore },
-                          { label: 'Risk', score: analysis.riskassesmentScore },
-                          { label: 'ESG', score: analysis.esgassesmentScore },
-                          { label: 'Financial Need', score: analysis.financialneedScore },
-                        ].map((item, index) => (
-                          <div key={index} className="text-center p-3 bg-white rounded-lg shadow-sm">
-                            <p className="text-sm font-medium text-gray-700 mb-2">{item.label}</p>
-                            {getScoreBadge(item.score)}
-                          </div>
-                        ))}
+                  {/* Review Section */}
+                  <div className="space-y-4 md:col-span-2">
+                    <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                      <ClipboardCheck size={18} className="text-blue-600" />
+                      Review & Scoring
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                          <Percent size={14} />
+                          PESTEL Score
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          placeholder="0-100"
+                          value={review.pestelanalysisScore ?? ''}
+                          onChange={(e) => handleReviewChange(customer.applicationReferenceNumber, 'pestelanalysisScore', parseInt(e.target.value))}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        />
                       </div>
-                      
-                      <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        {getOverallScoreBadge(analysis.overallScore)}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                          <Percent size={14} />
+                          SWOT Score
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          placeholder="0-100"
+                          value={review.swotanalysisScore ?? ''}
+                          onChange={(e) => handleReviewChange(customer.applicationReferenceNumber, 'swotanalysisScore', parseInt(e.target.value))}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                          <Percent size={14} />
+                          Risk Score
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          placeholder="0-100"
+                          value={review.riskassesmentScore ?? ''}
+                          onChange={(e) => handleReviewChange(customer.applicationReferenceNumber, 'riskassesmentScore', parseInt(e.target.value))}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                          <Percent size={14} />
+                          ESG Score
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          placeholder="0-100"
+                          value={review.esgassesmentScore ?? ''}
+                          onChange={(e) => handleReviewChange(customer.applicationReferenceNumber, 'esgassesmentScore', parseInt(e.target.value))}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                          <Percent size={14} />
+                          Financial Need
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          placeholder="0-100"
+                          value={review.financialneedScore ?? ''}
+                          onChange={(e) => handleReviewChange(customer.applicationReferenceNumber, 'financialneedScore', parseInt(e.target.value))}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2 lg:col-span-5">
+                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                          <Star size={14} />
+                          Overall Score
+                        </label>
+                        <div className={`w-full p-2 border border-gray-300 rounded-md ${getScoreBgColor(review.overallScore)} text-center font-bold`}>
+                          {review.overallScore !== undefined ? `${review.overallScore.toFixed(1)} / 100` : 'N/A'}
+                        </div>
                       </div>
                     </div>
-                  )}
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        <FileEdit size={14} />
+                        Review Notes
+                      </label>
+                      <textarea
+                        placeholder="Enter your review notes here..."
+                        value={review.reviewNotes || ''}
+                        onChange={(e) => handleReviewChange(customer.applicationReferenceNumber, 'reviewNotes', e.target.value)}
+                        rows={3}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div className="flex justify-end">
+                      <SaveReviewButton
+                        customerId={customer.id}
+                        refNumber={customer.applicationReferenceNumber}
+                        reviewData={reviewData}
+                        onSuccess={() => {
+                          console.log("Analysis saved successfully");
+                          toast.success("Review saved successfully!");
+                          fetchPendingCustomers(); 
+                        }}
+                        
+                      />
+                    </div>
+                  </div>
                 </CardContent>
                 
                 <CardFooter className="bg-gray-50 border-t border-gray-200 flex justify-between items-center py-4 px-6">
-                  <div className="flex gap-2">
-                    <CreditEdit
-                      customerId={customer.id} 
-                      onSuccess={() => {
-                        console.log("Edit action completed successfully");
-                        toast.success("Application sent for revision!");
-                        fetchPendingCustomers(); 
-                      }} 
-                    />
-                    <CreditFinish
-                      customerId={customer.id} 
-                      onSuccess={() => {
-                        console.log("Finish action completed successfully");
-                        toast.success("Application finalized successfully!");
-                        fetchPendingCustomers(); 
-                      }} 
-                    />
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <Button 
-                      onClick={() => fetchLoanAnalysis(customer.applicationReferenceNumber).then(() => {
-                        toast.success('Analysis refreshed!');
-                      })}
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                    >
-                      <RefreshCw size={14} />
-                      Refresh Analysis
-                    </Button>
-                    
-                    {analysis ? (
-                      <Badge className="bg-green-100 text-green-800 border-green-200 gap-1">
-                        <Check size={14} />
-                        Analysis Complete
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300 gap-1">
-                        <Clock size={14} />
-                        Pending Analysis
-                      </Badge>
-                    )}
-                  </div>
+                  <Button 
+                    onClick={() => fetchLoanAnalysis(customer.applicationReferenceNumber).then(() => {
+                      toast.success('Analysis refreshed!');
+                    })}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <RefreshCw size={16} />
+                    Refresh Analysis
+                  </Button>
+                  {analysis ? (
+                    <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+                      Analysis Available
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="bg-gray-100 text-gray-800 border-gray-200">
+                      No Analysis
+                    </Badge>
+                  )}
                 </CardFooter>
               </Card>
             );

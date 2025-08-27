@@ -1,12 +1,34 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { toast, Toaster } from 'sonner';
-import { Takesup } from '@/components/Takesup';
+import { toast, Toaster } from "sonner";
+import { Takesup } from "@/components/Takesup";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  RefreshCw,
+  FileText,
+  User,
+  MapPin,
+  Briefcase,
+  DollarSign,
+  Calendar,
+  Phone,
+  Mail,
+  IdCard,
+  Building,
+  CheckCircle2,
+  Info,
+} from "lucide-react";
 
 // Define the interface for the LoanAnalysis model
 interface LoanAnalysis {
@@ -76,37 +98,45 @@ interface Customer {
 
 export default function PendingCustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loanAnalyses, setLoanAnalyses] = useState<Record<string, LoanAnalysis>>({});
+  const [loanAnalyses, setLoanAnalyses] = useState<
+    Record<string, LoanAnalysis>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    const fetchPendingCustomers = async () => {
-      try {
-        const response = await fetch(`/api/get?status=CONDITIONAL`);
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch pending customers');
-        }
-        const data = await response.json();
-        setCustomers(data);
-
-        // fetch loan analyses for all customers
-        await fetchAllLoanAnalyses(data);
-      } catch (err: any) {
-        setError(err.message);
-        setCustomers([]);
-      } finally {
-        setIsLoading(false);
+  const fetchPendingCustomers = async () => {
+    try {
+      setRefreshing(true);
+      const response = await fetch(`/api/get?status=CONDITIONAL`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || "Failed to fetch available customers"
+        );
       }
-    };
+      const data = await response.json();
+      setCustomers(data);
 
-    fetchPendingCustomers();
-  }, []);
+      // fetch loan analyses for all customers
+      await fetchAllLoanAnalyses(data);
+      setError(null);
+    } catch (err: any) {
+      setError(
+        "We're having trouble connecting to the server. Please try again in a moment."
+      );
+      setCustomers([]);
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   const fetchLoanAnalysis = async (applicationReferenceNumber: string) => {
     try {
-      const response = await fetch(`/api/loan-analysis/${applicationReferenceNumber}`);
+      const response = await fetch(
+        `/api/loan-analysis/${applicationReferenceNumber}`
+      );
       if (!response.ok) {
         return null;
       }
@@ -119,7 +149,9 @@ export default function PendingCustomersPage() {
   const fetchAllLoanAnalyses = async (customersData: Customer[]) => {
     const analyses: Record<string, LoanAnalysis> = {};
     for (const customer of customersData) {
-      const analysis = await fetchLoanAnalysis(customer.applicationReferenceNumber);
+      const analysis = await fetchLoanAnalysis(
+        customer.applicationReferenceNumber
+      );
       if (analysis) {
         analyses[customer.applicationReferenceNumber] = analysis;
       }
@@ -127,35 +159,144 @@ export default function PendingCustomersPage() {
     setLoanAnalyses(analyses);
   };
 
+  useEffect(() => {
+    fetchPendingCustomers();
+  }, []);
+
   const formatData = (value: string | number | undefined | null) => {
-    if (!value) return "N/A";
-    if (typeof value === 'string' && value.startsWith('http')) {
+    if (value === undefined || value === null || value === "") {
+      return <span className="text-gray-400">N/A</span>;
+    }
+    if (typeof value === "string" && value.startsWith("http")) {
       return (
-        <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+        <a
+          href={value}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 hover:underline font-medium flex items-center gap-1"
+        >
+          <FileText size={14} />
           View Document
         </a>
       );
     }
+    if (typeof value === "number" && value > 1000) {
+      return new Intl.NumberFormat("en-ET", {
+        style: "currency",
+        currency: "ETB",
+      }).format(value);
+    }
     return value;
   };
 
+  const CardSkeleton = () => (
+    <Card className="max-w-6xl mx-auto">
+      <CardHeader className="bg-gradient-to-r from-gray-100 to-gray-50 border-b border-gray-200 py-4">
+        <Skeleton className="h-8 w-3/4 mb-2" />
+        <Skeleton className="h-6 w-full" />
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="space-y-4">
+            <Skeleton className="h-6 w-48 mb-2" />
+            <div className="space-y-2">
+              {[...Array(4)].map((_, j) => (
+                <div
+                  key={j}
+                  className="flex justify-between items-center text-sm"
+                >
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </CardContent>
+      <CardFooter className="bg-gray-50 border-t border-gray-200 flex justify-end py-4">
+        <Skeleton className="h-10 w-32" />
+      </CardFooter>
+    </Card>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
+        <div className="flex flex-col items-center mb-8">
+          <Skeleton className="h-10 w-64 mb-2" />
+          <Skeleton className="h-6 w-80" />
+        </div>
+        <div className="grid grid-cols-1 gap-6">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-extrabold text-center text-gray-900">
-          Pending Applications ⏳
+    <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
+      <div className="flex flex-col items-center mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-2">
+          Available Applications
         </h1>
-        <Button onClick={() => fetchAllLoanAnalyses(customers)} variant="outline">
-          Refresh Analyses
-        </Button>
+      
+
+        <div className="flex gap-4 mt-6">
+          <Button
+            onClick={fetchPendingCustomers}
+            variant="outline"
+            className="gap-2 border-blue-500 text-blue-600 hover:bg-blue-50"
+            disabled={refreshing}
+          >
+            <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
+            {refreshing ? "Refreshing..." : "Refresh List"}
+          </Button>
+       
+        </div>
       </div>
 
-      {isLoading && <div className="text-center text-lg text-gray-600">Fetching pending applications...</div>}
-      {error && <div className="text-center text-red-600 text-lg p-4 bg-red-100 rounded-lg">Error: {error}</div>}
+      {error && (
+        <div className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto border-4 border-dashed border-gray-200 text-gray-700 mb-8">
+          <div className="mb-6 p-4 bg-gray-100 rounded-full">
+            <Info className="text-gray-500" size={48} />
+          </div>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
+             All Clear!
+          </h2>
+          <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
+               All applications have been taken. Feel free to check back later!
+          </p>
+          <Button
+            onClick={fetchPendingCustomers}
+            className="gap-2 bg-gray-600 hover:bg-gray-700 text-white"
+            size="sm"
+          >
+            <RefreshCw size={14} />
+            Try Again
+          </Button>
+        </div>
+      )}
 
       {!isLoading && !error && customers.length === 0 && (
-        <div className="text-center text-lg text-gray-500 p-4 bg-white rounded-lg shadow-md">
-          <p>There are no pending applications at the moment. 🎉</p>
+        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto border-4 border-dashed border-gray-200">
+          <div className="mb-6 p-4 bg-green-100 rounded-full">
+            <CheckCircle2 className="text-green-600" size={48} />
+          </div>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
+            All Clear!
+          </h2>
+          <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
+          
+          </p>
+          <Button
+            onClick={fetchPendingCustomers}
+            className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+          >
+            <RefreshCw size={18} />
+            Check for New Applications
+          </Button>
         </div>
       )}
 
@@ -164,110 +305,365 @@ export default function PendingCustomersPage() {
           {customers.map((customer) => {
             const analysis = loanAnalyses[customer.applicationReferenceNumber];
             return (
-              <Card key={customer.id} className="max-w-6xl mx-auto">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>{customer.firstName} {customer.middleName} {customer.lastName}</span>
-                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+              <Card
+                key={customer.id}
+                className="max-w-6xl mx-auto overflow-hidden border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300"
+              >
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 py-4 px-6">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-2xl text-gray-900 flex items-center gap-2 font-extrabold">
+                        <User size={24} className="text-blue-600" />
+                        {customer.firstName} {customer.middleName}{" "}
+                        {customer.lastName}
+                      </CardTitle>
+                      <CardDescription className="flex flex-col md:flex-row md:gap-4 mt-2 text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <IdCard size={14} />
+                          Ref:{" "}
+                          <span className="font-medium text-gray-800">
+                            {customer.applicationReferenceNumber}
+                          </span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Building size={14} />
+                          Customer No:{" "}
+                          <span className="font-medium text-gray-800">
+                            {customer.customerNumber}
+                          </span>
+                        </span>
+                      </CardDescription>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className="bg-yellow-100 text-yellow-800 border-yellow-200 self-start md:self-auto py-1 px-3 font-semibold text-sm"
+                    >
                       {customer.applicationStatus}
                     </Badge>
-                  </CardTitle>
-                  <CardDescription className="flex justify-between items-center text-sm">
-                    <span>Ref: {customer.applicationReferenceNumber}</span>
-                    <span>Customer No: {customer.customerNumber}</span>
-                  </CardDescription>
+                  </div>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+
+                <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-lg text-gray-700">Personal & Contact Information</h3>
-                    <Separator />
-                    <p><strong>TIN:</strong> {formatData(customer.tinNumber)}</p>
-                    <p><strong>National ID:</strong> {formatData(customer.nationalId)}</p>
-                    <p><strong>Phone:</strong> {formatData(customer.phone)}</p>
-                    <p><strong>Email:</strong> {formatData(customer.email)}</p>
-                    <p><strong>Gender:</strong> {formatData(customer.gender)}</p>
-                    <p><strong>Marital Status:</strong> {formatData(customer.maritalStatus)}</p>
-                    <p><strong>Date of Birth:</strong> {formatData(new Date(customer.dateOfBirth).toLocaleDateString())}</p>
+                    <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                      <User size={18} className="text-blue-600" />
+                      Personal Information
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">TIN:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.tinNumber)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">National ID:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.nationalId)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600 flex items-center gap-1">
+                          <Phone size={14} />
+                          Phone:
+                        </p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.phone)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600 flex items-center gap-1">
+                          <Mail size={14} />
+                          Email:
+                        </p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.email)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Gender:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.gender)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Marital Status:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.maritalStatus)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600 flex items-center gap-1">
+                          <Calendar size={14} />
+                          Date of Birth:
+                        </p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(
+                            new Date(customer.dateOfBirth).toLocaleDateString()
+                          )}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-lg text-gray-700">Address</h3>
-                    <Separator />
-                    <p><strong>Region:</strong> {formatData(customer.region)}</p>
-                    <p><strong>Zone:</strong> {formatData(customer.zone)}</p>
-                    <p><strong>City:</strong> {formatData(customer.city)}</p>
-                    <p><strong>Subcity:</strong> {formatData(customer.subcity)}</p>
-                    <p><strong>Woreda:</strong> {formatData(customer.woreda)}</p>
-                    <p><strong>Monthly Income:</strong> {formatData(customer.monthlyIncome)}</p>
-                    <p><strong>Account Type:</strong> {formatData(customer.accountType)}</p>
+                    <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                      <MapPin size={18} className="text-blue-600" />
+                      Address & Income
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Region:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.region)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Zone:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.zone)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">City:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.city)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Subcity:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.subcity)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Woreda:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.woreda)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600 flex items-center gap-1">
+                          <DollarSign size={14} />
+                          Monthly Income:
+                        </p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.monthlyIncome)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Account Type:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.accountType)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-lg text-gray-700">Business & Financials</h3>
-                    <Separator />
-                    <p><strong>Major Line of Business:</strong> {formatData(customer.majorLineBusiness)}</p>
-                    <p><strong>Date of Establishment (MLB):</strong> {formatData(new Date(customer.dateOfEstablishmentMLB).toLocaleDateString())}</p>
-                    <p><strong>Economic Sector:</strong> {formatData(customer.economicSector)}</p>
-                    <p><strong>Customer Segmentation:</strong> {formatData(customer.customerSegmentation)}</p>
-                    <p><strong>Credit Initiation Center:</strong> {formatData(customer.creditInitiationCenter)}</p>
+                    <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                      <Briefcase size={18} className="text-blue-600" />
+                      Business Details
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Major Business:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.majorLineBusiness)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600 flex items-center gap-1">
+                          <Calendar size={14} />
+                          Established:
+                        </p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(
+                            new Date(
+                              customer.dateOfEstablishmentMLB
+                            ).toLocaleDateString()
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Economic Sector:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.economicSector)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Customer Segment:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.customerSegmentation)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Initiation Center:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.creditInitiationCenter)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-lg text-gray-700">Loan Details</h3>
-                    <Separator />
-                    <p><strong>Loan Type:</strong> {formatData(customer.loanType)}</p>
-                    <p><strong>Loan Amount:</strong> {formatData(customer.loanAmount)}</p>
-                    <p><strong>Loan Period:</strong> {formatData(customer.loanPeriod)} months</p>
-                    <p><strong>Mode of Repayment:</strong> {formatData(customer.modeOfRepayment)}</p>
-                    <p><strong>Purpose of Loan:</strong> {formatData(customer.purposeOfLoan)}</p>
+                    <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                      <DollarSign size={18} className="text-blue-600" />
+                      Loan Details
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Loan Type:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.loanType)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Loan Amount:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.loanAmount)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Loan Period:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.loanPeriod)} months
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Repayment Mode:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.modeOfRepayment)}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <p className="text-gray-600">Purpose:</p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(customer.purposeOfLoan)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-4 md:col-span-2">
-                    <h3 className="font-semibold text-lg text-gray-700">Documents</h3>
-                    <Separator />
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <p><strong>National ID:</strong> {formatData(customer.nationalidUrl)}</p>
-                      <p><strong>Agreement Form:</strong> {formatData(customer.agreementFormUrl)}</p>
-                      <p><strong>Major Business Doc:</strong> {formatData(customer.majorLineBusinessUrl)}</p>
-                      <p><strong>Application Form:</strong> {formatData(customer.applicationFormUrl)}</p>
-                      <p><strong>Shareholders Details:</strong> {formatData(customer.shareholdersDetailsUrl)}</p>
-                      <p><strong>Credit Profile:</strong> {formatData(customer.creditProfileUrl)}</p>
-                      <p><strong>Transaction Profile:</strong> {formatData(customer.transactionProfileUrl)}</p>
-                      <p><strong>Collateral Profile:</strong> {formatData(customer.collateralProfileUrl)}</p>
-                      <p><strong>Financial Profile:</strong> {formatData(customer.financialProfileUrl)}</p>
+                    <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                      <FileText size={18} className="text-blue-600" />
+                      Supporting Documents
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">National ID:</span>
+                        {formatData(customer.nationalidUrl)}
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Agreement Form:</span>
+                        {formatData(customer.agreementFormUrl)}
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">
+                          Major Business Doc:
+                        </span>
+                        {formatData(customer.majorLineBusinessUrl)}
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Application Form:</span>
+                        {formatData(customer.applicationFormUrl)}
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">
+                          Shareholders Details:
+                        </span>
+                        {formatData(customer.shareholdersDetailsUrl)}
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Credit Profile:</span>
+                        {formatData(customer.creditProfileUrl)}
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">
+                          Transaction Profile:
+                        </span>
+                        {formatData(customer.transactionProfileUrl)}
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">
+                          Collateral Profile:
+                        </span>
+                        {formatData(customer.collateralProfileUrl)}
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">
+                          Financial Profile:
+                        </span>
+                        {formatData(customer.financialProfileUrl)}
+                      </div>
                     </div>
                   </div>
 
                   {analysis && (
                     <div className="space-y-4 md:col-span-2">
-                      <h3 className="font-semibold text-lg text-gray-700 mt-6">Loan Analysis</h3>
-                      <Separator />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <p><strong>PESTEL Analysis:</strong> {formatData(analysis.pestelAnalysisUrl)}</p>
-                        <p><strong>SWOT Analysis:</strong> {formatData(analysis.swotAnalysisUrl)}</p>
-                        <p><strong>Risk Assessment:</strong> {formatData(analysis.riskAssessmentUrl)}</p>
-                        <p><strong>ESG Assessment:</strong> {formatData(analysis.esgAssessmentUrl)}</p>
-                        <p><strong>Financial Need:</strong> {formatData(analysis.financialNeedUrl)}</p>
-                        <div className="col-span-2">
-                          <p><strong>Analyst Conclusion:</strong> {formatData(analysis.analystConclusion)}</p>
+                      <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                        <FileText size={18} className="text-blue-600" />
+                        Loan Analysis
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600">
+                            PESTEL Analysis:
+                          </span>
+                          {formatData(analysis.pestelAnalysisUrl)}
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600">SWOT Analysis:</span>
+                          {formatData(analysis.swotAnalysisUrl)}
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600">
+                            Risk Assessment:
+                          </span>
+                          {formatData(analysis.riskAssessmentUrl)}
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600">ESG Assessment:</span>
+                          {formatData(analysis.esgAssessmentUrl)}
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600">Financial Need:</span>
+                          {formatData(analysis.financialNeedUrl)}
                         </div>
                         <div className="col-span-2">
-                          <p><strong>Analyst Recommendation:</strong> {formatData(analysis.analystRecommendation)}</p>
+                          <div className="flex flex-col text-sm">
+                            <span className="text-gray-600 mb-1">
+                              Analyst Conclusion:
+                            </span>
+                            <span className="font-medium text-gray-800">
+                              {formatData(analysis.analystConclusion)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="col-span-2">
+                          <div className="flex flex-col text-sm">
+                            <span className="text-gray-600 mb-1">
+                              Analyst Recommendation:
+                            </span>
+                            <span className="font-medium text-gray-800">
+                              {formatData(analysis.analystRecommendation)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   )}
                 </CardContent>
-                <CardFooter >
-                           
-                    <Takesup 
-                      customerId={customer.id} 
-                      onSuccess={() => {
-                        // Optional: refresh the page, refetch customer, or show a toast
-                        console.log("Customer assigned successfully");
-                      }} 
-                    />
-                 
+
+                <CardFooter className="bg-gray-50 border-t border-gray-200 flex justify-end py-4 px-6">
+                  <Takesup
+                    customerId={customer.id}
+                    onSuccess={() => {
+                      toast.success("Customer assigned successfully!");
+                      fetchPendingCustomers(); // Reload the customer list automatically
+                    }}
+                  />
                 </CardFooter>
               </Card>
             );

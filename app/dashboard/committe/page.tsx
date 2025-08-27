@@ -10,9 +10,31 @@ import {
   CardDescription
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { toast, Toaster } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  User,
+  MapPin,
+  Briefcase,
+  DollarSign,
+  Calendar,
+  Phone,
+  Mail,
+  IdCard,
+  Building,
+  FileText,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  AlertCircle,
+  RefreshCw,
+  BarChart3,
+  ClipboardList,
+  Check,
+  X,
+  RotateCcw
+} from "lucide-react";
 
 // Define the interface for the LoanAnalysis model
 interface LoanAnalysis {
@@ -87,55 +109,57 @@ export default function CommitteeDecisionPage() {
   const [decisionReasons, setDecisionReasons] = useState<Record<string, string>>({});
   const [selectedDecisions, setSelectedDecisions] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState<Record<string, boolean>>({});
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    const fetchPendingCustomers = async () => {
-      try {
-        // Fix the status value - it should match your database enum
-        const response = await fetch(`/api/get?status=COMMITTE_REVIEW`);        
-        if (!response.ok) {
-          throw new Error("Failed to fetch pending customers");
-        }
-        const data = await response.json();
-        
-        // Fetch loan analysis for each customer
-        const customersWithAnalysis = await Promise.all(
-          data.map(async (customer: Customer) => {
-            try {
-              const analysisResponse = await fetch(`/api/loan-analysis/${customer.applicationReferenceNumber}`);
-              if (analysisResponse.ok) {
-                const analysisData = await analysisResponse.json();
-                return {
-                  ...customer,
-                  loanAnalysis: analysisData
-                };
-              }
-              return {
-                ...customer,
-                loanAnalysis: null
-              };
-            } catch (err) {
-              console.error(`Failed to fetch analysis for ${customer.applicationReferenceNumber}:`, err);
-              return {
-                ...customer,
-                loanAnalysis: null
-              };
-            }
-          })
-        );
-        
-        setCustomers(customersWithAnalysis);
-      } catch (err: any) {
-        setError(err.message);
-        toast.error("Failed to load applications");
-        setCustomers([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchPendingCustomers();
   }, []);
+
+  const fetchPendingCustomers = async () => {
+    try {
+      setRefreshing(true);
+      const response = await fetch(`/api/get?status=COMMITTE_REVIEW`);        
+      if (!response.ok) {
+        throw new Error("Failed to fetch pending customers");
+      }
+      const data = await response.json();
+      
+      // Fetch loan analysis for each customer
+      const customersWithAnalysis = await Promise.all(
+        data.map(async (customer: Customer) => {
+          try {
+            const analysisResponse = await fetch(`/api/loan-analysis/${customer.applicationReferenceNumber}`);
+            if (analysisResponse.ok) {
+              const analysisData = await analysisResponse.json();
+              return {
+                ...customer,
+                loanAnalysis: analysisData
+              };
+            }
+            return {
+              ...customer,
+              loanAnalysis: null
+            };
+          } catch (err) {
+            console.error(`Failed to fetch analysis for ${customer.applicationReferenceNumber}:`, err);
+            return {
+              ...customer,
+              loanAnalysis: null
+            };
+          }
+        })
+      );
+      
+      setCustomers(customersWithAnalysis);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || "We're having trouble connecting to the server. Please try again in a moment.");
+      setCustomers([]);
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   const handleDecision = async (customerId: string, applicationRef: string) => {
     const decision = selectedDecisions[applicationRef];
@@ -214,263 +238,526 @@ export default function CommitteeDecisionPage() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      PENDING: { label: "Pending", color: "bg-yellow-100 text-yellow-800" },
-      COMMITTE_REVERSED: { label: "Committe reversed", color: "bg-blue-100 text-blue-800" },
-      COMMITTEE_REVIEW: { label: "Committee Review", color: "bg-purple-100 text-purple-800" },
-      APPROVED: { label: "Approved", color: "bg-green-100 text-green-800" },
-      REJECTED: { label: "Rejected", color: "bg-red-100 text-red-800" }
+      PENDING: { label: "Pending", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+      COMMITTE_REVERSED: { label: "Committe reversed", color: "bg-blue-100 text-blue-800 border-blue-200" },
+      COMMITTEE_REVIEW: { label: "Committee Review", color: "bg-purple-100 text-purple-800 border-purple-200" },
+      APPROVED: { label: "Approved", color: "bg-green-100 text-green-800 border-green-200" },
+      REJECTED: { label: "Rejected", color: "bg-red-100 text-red-800 border-red-200" }
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] ||  
-                  { label: status, color: "bg-gray-100 text-gray-800" };
+                  { label: status, color: "bg-gray-100 text-gray-800 border-gray-200" };
 
     return <Badge className={config.color}>{config.label}</Badge>;
   };
 
   const formatData = (value: string | number | undefined | null) => {
     if (value === undefined || value === null || value === "") {
-      return "N/A";
+      return <span className="text-gray-400">N/A</span>;
     }
     if (typeof value === 'string' && value.startsWith('http')) {
       return (
-        <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+        <a
+          href={value}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 hover:underline font-medium flex items-center gap-1"
+        >
+          <FileText size={14} />
           View Document
         </a>
       );
     }
+    if (typeof value === 'number' && value > 1000) {
+      return new Intl.NumberFormat('en-ET', {
+        style: 'currency',
+        currency: 'ETB'
+      }).format(value);
+    }
     return value;
   };
 
+  const CardSkeleton = () => (
+    <Card className="max-w-6xl mx-auto">
+      <CardHeader className="bg-gradient-to-r from-gray-100 to-gray-50 border-b border-gray-200 py-4">
+        <Skeleton className="h-8 w-3/4 mb-2" />
+        <Skeleton className="h-6 w-full" />
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="space-y-4">
+            <Skeleton className="h-6 w-48 mb-2" />
+            <div className="space-y-2">
+              {[...Array(4)].map((_, j) => (
+                <div key={j} className="flex justify-between items-center text-sm">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </CardContent>
+      <CardFooter className="bg-gray-50 border-t border-gray-200 flex justify-end py-4">
+        <Skeleton className="h-10 w-32" />
+      </CardFooter>
+    </Card>
+  );
+
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="text-lg text-gray-600 mt-4">Loading applications...</p>
+      <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
+        <div className="flex flex-col items-center mb-8">
+          <Skeleton className="h-10 w-64 mb-2" />
+          <Skeleton className="h-6 w-80" />
         </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="text-center p-6 bg-red-50 rounded-lg border border-red-200">
-          <p className="text-red-600 text-lg">Error: {error}</p>
-          <Button onClick={() => window.location.reload()} className="mt-4">
-            Try Again
-          </Button>
+        <div className="grid grid-cols-1 gap-6">
+          <CardSkeleton />
+          <CardSkeleton />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
-      <div className="mb-8">
-        <h1 className="text-4xl font-extrabold text-gray-900">
+    <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
+      <div className="flex flex-col items-center mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-2">
           Committee Decisions 📋
         </h1>
-        <p className="text-gray-600 mt-2">
-          Review and make decisions on loan applications
+        <p className="text-gray-600 text-center max-w-2xl">
+          Review and make decisions on loan applications awaiting committee review.
         </p>
+        
+        <div className="flex gap-4 mt-6">
+          <Button
+            onClick={fetchPendingCustomers}
+            variant="outline"
+            className="gap-2 border-blue-500 text-blue-600 hover:bg-blue-50"
+            disabled={refreshing}
+          >
+            <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
+            {refreshing ? "Refreshing..." : "Refresh Applications"}
+          </Button>
+        </div>
       </div>
 
-      {customers.length === 0 ? (
-        <div className="text-center p-12 bg-white rounded-lg shadow-sm border">
-          <h3 className="text-xl font-semibold text-gray-900 mt-4">
-            All Caught Up! 🎉
-          </h3>
-          <p className="text-gray-600 mt-2">
-            There are no applications pending committee review.
+      {error && (
+        <div className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto border-4 border-dashed border-gray-200 text-gray-700 mb-8">
+          <div className="mb-6 p-4 bg-red-100 rounded-full">
+            <AlertCircle className="text-red-500" size={48} />
+          </div>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">All Clear!</h2>
+          <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
+             No applications pending committee review. Check back later for new submissions.
           </p>
+          <Button
+            onClick={fetchPendingCustomers}
+            className="gap-2 bg-red-600 hover:bg-red-700 text-white"
+            size="sm"
+          >
+            <RefreshCw size={14} />
+            Try Again
+          </Button>
         </div>
-      ) : (
+      )}
+
+      {!isLoading && !error && customers.length === 0 && (
+        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto border-4 border-dashed border-gray-200">
+          <div className="mb-6 p-4 bg-green-100 rounded-full">
+            <CheckCircle2 className="text-green-600" size={48} />
+          </div>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">All Clear!</h2>
+          <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
+            No applications pending committee review. Check back later for new submissions.
+          </p>
+          <Button
+            onClick={fetchPendingCustomers}
+            className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+          >
+            <RefreshCw size={18} />
+            Check for New Applications
+          </Button>
+        </div>
+      )}
+
+      {!isLoading && customers.length > 0 && (
         <div className="grid grid-cols-1 gap-6">
           {customers.map((customer) => (
-            <Card key={customer.id} className="shadow-md">
-              <CardHeader className="bg-blue-50">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-2xl">
+            <Card key={customer.id} className="max-w-6xl mx-auto overflow-hidden border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 py-4 px-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-2xl text-gray-900 flex items-center gap-2 font-extrabold">
+                      <User size={24} className="text-blue-600" />
                       {customer.firstName} {customer.middleName} {customer.lastName}
                     </CardTitle>
-                    <CardDescription className="mt-2">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                        <span>Ref: {customer.applicationReferenceNumber}</span>
-                        <span>Customer No: {customer.customerNumber}</span>
-                      </div>
+                    <CardDescription className="flex flex-col md:flex-row md:gap-4 mt-2 text-sm text-gray-600">
+                      <span className="flex items-center gap-1">
+                        <IdCard size={14} />
+                        Ref: <span className="font-medium text-gray-800">{customer.applicationReferenceNumber}</span>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Building size={14} />
+                        Customer No: <span className="font-medium text-gray-800">{customer.customerNumber}</span>
+                      </span>
                     </CardDescription>
                   </div>
                   {getStatusBadge(customer.applicationStatus)}
                 </div>
               </CardHeader>
 
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                  {/* Personal Information */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-lg text-gray-700">Personal Information</h3>
-                    <Separator />
-                    <p><strong>TIN:</strong> {formatData(customer.tinNumber)}</p>
-                    <p><strong>National ID:</strong> {formatData(customer.nationalId)}</p>
-                    <p><strong>Phone:</strong> {formatData(customer.phone)}</p>
-                    <p><strong>Email:</strong> {formatData(customer.email)}</p>
-                    <p><strong>Gender:</strong> {formatData(customer.gender)}</p>
-                    <p><strong>Marital Status:</strong> {formatData(customer.maritalStatus)}</p>
-                    <p><strong>Date of Birth:</strong> {formatData(new Date(customer.dateOfBirth).toLocaleDateString())}</p>
-                  </div>
-
-                  {/* Address Information */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-lg text-gray-700">Address Information</h3>
-                    <Separator />
-                    <p><strong>Region:</strong> {formatData(customer.region)}</p>
-                    <p><strong>Zone:</strong> {formatData(customer.zone)}</p>
-                    <p><strong>City:</strong> {formatData(customer.city)}</p>
-                    <p><strong>Subcity:</strong> {formatData(customer.subcity)}</p>
-                    <p><strong>Woreda:</strong> {formatData(customer.woreda)}</p>
-                    <p><strong>Monthly Income:</strong> {formatData(customer.monthlyIncome)}</p>
-                    <p><strong>Account Type:</strong> {formatData(customer.accountType)}</p>
-                  </div>
-
-                  {/* Business Information */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-lg text-gray-700">Business Information</h3>
-                    <Separator />
-                    <p><strong>Major Line of Business:</strong> {formatData(customer.majorLineBusiness)}</p>
-                    <p><strong>Date of Establishment (MLB):</strong> {formatData(new Date(customer.dateOfEstablishmentMLB).toLocaleDateString())}</p>
-                    <p><strong>Economic Sector:</strong> {formatData(customer.economicSector)}</p>
-                    <p><strong>Customer Segmentation:</strong> {formatData(customer.customerSegmentation)}</p>
-                    <p><strong>Credit Initiation Center:</strong> {formatData(customer.creditInitiationCenter)}</p>
-                  </div>
-
-                  {/* Loan Details */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-lg text-gray-700">Loan Details</h3>
-                    <Separator />
-                    <p><strong>Loan Type:</strong> {formatData(customer.loanType)}</p>
-                    <p><strong>Loan Amount:</strong> {formatData(customer.loanAmount)}</p>
-                    <p><strong>Loan Period:</strong> {formatData(customer.loanPeriod)} months</p>
-                    <p><strong>Mode of Repayment:</strong> {formatData(customer.modeOfRepayment)}</p>
-                    <p><strong>Purpose of Loan:</strong> {formatData(customer.purposeOfLoan)}</p>
-                  </div>
-
-                  {/* Documents */}
-                  <div className="space-y-4 md:col-span-2">
-                    <h3 className="font-semibold text-lg text-gray-700">Documents</h3>
-                    <Separator />
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <p><strong>National ID:</strong> {formatData(customer.nationalidUrl)}</p>
-                      <p><strong>Agreement Form:</strong> {formatData(customer.agreementFormUrl)}</p>
-                      <p><strong>Major Business Doc:</strong> {formatData(customer.majorLineBusinessUrl)}</p>
-                      <p><strong>Application Form:</strong> {formatData(customer.applicationFormUrl)}</p>
-                      <p><strong>Shareholders Details:</strong> {formatData(customer.shareholdersDetailsUrl)}</p>
-                      <p><strong>Credit Profile:</strong> {formatData(customer.creditProfileUrl)}</p>
-                      <p><strong>Transaction Profile:</strong> {formatData(customer.transactionProfileUrl)}</p>
-                      <p><strong>Collateral Profile:</strong> {formatData(customer.collateralProfileUrl)}</p>
-                      <p><strong>Financial Profile:</strong> {formatData(customer.financialProfileUrl)}</p>
+              <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Personal Information */}
+                <div className="space-y-4">
+                  <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                    <User size={18} className="text-blue-600" />
+                    Personal Information
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">TIN:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.tinNumber)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">National ID:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.nationalId)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600 flex items-center gap-1">
+                        <Phone size={14} />
+                        Phone:
+                      </p>
+                      <p className="font-medium text-gray-800">{formatData(customer.phone)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600 flex items-center gap-1">
+                        <Mail size={14} />
+                        Email:
+                      </p>
+                      <p className="font-medium text-gray-800">{formatData(customer.email)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Gender:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.gender)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Marital Status:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.maritalStatus)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600 flex items-center gap-1">
+                        <Calendar size={14} />
+                        Date of Birth:
+                      </p>
+                      <p className="font-medium text-gray-800">{formatData(new Date(customer.dateOfBirth).toLocaleDateString())}</p>
                     </div>
                   </div>
-
-                  {/* Loan Analysis */}
-                  {customer.loanAnalysis && (
-                    <div className="space-y-4 md:col-span-2">
-                      <h3 className="font-semibold text-lg text-gray-700">Loan Analysis</h3>
-                      <Separator />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <p><strong>Financial Profile:</strong> {formatData(customer.loanAnalysis.financialProfileUrl)}</p>
-                        <p><strong>PESTEL Analysis:</strong> {formatData(customer.loanAnalysis.pestelAnalysisUrl)}</p>
-                        <p><strong>SWOT Analysis:</strong> {formatData(customer.loanAnalysis.swotAnalysisUrl)}</p>
-                        <p><strong>Risk Assessment:</strong> {formatData(customer.loanAnalysis.riskAssessmentUrl)}</p>
-                        <p><strong>ESG Assessment:</strong> {formatData(customer.loanAnalysis.esgAssessmentUrl)}</p>
-                        <p><strong>Financial Need:</strong> {formatData(customer.loanAnalysis.financialNeedUrl)}</p>
-                        
-                        {customer.loanAnalysis.analystConclusion && (
-                          <div className="col-span-2">
-                            <p><strong>Analyst Conclusion:</strong></p>
-                            <p className="mt-1 p-3 bg-gray-100 rounded-md">{customer.loanAnalysis.analystConclusion}</p>
-                          </div>
-                        )}
-                        
-                        {customer.loanAnalysis.analystRecommendation && (
-                          <div className="col-span-2">
-                            <p><strong>Analyst Recommendation:</strong></p>
-                            <p className="mt-1 p-3 bg-gray-100 rounded-md">{customer.loanAnalysis.analystRecommendation}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-                <Separator className="my-6" />
+                {/* Address & Income */}
+                <div className="space-y-4">
+                  <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                    <MapPin size={18} className="text-blue-600" />
+                    Address & Income
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Region:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.region)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Zone:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.zone)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">City:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.city)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Subcity:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.subcity)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Woreda:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.woreda)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600 flex items-center gap-1">
+                        <DollarSign size={14} />
+                        Monthly Income:
+                      </p>
+                      <p className="font-medium text-gray-800">{formatData(customer.monthlyIncome)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Account Type:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.accountType)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Business Details */}
+                <div className="space-y-4">
+                  <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                    <Briefcase size={18} className="text-blue-600" />
+                    Business Details
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Major Business:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.majorLineBusiness)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600 flex items-center gap-1">
+                        <Calendar size={14} />
+                        Established:
+                      </p>
+                      <p className="font-medium text-gray-800">{formatData(new Date(customer.dateOfEstablishmentMLB).toLocaleDateString())}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Economic Sector:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.economicSector)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Customer Segment:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.customerSegmentation)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Initiation Center:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.creditInitiationCenter)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Loan Details */}
+                <div className="space-y-4">
+                  <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                    <DollarSign size={18} className="text-blue-600" />
+                    Loan Details
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Loan Type:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.loanType)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Loan Amount:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.loanAmount)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Loan Period:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.loanPeriod)} months</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Repayment Mode:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.modeOfRepayment)}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-600">Purpose:</p>
+                      <p className="font-medium text-gray-800">{formatData(customer.purposeOfLoan)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Supporting Documents */}
+                <div className="space-y-4 md:col-span-2">
+                  <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                    <FileText size={18} className="text-blue-600" />
+                    Supporting Documents
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">National ID:</span>
+                      {formatData(customer.nationalidUrl)}
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Agreement Form:</span>
+                      {formatData(customer.agreementFormUrl)}
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Major Business Doc:</span>
+                      {formatData(customer.majorLineBusinessUrl)}
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Application Form:</span>
+                      {formatData(customer.applicationFormUrl)}
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Shareholders Details:</span>
+                      {formatData(customer.shareholdersDetailsUrl)}
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Credit Profile:</span>
+                      {formatData(customer.creditProfileUrl)}
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Transaction Profile:</span>
+                      {formatData(customer.transactionProfileUrl)}
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Collateral Profile:</span>
+                      {formatData(customer.collateralProfileUrl)}
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Financial Profile:</span>
+                      {formatData(customer.financialProfileUrl)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Loan Analysis Section */}
+                {customer.loanAnalysis && (
+                  <div className="space-y-4 md:col-span-2">
+                    <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                      <BarChart3 size={18} className="text-blue-600" />
+                      Loan Analysis
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Financial Profile:</span>
+                        {formatData(customer.loanAnalysis.financialProfileUrl)}
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">PESTEL Analysis:</span>
+                        {formatData(customer.loanAnalysis.pestelAnalysisUrl)}
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">SWOT Analysis:</span>
+                        {formatData(customer.loanAnalysis.swotAnalysisUrl)}
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Risk Assessment:</span>
+                        {formatData(customer.loanAnalysis.riskAssessmentUrl)}
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">ESG Assessment:</span>
+                        {formatData(customer.loanAnalysis.esgAssessmentUrl)}
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Financial Need:</span>
+                        {formatData(customer.loanAnalysis.financialNeedUrl)}
+                      </div>
+                      
+                      {customer.loanAnalysis.analystConclusion && (
+                        <div className="col-span-2">
+                          <div className="flex flex-col text-sm">
+                            <span className="text-gray-600 mb-1">Analyst Conclusion:</span>
+                            <span className="font-medium text-gray-800 bg-blue-50 p-3 rounded-md">{formatData(customer.loanAnalysis.analystConclusion)}</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {customer.loanAnalysis.analystRecommendation && (
+                        <div className="col-span-2">
+                          <div className="flex flex-col text-sm">
+                            <span className="text-gray-600 mb-1">Analyst Recommendation:</span>
+                            <span className="font-medium text-gray-800 bg-blue-50 p-3 rounded-md">{formatData(customer.loanAnalysis.analystRecommendation)}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Decision Section */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-lg">Committee Decision:</h4>
-                  <div className="flex flex-col space-y-2">
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        name={`decision-${customer.applicationReferenceNumber}`}
-                        value="APPROVED"
-                        checked={selectedDecisions[customer.applicationReferenceNumber] === 'APPROVED'}
-                        onChange={(e) => handleDecisionChange(customer.applicationReferenceNumber, e.target.value)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                      />
-                      <span className="text-gray-700">Approve</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        name={`decision-${customer.applicationReferenceNumber}`}
-                        value="COMMITTE_REVERSED"
-                        checked={selectedDecisions[customer.applicationReferenceNumber] === 'COMMITTE_REVERSED'}
-                        onChange={(e) => handleDecisionChange(customer.applicationReferenceNumber, e.target.value)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                      />
-                      <span className="text-gray-700">Need More Review</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        name={`decision-${customer.applicationReferenceNumber}`}
-                        value="REJECTED"
-                        checked={selectedDecisions[customer.applicationReferenceNumber] === 'REJECTED'}
-                        onChange={(e) => handleDecisionChange(customer.applicationReferenceNumber, e.target.value)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                      />
-                      <span className="text-gray-700">Reject</span>
-                    </label>
-                  </div>
-
-                  {selectedDecisions[customer.applicationReferenceNumber] === 'REJECTED' && (
-                    <div className="space-y-2 mt-4">
-                      <h4 className="font-semibold">Decision Reason (Required):</h4>
-                      <textarea
-                        placeholder="Enter detailed reason for rejecting this application..."
-                        value={decisionReasons[customer.applicationReferenceNumber] || ''}
-                        onChange={(e) => handleReasonChange(customer.applicationReferenceNumber, e.target.value)}
-                        className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
-                        required
-                      />
-                      <p className="text-sm text-gray-500">Please provide a detailed reason for rejection.</p>
+                <div className="space-y-4 md:col-span-2">
+                  <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                    <ClipboardList size={18} className="text-blue-600" />
+                    Committee Decision
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="space-y-2">
+                      <label className="flex items-center space-x-2 p-3 rounded-md border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="radio"
+                          name={`decision-${customer.applicationReferenceNumber}`}
+                          value="APPROVED"
+                          checked={selectedDecisions[customer.applicationReferenceNumber] === 'APPROVED'}
+                          onChange={(e) => handleDecisionChange(customer.applicationReferenceNumber, e.target.value)}
+                          className="h-4 w-4 text-green-600 focus:ring-green-500"
+                        />
+                        <div className="flex items-center gap-2">
+                          <Check className="h-5 w-5 text-green-600" />
+                          <span className="text-gray-700 font-medium">Approve</span>
+                        </div>
+                      </label>
                     </div>
-                  )}
+
+                    <div className="space-y-2">
+                      <label className="flex items-center space-x-2 p-3 rounded-md border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="radio"
+                          name={`decision-${customer.applicationReferenceNumber}`}
+                          value="COMMITTE_REVERSED"
+                          checked={selectedDecisions[customer.applicationReferenceNumber] === 'COMMITTE_REVERSED'}
+                          onChange={(e) => handleDecisionChange(customer.applicationReferenceNumber, e.target.value)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        />
+                        <div className="flex items-center gap-2">
+                          <RotateCcw className="h-5 w-5 text-blue-600" />
+                          <span className="text-gray-700 font-medium">Need Review</span>
+                        </div>
+                      </label>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="flex items-center space-x-2 p-3 rounded-md border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="radio"
+                          name={`decision-${customer.applicationReferenceNumber}`}
+                          value="REJECTED"
+                          checked={selectedDecisions[customer.applicationReferenceNumber] === 'REJECTED'}
+                          onChange={(e) => handleDecisionChange(customer.applicationReferenceNumber, e.target.value)}
+                          className="h-4 w-4 text-red-600 focus:ring-red-500"
+                        />
+                        <div className="flex items-center gap-2">
+                          <X className="h-5 w-5 text-red-600" />
+                          <span className="text-gray-700 font-medium">Reject</span>
+                        </div>
+                      </label>
+                    </div>
+
+                    {selectedDecisions[customer.applicationReferenceNumber] === 'REJECTED' || selectedDecisions[customer.applicationReferenceNumber] === 'COMMITTE_REVERSED' && (
+                      <div className="col-span-3 space-y-2 mt-4">
+                        <h4 className="font-semibold text-gray-700 flex items-center gap-2">
+                          <AlertCircle size={16} className="text-red-500" />
+                          Decision Reason (Required):
+                        </h4>
+                        <textarea
+                          placeholder="Enter detailed reason for rejecting this application..."
+                          value={decisionReasons[customer.applicationReferenceNumber] || ''}
+                          onChange={(e) => handleReasonChange(customer.applicationReferenceNumber, e.target.value)}
+                          className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+                          required
+                        />
+                        <p className="text-sm text-gray-500">Please provide a detailed reason for rejection.</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
 
-              <CardFooter className="bg-gray-50 flex justify-between items-center p-4">
-                <div className="text-sm text-gray-600">
+              <CardFooter className="bg-gray-50 border-t border-gray-200 flex justify-between items-center py-4 px-6">
+                <div className="text-sm text-gray-600 flex items-center gap-2">
+                  <Clock size={14} />
                   Application ready for committee decision
                 </div>
                 <Button
                   onClick={() => handleDecision(customer.id, customer.applicationReferenceNumber)}
                   disabled={isSubmitting[customer.applicationReferenceNumber]}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="gap-2 bg-blue-600 hover:bg-blue-700"
                 >
-                  {isSubmitting[customer.applicationReferenceNumber] ? 'Processing...' : 'Submit Decision'}
+                  {isSubmitting[customer.applicationReferenceNumber] ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Check size={14} />
+                      Submit Decision
+                    </>
+                  )}
                 </Button>
               </CardFooter>
             </Card>

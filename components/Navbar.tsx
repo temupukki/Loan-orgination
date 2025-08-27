@@ -98,16 +98,38 @@ export default async function Navbar() {
                 >
                   Revised
                 </Link>
+                   <Link
+                  href="/dashboard/credit/reversed"
+                  className="text-white font-medium hover:bg-blue-700/60 px-4 py-2 rounded-md transition-all duration-200"
+                >
+                  Reversed
+                </Link>
+                 <Link
+                  href="/dashboard/credit/final"
+                  className="text-white font-medium hover:bg-blue-700/60 px-4 py-2 rounded-md transition-all duration-200"
+                >
+                  Edit Analysis
+                </Link>
               </>
             )}
 
             {userRole === "SUPERVISOR" && (
+              <>
               <Link
-                href="/dashboard/supervisor"
+                href="/dashboard/supervisor-review"
                 className="text-white font-medium hover:bg-blue-700/60 px-4 py-2 rounded-md transition-all duration-200"
               >
-                Review Analysis
-              </Link>
+                Avaliable
+              </Link><Link
+                href="/dashboard/supervisor-review/supervisor"
+                className="text-white font-medium hover:bg-blue-700/60 px-4 py-2 rounded-md transition-all duration-200"
+              >
+                  In Progress
+                </Link>
+                
+                </>
+              
+              
             )}
                     
             {userRole === "COMMITTE_MEMBER" && (
@@ -115,7 +137,7 @@ export default async function Navbar() {
                 href="/dashboard/committe"
                 className="text-white font-medium hover:bg-blue-700/60 px-4 py-2 rounded-md transition-all duration-200"
               >
-                Review Applications
+                Avaliable
               </Link>
             )}
           </div>

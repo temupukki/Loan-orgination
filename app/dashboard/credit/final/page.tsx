@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast, Toaster } from 'sonner';
-import { CreditEdit } from '@/components/CreditEdit';
 import { CreditFinish } from '@/components/CreditFinish';
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -24,12 +23,9 @@ import {
   Info,
   AlertCircle,
   BarChart3,
-  ClipboardCheck,
-  Star,
-  Percent,
-  FileEdit,
-  Check,
-  Clock,
+  Upload,
+  FileCheck,
+  ClipboardList,
 } from 'lucide-react';
 
 // Define the interface for the LoanAnalysis model
@@ -45,14 +41,6 @@ interface LoanAnalysis {
   analystConclusion?: string;
   analystRecommendation?: string;
   rmRecommendation?: string;
-  pestelanalysisScore?: number;
-  swotanalysisScore?: number;
-  riskassesmentScore?: number;
-  esgassesmentScore?: number;
-  financialneedScore?: number;
-  overallScore?: number;
-  reviewNotes?: string;
-  decision?: string;
 }
 
 // Update the Customer interface to include the LoanAnalysis relation
@@ -111,8 +99,9 @@ export default function PendingCustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [loanAnalyses, setLoanAnalyses] = useState<Record<string, LoanAnalysis>>({});
+  const [analysisData, setAnalysisData] = useState<Record<string, Partial<LoanAnalysis>>>({});
   const [refreshing, setRefreshing] = useState(false);
+  const [uploading, setUploading] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchPendingCustomers();
@@ -121,15 +110,53 @@ export default function PendingCustomersPage() {
   const fetchPendingCustomers = async () => {
     try {
       setRefreshing(true);
-      const response = await fetch(`/api/revised?status=SUPERVISED`);
+      const response = await fetch(`/api/final?status=FINAL_ANALYSIS`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch pending customers');
       }
       const data = await response.json();
       setCustomers(data);
-      
-      await fetchAllLoanAnalyses(data);
+
+      // Fetch loan analysis for each customer
+      const analysisPromises = data.map(async (customer: Customer) => {
+        try {
+          const analysisResponse = await fetch(
+            `/api/loan-analysis/${customer.applicationReferenceNumber}`
+          );
+          if (analysisResponse.ok) {
+            const analysisData = await analysisResponse.json();
+            return {
+              refNumber: customer.applicationReferenceNumber,
+              analysis: analysisData,
+            };
+          }
+          return {
+            refNumber: customer.applicationReferenceNumber,
+            analysis: {},
+          };
+        } catch (err) {
+          console.error(
+            `Failed to fetch analysis for ${customer.applicationReferenceNumber}:`,
+            err
+          );
+          return {
+            refNumber: customer.applicationReferenceNumber,
+            analysis: {},
+          };
+        }
+      });
+
+      const analysisResults = await Promise.all(analysisPromises);
+      const initialAnalysisData = analysisResults.reduce(
+        (acc: any, result) => {
+          acc[result.refNumber] = result.analysis || {};
+          return acc;
+        },
+        {}
+      );
+
+      setAnalysisData(initialAnalysisData);
       setError(null);
     } catch (err: any) {
       setError(err.message || "We're having trouble connecting to the server. Please try again in a moment.");
@@ -140,40 +167,72 @@ export default function PendingCustomersPage() {
     }
   };
 
-  const fetchLoanAnalysis = async (applicationReferenceNumber: string) => {
-    try {
-      const response = await fetch(`/api/loan-analysis/${applicationReferenceNumber}`);
-      if (!response.ok) {
-        return null;
-      }
-      return await response.json();
-    } catch {
-      return null;
-    }
+  const uploadFile = async (file: File, path: string) => {
+    // Simulate file upload - replace with your actual upload logic
+    return new Promise<string>((resolve) => {
+      setTimeout(() => {
+        resolve(`https://example.com/uploads/${path}`);
+      }, 1500);
+    });
   };
 
-  const fetchAllLoanAnalyses = async (customersData: Customer[]) => {
+  const handleInputChange = (
+    refNumber: string,
+    field: keyof LoanAnalysis,
+    value: string
+  ) => {
+    setAnalysisData((prev) => ({
+      ...prev,
+      [refNumber]: {
+        ...prev[refNumber],
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleFileUpload = async (
+    e: ChangeEvent<HTMLInputElement>,
+    refNumber: string,
+    field: keyof LoanAnalysis
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     try {
-      const analyses: Record<string, LoanAnalysis> = {};
+      setUploading(prev => ({ ...prev, [`${refNumber}-${field}`]: file.name }));
+      toast.loading(`Uploading ${file.name}...`);
       
-      for (const customer of customersData) {
-        const analysis = await fetchLoanAnalysis(customer.applicationReferenceNumber);
-        if (analysis) {
-          analyses[customer.applicationReferenceNumber] = analysis;
-        }
-      }
+      const filePath = `loan-analysis/${refNumber}/${field}-${file.name}`;
+      const url = await uploadFile(file, filePath);
+
+      setUploading(prev => {
+        const newState = { ...prev };
+        delete newState[`${refNumber}-${field}`];
+        return newState;
+      });
       
-      setLoanAnalyses(analyses);
+      toast.dismiss();
+      toast.success("File uploaded successfully!");
+
+      setAnalysisData((prev) => ({
+        ...prev,
+        [refNumber]: {
+          ...prev[refNumber],
+          [field]: url,
+        },
+      }));
     } catch (err: any) {
-      console.error('Error fetching loan analyses:', err);
+      setUploading(prev => {
+        const newState = { ...prev };
+        delete newState[`${refNumber}-${field}`];
+        return newState;
+      });
+      
+      toast.dismiss();
+      toast.error(
+        err.message || "An unexpected error occurred during file upload."
+      );
     }
-  };
-
-  const handleRefreshAnalyses = async () => {
-    setRefreshing(true);
-    await fetchAllLoanAnalyses(customers);
-    setRefreshing(false);
-    toast.success('Loan analyses refreshed!');
   };
 
   const formatData = (value: string | number | undefined | null) => {
@@ -200,31 +259,6 @@ export default function PendingCustomersPage() {
       }).format(value);
     }
     return value;
-  };
-
-  const getScoreColor = (score: number | undefined) => {
-    if (score === undefined) return 'text-gray-500';
-    if (score >= 80) return 'text-green-600 font-bold';
-    if (score >= 60) return 'text-yellow-600 font-bold';
-    return 'text-red-600 font-bold';
-  };
-
-  const getScoreBadge = (score: number | undefined) => {
-    if (score === undefined) {
-      return <Badge variant="outline" className="bg-gray-100 text-gray-700">N/A</Badge>;
-    }
-    if (score >= 80) return <Badge className="bg-green-100 text-green-800 border-green-200">{score}</Badge>;
-    if (score >= 60) return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">{score}</Badge>;
-    return <Badge className="bg-red-100 text-red-800 border-red-200">{score}</Badge>;
-  };
-
-  const getOverallScoreBadge = (score: number | undefined) => {
-    if (score === undefined) {
-      return <Badge variant="outline" className="bg-gray-100 text-gray-700 text-lg px-4 py-2 border-gray-300">Overall: N/A</Badge>;
-    }
-    if (score >= 80) return <Badge className="bg-green-100 text-green-800 text-lg px-4 py-2 border-green-300">Overall: {score.toFixed(1)}</Badge>;
-    if (score >= 60) return <Badge className="bg-yellow-100 text-yellow-800 text-lg px-4 py-2 border-yellow-300">Overall: {score.toFixed(1)}</Badge>;
-    return <Badge className="bg-red-100 text-red-800 text-lg px-4 py-2 border-red-300">Overall: {score.toFixed(1)}</Badge>;
   };
 
   const CardSkeleton = () => (
@@ -273,10 +307,10 @@ export default function PendingCustomersPage() {
     <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col items-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-2">
-          Supervised Applications 📋
+          Final Analysis Applications 📋
         </h1>
         <p className="text-gray-600 text-center max-w-2xl">
-          Review and monitor customer loan applications that have been supervised.
+          Complete the final analysis and submit your recommendations for loan approval.
         </p>
         
         <div className="flex gap-4 mt-6">
@@ -289,8 +323,6 @@ export default function PendingCustomersPage() {
             <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
             {refreshing ? "Refreshing..." : "Refresh Applications"}
           </Button>
-       
-      
         </div>
       </div>
 
@@ -301,7 +333,7 @@ export default function PendingCustomersPage() {
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">All Clear!</h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
-           No supervised applications at the moment. Check back later for new submissions.
+            No applications pending final analysis. Check back later for new submissions.
           </p>
           <Button
             onClick={fetchPendingCustomers}
@@ -321,7 +353,7 @@ export default function PendingCustomersPage() {
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">All Clear!</h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
-            No supervised applications at the moment. Check back later for new submissions.
+            No applications pending final analysis. Check back later for new submissions.
           </p>
           <Button
             onClick={fetchPendingCustomers}
@@ -336,7 +368,8 @@ export default function PendingCustomersPage() {
       {!isLoading && customers.length > 0 && (
         <div className="grid grid-cols-1 gap-6">
           {customers.map((customer) => {
-            const analysis = loanAnalyses[customer.applicationReferenceNumber];
+            const analysis = analysisData[customer.applicationReferenceNumber] || {};
+            const isUploading = (field: string) => uploading[`${customer.applicationReferenceNumber}-${field}`] !== undefined;
             
             return (
               <Card key={customer.id} className="max-w-6xl mx-auto overflow-hidden border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -563,129 +596,111 @@ export default function PendingCustomersPage() {
                   </div>
 
                   {/* Loan Analysis Section */}
-                  {analysis && (
-                    <div className="space-y-4 md:col-span-2">
-                      <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
-                        <BarChart3 size={18} className="text-blue-600" />
-                        Loan Analysis
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600">PESTEL Analysis:</span>
-                          {formatData(analysis.pestelAnalysisUrl)}
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600">SWOT Analysis:</span>
-                          {formatData(analysis.swotAnalysisUrl)}
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600">Risk Assessment:</span>
-                          {formatData(analysis.riskAssessmentUrl)}
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600">ESG Assessment:</span>
-                          {formatData(analysis.esgAssessmentUrl)}
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600">Financial Need:</span>
-                          {formatData(analysis.financialNeedUrl)}
-                        </div>
-                        <div className="col-span-2">
-                          <div className="flex flex-col text-sm">
-                            <span className="text-gray-600 mb-1">Analyst Conclusion:</span>
-                            <span className="font-medium text-gray-800">{formatData(analysis.analystConclusion)}</span>
+                  <div className="space-y-4 md:col-span-2">
+                    <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
+                      <BarChart3 size={18} className="text-blue-600" />
+                      Loan Analysis & Recommendation
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      {/* Document Uploads for Analysis */}
+                      {[
+                        { field: 'financialProfileUrl', label: 'Financial Profile Doc' },
+                        { field: 'pestelAnalysisUrl', label: 'PESTEL Analysis Doc' },
+                        { field: 'swotAnalysisUrl', label: 'SWOT Analysis Doc' },
+                        { field: 'riskAssessmentUrl', label: 'Risk Assessment Doc' },
+                        { field: 'esgAssessmentUrl', label: 'ESG Assessment Doc' },
+                        { field: 'financialNeedUrl', label: 'Financial Need Doc' },
+                      ].map(({ field, label }) => (
+                        <div key={field} className="space-y-2">
+                          <label htmlFor={`${field}-${customer.id}`} className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                            <FileCheck size={14} />
+                            {label}
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              id={`${field}-${customer.id}`}
+                              type="file"
+                              onChange={(e) => handleFileUpload(e, customer.applicationReferenceNumber, field as keyof LoanAnalysis)}
+                              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                              disabled={isUploading(field)}
+                            />
+                            {isUploading(field) && (
+                              <RefreshCw size={16} className="animate-spin text-blue-600" />
+                            )}
                           </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {analysis[field] ? (
+                              <a
+                                href={analysis[field] as string}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline font-medium flex items-center gap-1"
+                              >
+                                <FileText size={12} />
+                                View Current Document
+                              </a>
+                            ) : (
+                              "No file uploaded"
+                            )}
+                          </p>
                         </div>
-                        <div className="col-span-2">
-                          <div className="flex flex-col text-sm">
-                            <span className="text-gray-600 mb-1">Analyst Recommendation:</span>
-                            <span className="font-medium text-gray-800">{formatData(analysis.analystRecommendation)}</span>
-                          </div>
-                        </div>
-                        <div className="col-span-2">
-                          <div className="flex flex-col text-sm">
-                            <span className="text-gray-600 mb-1">Supervisor Comment:</span>
-                            <span className="font-medium text-gray-800">{formatData(analysis.reviewNotes)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                      ))}
 
-                  {/* Review Scores Section */}
-                  {analysis && (
-                    <div className="space-y-4 md:col-span-2">
-                      <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
-                        <ClipboardCheck size={18} className="text-blue-600" />
-                        Review Scores
-                      </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        {[
-                          { label: 'PESTEL', score: analysis.pestelanalysisScore },
-                          { label: 'SWOT', score: analysis.swotanalysisScore },
-                          { label: 'Risk', score: analysis.riskassesmentScore },
-                          { label: 'ESG', score: analysis.esgassesmentScore },
-                          { label: 'Financial Need', score: analysis.financialneedScore },
-                        ].map((item, index) => (
-                          <div key={index} className="text-center p-3 bg-white rounded-lg shadow-sm">
-                            <p className="text-sm font-medium text-gray-700 mb-2">{item.label}</p>
-                            {getScoreBadge(item.score)}
-                          </div>
-                        ))}
+                      {/* Input fields for analyst's text */}
+                      <div className="col-span-2 space-y-2">
+                        <label htmlFor={`analystConclusion-${customer.id}`} className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                          <ClipboardList size={14} />
+                          Analyst Conclusion
+                        </label>
+                        <textarea
+                          id={`analystConclusion-${customer.id}`}
+                          placeholder="Enter analyst's conclusion here..."
+                          value={analysis.analystConclusion || ""}
+                          onChange={(e) =>
+                            handleInputChange(
+                              customer.applicationReferenceNumber,
+                              "analystConclusion",
+                              e.target.value
+                            )
+                          }
+                          rows={4}
+                          className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        />
                       </div>
-                      
-                      <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        {getOverallScoreBadge(analysis.overallScore)}
+
+                      <div className="col-span-2 space-y-2">
+                        <label htmlFor={`analystRecommendation-${customer.id}`} className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                          <ClipboardList size={14} />
+                          Analyst Recommendation
+                        </label>
+                        <textarea
+                          id={`analystRecommendation-${customer.id}`}
+                          placeholder="Enter analyst's recommendation here..."
+                          value={analysis.analystRecommendation || ""}
+                          onChange={(e) =>
+                            handleInputChange(
+                              customer.applicationReferenceNumber,
+                              "analystRecommendation",
+                              e.target.value
+                            )
+                          }
+                          rows={4}
+                          className="block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        />
                       </div>
                     </div>
-                  )}
+                  </div>
                 </CardContent>
                 
-                <CardFooter className="bg-gray-50 border-t border-gray-200 flex justify-between items-center py-4 px-6">
-                  <div className="flex gap-2">
-                    <CreditEdit
-                      customerId={customer.id} 
-                      onSuccess={() => {
-                        console.log("Edit action completed successfully");
-                        toast.success("Application sent for revision!");
-                        fetchPendingCustomers(); 
-                      }} 
-                    />
-                    <CreditFinish
-                      customerId={customer.id} 
-                      onSuccess={() => {
-                        console.log("Finish action completed successfully");
-                        toast.success("Application finalized successfully!");
-                        fetchPendingCustomers(); 
-                      }} 
-                    />
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <Button 
-                      onClick={() => fetchLoanAnalysis(customer.applicationReferenceNumber).then(() => {
-                        toast.success('Analysis refreshed!');
-                      })}
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                    >
-                      <RefreshCw size={14} />
-                      Refresh Analysis
-                    </Button>
-                    
-                    {analysis ? (
-                      <Badge className="bg-green-100 text-green-800 border-green-200 gap-1">
-                        <Check size={14} />
-                        Analysis Complete
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300 gap-1">
-                        <Clock size={14} />
-                        Pending Analysis
-                      </Badge>
-                    )}
-                  </div>
+                <CardFooter className="bg-gray-50 border-t border-gray-200 flex justify-end py-4 px-6">
+                  <CreditFinish
+                    customerId={customer.id}
+                    onSuccess={() => {
+                      console.log("Final analysis completed successfully");
+                      toast.success("Application finalized successfully!");
+                      fetchPendingCustomers(); 
+                    }}
+                  />
                 </CardFooter>
               </Card>
             );
