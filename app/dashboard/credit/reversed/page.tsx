@@ -36,7 +36,8 @@ import {
   AlertTriangle,
   Check,
   X,
-  RotateCcw
+  RotateCcw,
+  UserCheck
 } from "lucide-react";
 
 // Define the interface for the LoanAnalysis model
@@ -423,7 +424,7 @@ export default function PendingCustomersPage() {
       {error && (
         <div className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto border-4 border-dashed border-gray-200 text-gray-700 mb-8">
           <div className="mb-6 p-4 bg-green-100 rounded-full">
-            <CheckCircle2 className="text-green-600" size={48} />
+            <UserCheck className="text-green-600" size={48} />
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">All Clear!</h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
