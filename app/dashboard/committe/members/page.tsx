@@ -902,6 +902,12 @@ export default function CommitteeDecisionPage() {
                             {existingDecision.decisionReason}
                           </p>
                         )}
+                        {existingDecision.decisionReason && (
+                          <p className="text-sm text-blue-700 mt-2">
+                            <strong>Application ref number:</strong>{" "}
+                            {existingDecision.applicationReferenceNumber}
+                          </p>
+                        )}
                         <p className="text-xs text-blue-600 mt-2">
                           Submitted on:{" "}
                           {new Date(
@@ -997,53 +1003,70 @@ export default function CommitteeDecisionPage() {
                           </div>
                         </label>
                       </div>
-
-                      {(selectedDecisions[
-                        customer.applicationReferenceNumber
-                      ] === "REJECTED" ||
-                        selectedDecisions[
+                      {!hasExistingDecision &&
+                        (selectedDecisions[
                           customer.applicationReferenceNumber
-                        ] === "COMMITTE_REVERSED") && (
-                        <div className="col-span-3 space-y-2 mt-4">
-                          <h4 className="font-semibold text-gray-700 flex items-center gap-2">
-                            <AlertCircle size={16} className="text-red-500" />
-                            {selectedDecisions[
-                              customer.applicationReferenceNumber
-                            ] === "REJECTED"
-                              ? "Rejection Reason (Required):"
-                              : "Feedback for Additional Analysis (Required):"}
-                          </h4>
-                          <textarea
-                            placeholder={
-                              selectedDecisions[
+                        ] === "REJECTED" ||
+                          selectedDecisions[
+                            customer.applicationReferenceNumber
+                          ] === "COMMITTE_REVERSED" ||
+                          selectedDecisions[
+                            customer.applicationReferenceNumber
+                          ] === "APPROVED") && (
+                          <div className="col-span-3 space-y-2 mt-4">
+                            <h4 className="font-semibold text-gray-700 flex items-center gap-2">
+                              <AlertCircle size={16} className="text-red-500" />
+                              {selectedDecisions[
                                 customer.applicationReferenceNumber
                               ] === "REJECTED"
-                                ? "Enter detailed reason for rejecting this application..."
-                                : "Specify what additional analysis is needed..."
-                            }
-                            value={
-                              decisionReasons[
+                                ? "Rejection Reason (Required):"
+                                : selectedDecisions[
+                                    customer.applicationReferenceNumber
+                                  ] === "APPROVED"
+                                ? "Approval Note :"
+                                : "Feedback for Additional Analysis (Required):"}
+                            </h4>
+
+                            <textarea
+                              placeholder={
+                                selectedDecisions[
+                                  customer.applicationReferenceNumber
+                                ] === "REJECTED"
+                                  ? "Enter detailed reason for rejecting this application..."
+                                  : selectedDecisions[
+                                      customer.applicationReferenceNumber
+                                    ] === "APPROVED"
+                                  ? "Add an approval note ..."
+                                  : "Specify what additional analysis is needed..."
+                              }
+                              value={
+                                decisionReasons[
+                                  customer.applicationReferenceNumber
+                                ] || ""
+                              }
+                              onChange={(e) =>
+                                handleReasonChange(
+                                  customer.applicationReferenceNumber,
+                                  e.target.value
+                                )
+                              }
+                              className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+                              required
+                            />
+
+                            <p className="text-sm text-gray-500">
+                              {selectedDecisions[
                                 customer.applicationReferenceNumber
-                              ] || ""
-                            }
-                            onChange={(e) =>
-                              handleReasonChange(
-                                customer.applicationReferenceNumber,
-                                e.target.value
-                              )
-                            }
-                            className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
-                            required
-                          />
-                          <p className="text-sm text-gray-500">
-                            {selectedDecisions[
-                              customer.applicationReferenceNumber
-                            ] === "REJECTED"
-                              ? "Please provide a detailed reason for rejection."
-                              : "Please specify what additional analysis or information is required."}
-                          </p>
-                        </div>
-                      )}
+                              ] === "REJECTED"
+                                ? "Please provide a detailed reason for rejection."
+                                : selectedDecisions[
+                                    customer.applicationReferenceNumber
+                                  ] === "APPROVED"
+                                ? "Add an optional note for approval."
+                                : "Please specify what additional analysis or information is required."}
+                            </p>
+                          </div>
+                        )}
                     </div>
                   </div>
                 </CardContent>
@@ -1053,28 +1076,32 @@ export default function CommitteeDecisionPage() {
                     <Clock size={14} />
                     Application ready for committee decision
                   </div>
-                  <Button
-                    onClick={() =>
-                      handleDecision(
-                        customer.id,
-                        customer.applicationReferenceNumber
-                      )
-                    }
-                    disabled={isSubmitting[customer.applicationReferenceNumber]}
-                    className="gap-2 bg-blue-600 hover:bg-blue-700"
-                  >
-                    {isSubmitting[customer.applicationReferenceNumber] ? (
-                      <>
-                        <RefreshCw size={14} className="animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Check size={14} />
-                        Submit Decision
-                      </>
-                    )}
-                  </Button>
+                  {!hasExistingDecision && (
+                    <Button
+                      onClick={() =>
+                        handleDecision(
+                          customer.id,
+                          customer.applicationReferenceNumber
+                        )
+                      }
+                      disabled={
+                        isSubmitting[customer.applicationReferenceNumber]
+                      }
+                      className="gap-2 bg-blue-600 hover:bg-blue-700"
+                    >
+                      {isSubmitting[customer.applicationReferenceNumber] ? (
+                        <>
+                          <RefreshCw size={14} className="animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Check size={14} />
+                          Submit Decision
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
             );
