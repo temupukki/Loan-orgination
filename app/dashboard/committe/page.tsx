@@ -175,10 +175,37 @@ export default function CommitteeDecisionPage() {
       return;
     }
 
+    // For "Need More Analysis" status, also require a reason
+    if (decision === 'COMMITTE_REVERSED' && !decisionReasons[applicationRef]?.trim()) {
+      toast.error("Please provide feedback for what analysis is needed");
+      return;
+    }
+
     setIsSubmitting(prev => ({ ...prev, [applicationRef]: true }));
 
     try {
-      // First, update the customer status with PATCH
+      // First, record the decision using the new API
+      const decisionResponse = await fetch('/api/decisions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerId,
+          applicationReferenceNumber: applicationRef,
+          decision,
+          decisionReason: decisionReasons[applicationRef] || '',
+          committeeMember: "Current User" // Replace with actual user data
+        }),
+      });
+
+      const decisionData = await decisionResponse.json();
+
+      if (!decisionResponse.ok) {
+        throw new Error(decisionData.error || 'Failed to record decision');
+      }
+
+      // Then, update the customer status with PATCH
       const patchResponse = await fetch(`/api/customer/${customerId}/decision`, {
         method: 'PATCH',
         headers: {
@@ -239,7 +266,7 @@ export default function CommitteeDecisionPage() {
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       PENDING: { label: "Pending", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-      COMMITTE_REVERSED: { label: "Committe reversed", color: "bg-blue-100 text-blue-800 border-blue-200" },
+      COMMITTE_REVERSED: { label: "Needs More Analysis", color: "bg-blue-100 text-blue-800 border-blue-200" },
       COMMITTEE_REVIEW: { label: "Committee Review", color: "bg-purple-100 text-purple-800 border-purple-200" },
       APPROVED: { label: "Approved", color: "bg-green-100 text-green-800 border-green-200" },
       REJECTED: { label: "Rejected", color: "bg-red-100 text-red-800 border-red-200" }
@@ -344,8 +371,8 @@ export default function CommitteeDecisionPage() {
 
       {error && (
         <div className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto border-4 border-dashed border-gray-200 text-gray-700 mb-8">
-          <div className="mb-6 p-4 bg-red-100 rounded-full">
-            <AlertCircle className="text-red-500" size={48} />
+          <div className="mb-6 p-4 bg-green-100 rounded-full">
+            <CheckCircle2 className="text-green-600" size={48} />
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">All Clear!</h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
@@ -423,7 +450,7 @@ export default function CommitteeDecisionPage() {
                       <p className="text-gray-600">National ID:</p>
                       <p className="font-medium text-gray-800">{formatData(customer.nationalId)}</p>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
+                    <div className="flex justify-between itemsCenter text-sm">
                       <p className="text-gray-600 flex items-center gap-1">
                         <Phone size={14} />
                         Phone:
@@ -695,7 +722,7 @@ export default function CommitteeDecisionPage() {
                         />
                         <div className="flex items-center gap-2">
                           <RotateCcw className="h-5 w-5 text-blue-600" />
-                          <span className="text-gray-700 font-medium">Need Review</span>
+                          <span className="text-gray-700 font-medium">Need More Analysis</span>
                         </div>
                       </label>
                     </div>
@@ -717,20 +744,31 @@ export default function CommitteeDecisionPage() {
                       </label>
                     </div>
 
-                    {selectedDecisions[customer.applicationReferenceNumber] === 'REJECTED' || selectedDecisions[customer.applicationReferenceNumber] === 'COMMITTE_REVERSED' && (
+                    {(selectedDecisions[customer.applicationReferenceNumber] === 'REJECTED' || 
+                      selectedDecisions[customer.applicationReferenceNumber] === 'COMMITTE_REVERSED') && (
                       <div className="col-span-3 space-y-2 mt-4">
                         <h4 className="font-semibold text-gray-700 flex items-center gap-2">
                           <AlertCircle size={16} className="text-red-500" />
-                          Decision Reason (Required):
+                          {selectedDecisions[customer.applicationReferenceNumber] === 'REJECTED' 
+                            ? 'Rejection Reason (Required):' 
+                            : 'Feedback for Additional Analysis (Required):'}
                         </h4>
                         <textarea
-                          placeholder="Enter detailed reason for rejecting this application..."
+                          placeholder={
+                            selectedDecisions[customer.applicationReferenceNumber] === 'REJECTED' 
+                              ? "Enter detailed reason for rejecting this application..." 
+                              : "Specify what additional analysis is needed..."
+                          }
                           value={decisionReasons[customer.applicationReferenceNumber] || ''}
                           onChange={(e) => handleReasonChange(customer.applicationReferenceNumber, e.target.value)}
                           className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
                           required
                         />
-                        <p className="text-sm text-gray-500">Please provide a detailed reason for rejection.</p>
+                        <p className="text-sm text-gray-500">
+                          {selectedDecisions[customer.applicationReferenceNumber] === 'REJECTED' 
+                            ? 'Please provide a detailed reason for rejection.' 
+                            : 'Please specify what additional analysis or information is required.'}
+                        </p>
                       </div>
                     )}
                   </div>

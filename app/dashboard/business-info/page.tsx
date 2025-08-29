@@ -2,150 +2,131 @@
 
 import { useState, useEffect } from "react";
 import { Customer } from "@/app/types/loan";
-import { loanTypes } from "@/app/utils/constants";
 import { supabase } from "@/lib/supabase";
 
-export default function LoanDetailsPage() {
+export default function BusinessInfoPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [lineOfBusiness, setLineOfBusiness] = useState({
+    majorLineBusiness: "",
+    otherLineBusiness: "",
+  });
   const [uploading, setUploading] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    const customerData = localStorage.getItem('currentCustomer');
+    const customerData = localStorage.getItem("currentCustomer");
     if (customerData) {
-      setCustomer(JSON.parse(customerData));
+      const customerObj = JSON.parse(customerData);
+      setCustomer(customerObj);
+      setLineOfBusiness({
+        majorLineBusiness: customerObj.majorLineBusiness || "",
+        otherLineBusiness: customerObj.otherLineBusiness || "",
+      });
     } else {
-      window.location.href = '/';
+      window.location.href = "/";
     }
   }, []);
 
-  const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleLineOfBusinessChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setLineOfBusiness((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
+  };
+
+  const handleCustomerFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!customer) return;
-    
+
     const { name, value } = e.target;
     setCustomer({
       ...customer,
-      [name]: name === 'loanAmount' || name === 'loanPeriod' ? Number(value) : value
+      [name]: value,
     });
 
-    // Clear error when field is updated
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ""
+        [name]: "",
       }));
     }
   };
 
   const handleBlur = (fieldName: string) => {
-    setTouched(prev => ({
+    setTouched((prev) => ({
       ...prev,
-      [fieldName]: true
+      [fieldName]: true,
     }));
-    
-    // Validate the field when it loses focus
-    validateField(fieldName, customer?.[fieldName as keyof Customer] as string);
+
+    validateField(fieldName);
   };
 
-  const validateField = (fieldName: string, value: any) => {
+  const validateField = (fieldName: string) => {
     let isValid = true;
     let errorMessage = "";
 
     switch (fieldName) {
-      case "purposeOfLoan":
-        if (!value || value.trim() === "") {
-          errorMessage = "Purpose of loan is required";
+      case "majorLineBusiness":
+        if (!lineOfBusiness.majorLineBusiness.trim()) {
+          errorMessage = "Major line of business description is required";
           isValid = false;
         }
         break;
-      
-      case "loanType":
-        if (!value || value.trim() === "") {
-          errorMessage = "Loan type is required";
+
+      case "dateOfEstablishmentMLB":
+        if (!customer?.dateOfEstablishmentMLB) {
+          errorMessage = "Date of establishment is required";
           isValid = false;
         }
         break;
-      
-      case "loanAmount":
-        if (!value || value <= 0) {
-          errorMessage = "Valid loan amount is required";
+
+      case "majorLineBusinessDoc":
+        if (!customer?.majorLineBusinessUrl) {
+          errorMessage = "Supporting document is required";
           isValid = false;
         }
         break;
-      
-      case "loanPeriod":
-        if (!value || value <= 0) {
-          errorMessage = "Valid loan period is required";
-          isValid = false;
-        }
-        break;
-      
-      case "modeOfRepayment":
-        if (!value || value.trim() === "") {
-          errorMessage = "Mode of repayment is required";
-          isValid = false;
-        }
-        break;
-      
-      case "applicationFormDoc":
-        if (!customer?.applicationFormUrl) {
-          errorMessage = "Loan application form is required";
-          isValid = false;
-        }
-        break;
-      
-      // shareholdersDetailsUrl is optional, no validation needed
+
       default:
         break;
     }
 
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      [fieldName]: errorMessage
+      [fieldName]: errorMessage,
     }));
 
     return isValid;
   };
 
   const validateForm = () => {
-    if (!customer) return false;
-
     const newErrors: Record<string, string> = {};
     let isValid = true;
 
-    // Validate all required fields
-    if (!customer.purposeOfLoan?.trim()) {
-      newErrors.purposeOfLoan = "Purpose of loan is required";
+    if (!lineOfBusiness.majorLineBusiness.trim()) {
+      newErrors.majorLineBusiness = "Major line of business description is required";
       isValid = false;
     }
 
-    if (!customer.loanType?.trim()) {
-      newErrors.loanType = "Loan type is required";
+    if (!customer?.dateOfEstablishmentMLB) {
+      newErrors.dateOfEstablishmentMLB = "Date of establishment is required";
       isValid = false;
     }
 
-    if (!customer.loanAmount || customer.loanAmount <= 0) {
-      newErrors.loanAmount = "Valid loan amount is required";
+    if (!customer?.majorLineBusinessUrl) {
+      newErrors.majorLineBusinessDoc = "Supporting document is required";
       isValid = false;
     }
-
-    if (!customer.loanPeriod || customer.loanPeriod <= 0) {
-      newErrors.loanPeriod = "Valid loan period is required";
-      isValid = false;
-    }
-
-    if (!customer.modeOfRepayment?.trim()) {
-      newErrors.modeOfRepayment = "Mode of repayment is required";
-      isValid = false;
-    }
-
-    if (!customer.applicationFormUrl) {
-      newErrors.applicationFormDoc = "Loan application form is required";
-      isValid = false;
-    }
-
-    // shareholdersDetailsUrl is optional, no validation needed
 
     setErrors(newErrors);
     return isValid;
@@ -156,88 +137,123 @@ export default function LoanDetailsPage() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${type}.${fileExt}`;
-      const bucketName = "LOAN";
       const filePath = `${type}/${fileName}`;
 
       const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file);
+        .from("LOAN")
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (error) throw error;
 
       const { data: publicUrlData } = supabase.storage
-        .from(bucketName)
+        .from("LOAN")
         .getPublicUrl(filePath);
 
       return publicUrlData.publicUrl;
     } catch (err) {
-      throw new Error(`Failed to upload ${type} document: ${(err as Error).message}`);
+      throw new Error(
+        `Failed to upload ${type} document: ${(err as Error).message}`
+      );
     } finally {
       setUploading(null);
     }
   };
 
-  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
+  const handleDocumentUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: string
+  ) => {
     if (!e.target.files || e.target.files.length === 0 || !customer) return;
-    
+
     const file = e.target.files[0];
+    
+    // Validate file
+    const validTypes = [
+      'application/pdf', 
+      'image/jpeg', 
+      'image/png', 
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    
+    if (!validTypes.includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        [`${type}Doc`]: "Please upload PDF, Word, or image files only"
+      }));
+      return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) {
+      setErrors((prev) => ({
+        ...prev,
+        [`${type}Doc`]: "File size must be less than 10MB"
+      }));
+      return;
+    }
+
     try {
       const fileUrl = await uploadDocument(file, type);
-      
+
       setCustomer({
         ...customer,
-        [`${type}Url`]: fileUrl
+        [`${type}Url`]: fileUrl,
       });
 
-      // Clear document error after successful upload
       if (errors[`${type}Doc`]) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          [`${type}Doc`]: ""
+          [`${type}Doc`]: "",
         }));
       }
     } catch (err: any) {
       console.error(err.message);
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [`${type}Doc`]: "Failed to upload document. Please try again."
+        [`${type}Doc`]: "Failed to upload document. Please try again.",
       }));
     }
   };
 
   const saveAndContinue = () => {
-    // Mark all required fields as touched
     setTouched({
-      purposeOfLoan: true,
-      loanType: true,
-      loanAmount: true,
-      loanPeriod: true,
-      modeOfRepayment: true,
-      applicationFormDoc: true
-      // shareholdersDetailsDoc is optional, no need to mark as touched
+      majorLineBusiness: true,
+      dateOfEstablishmentMLB: true,
+      majorLineBusinessDoc: true,
     });
 
     if (!validateForm()) {
-      // Scroll to first error
       const firstErrorField = Object.keys(errors)[0];
       if (firstErrorField) {
         const element = document.querySelector(`[name="${firstErrorField}"]`);
-        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element?.scrollIntoView({ behavior: "smooth", block: "center" });
       }
       return;
     }
 
     if (customer) {
-      localStorage.setItem('currentCustomer', JSON.stringify(customer));
-      window.location.href = '/dashboard/documents';
+      const updatedCustomer = {
+        ...customer,
+        ...lineOfBusiness,
+      };
+      localStorage.setItem("currentCustomer", JSON.stringify(updatedCustomer));
+      window.location.href = "/dashboard/loan-details";
     }
   };
 
   const goBack = () => {
-    window.location.href = '/dashboard/business-info';
+    window.location.href = "/dashboard/basic-info";
   };
 
-  if (!customer) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (!customer)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 px-4">
@@ -245,32 +261,38 @@ export default function LoanDetailsPage() {
         {/* Stepper Header */}
         <div className="flex items-center justify-center mb-10">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center opacity-40">
-              <div className="h-10 w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold">
+            <div className="flex items-center opacity-70">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
                 1
               </div>
-              <span className="ml-2 text-gray-500">Search Customer</span>
+              <span className="ml-2 font-semibold text-blue-700">
+                Search Customer
+              </span>
             </div>
             <div className="w-12 h-0.5 bg-gray-300"></div>
-            <div className="flex items-center opacity-40">
-              <div className="h-10 w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold">
+            <div className="flex items-center opacity-70">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
                 2
               </div>
-              <span className="ml-2 text-gray-500">Basic Info</span>
-            </div>
-            <div className="w-12 h-0.5 bg-gray-300"></div>
-            <div className="flex items-center opacity-40">
-              <div className="h-10 w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold">
-                3
-              </div>
-              <span className="ml-2 text-gray-500">Business Info</span>
+              <span className="ml-2 font-semibold text-blue-700">
+                Basic Info
+              </span>
             </div>
             <div className="w-12 h-0.5 bg-gray-300"></div>
             <div className="flex items-center">
               <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
+                3
+              </div>
+              <span className="ml-2 font-semibold text-blue-700">
+                Business Info
+              </span>
+            </div>
+            <div className="w-12 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center opacity-40">
+              <div className="h-10 w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold">
                 4
               </div>
-              <span className="ml-2 font-semibold text-blue-700">Loan Details</span>
+              <span className="ml-2 text-gray-500">Loan Details</span>
             </div>
           </div>
         </div>
@@ -279,212 +301,168 @@ export default function LoanDetailsPage() {
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-gray-800 mb-2">
-              Loan Origination – Step 4
+              Loan Origination – Step 3
             </h1>
             <p className="text-gray-600">
-              Provide loan details to continue
+              Provide business information to continue
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Left Column */}
-            <div className="space-y-4">
-              {/* Purpose of Loan */}
-              <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-100">
-                <h3 className="text-lg font-medium mb-3">
-                  Purpose of Loan *
-                </h3>
-                <textarea
-                  name="purposeOfLoan"
-                  value={customer.purposeOfLoan || ""}
-                  onChange={handleFieldChange}
-                  onBlur={() => handleBlur("purposeOfLoan")}
-                  className={`w-full p-2 border rounded-md ${
-                    errors.purposeOfLoan && touched.purposeOfLoan
-                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  }`}
-                  rows={3}
-                  placeholder="Describe the purpose of the loan"
-                  required
-                />
-                {errors.purposeOfLoan && touched.purposeOfLoan && (
-                  <p className="mt-1 text-sm text-red-600">{errors.purposeOfLoan}</p>
-                )}
-              </div>
-              
-              {/* Loan Application Form */}
-              <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-100">
-                <h3 className="text-lg font-medium mb-3">
-                  Loan Application Form *
-                </h3>
-                <input
-                  type="file"
-                  onChange={(e) => handleDocumentUpload(e, 'applicationForm')}
-                  className={`w-full p-2 border rounded-md ${
-                    errors.applicationFormDoc && touched.applicationFormDoc
-                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  }`}
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                  required
-                />
-                {uploading === 'applicationForm' && (
-                  <p className="mt-1 text-sm text-blue-600">Uploading...</p>
-                )}
-                {errors.applicationFormDoc && touched.applicationFormDoc && (
-                  <p className="mt-1 text-sm text-red-600">{errors.applicationFormDoc}</p>
-                )}
-                {customer.applicationFormUrl && !errors.applicationFormDoc && (
-                  <p className="mt-1 text-sm text-green-600">✓ Document uploaded successfully</p>
-                )}
+            {/* Major Line of Business */}
+            <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-100">
+              <h3 className="text-lg font-medium mb-3">
+                Major Line of Business *
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Business Description *
+                  </label>
+                  <textarea
+                    name="majorLineBusiness"
+                    value={lineOfBusiness.majorLineBusiness}
+                    onChange={handleLineOfBusinessChange}
+                    onBlur={() => handleBlur("majorLineBusiness")}
+                    className={`w-full p-2 border rounded-md ${
+                      errors.majorLineBusiness && touched.majorLineBusiness
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    }`}
+                    rows={3}
+                    placeholder="Describe your main business activity"
+                  />
+                  {errors.majorLineBusiness && touched.majorLineBusiness && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.majorLineBusiness}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date of Establishment *
+                  </label>
+                  <input
+                    type="date"
+                    name="dateOfEstablishmentMLB"
+                    value={customer.dateOfEstablishmentMLB ? new Date(customer.dateOfEstablishmentMLB).toISOString().split('T')[0] : ""}
+                    onChange={handleCustomerFieldChange}
+                    onBlur={() => handleBlur("dateOfEstablishmentMLB")}
+                    className={`w-full p-2 border rounded-md ${
+                      errors.dateOfEstablishmentMLB &&
+                      touched.dateOfEstablishmentMLB
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    }`}
+                  />
+                  {errors.dateOfEstablishmentMLB &&
+                    touched.dateOfEstablishmentMLB && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.dateOfEstablishmentMLB}
+                      </p>
+                    )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Supporting Document *
+                  </label>
+                  <input
+                    type="file"
+                    onChange={(e) => handleDocumentUpload(e, "majorLineBusiness")}
+                    className={`w-full p-2 border rounded-md ${
+                      errors.majorLineBusinessDoc && touched.majorLineBusinessDoc
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    }`}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  />
+                  {uploading === "majorLineBusiness" && (
+                    <p className="mt-1 text-sm text-blue-600">Uploading...</p>
+                  )}
+                  {errors.majorLineBusinessDoc &&
+                    touched.majorLineBusinessDoc && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.majorLineBusinessDoc}
+                      </p>
+                    )}
+                  {customer.majorLineBusinessUrl &&
+                    !errors.majorLineBusinessDoc && (
+                      <p className="mt-1 text-sm text-green-600">
+                        ✓ Document uploaded successfully
+                      </p>
+                    )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    Upload PDF, Word, or image files (max 10MB)
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-4">
-              {/* Loan Details */}
-              <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-100">
-                <h3 className="text-lg font-medium mb-3">
-                  Loan Details *
-                </h3>
-                <div className="space-y-4">
-                  {/* Loan Type */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Loan Type *
-                    </label>
-                    <select
-                      name="loanType"
-                      value={customer.loanType || ""}
-                      onChange={handleFieldChange}
-                      onBlur={() => handleBlur("loanType")}
-                      className={`w-full p-2 border rounded-md ${
-                        errors.loanType && touched.loanType
-                          ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      }`}
-                      required
-                    >
-                      <option value="">Select Loan Type</option>
-                      {loanTypes.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.loanType && touched.loanType && (
-                      <p className="mt-1 text-sm text-red-600">{errors.loanType}</p>
-                    )}
-                  </div>
-
-                  {/* Loan Amount */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Loan Amount ($) *
-                    </label>
-                    <input
-                      type="number"
-                      name="loanAmount"
-                      value={customer.loanAmount || ""}
-                      onChange={handleFieldChange}
-                      onBlur={() => handleBlur("loanAmount")}
-                      className={`w-full p-2 border rounded-md ${
-                        errors.loanAmount && touched.loanAmount
-                          ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      }`}
-                      min="1"
-                      step="0.01"
-                      placeholder="Enter loan amount"
-                      required
-                    />
-                    {errors.loanAmount && touched.loanAmount && (
-                      <p className="mt-1 text-sm text-red-600">{errors.loanAmount}</p>
-                    )}
-                  </div>
-
-                  {/* Loan Period */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Loan Period (months) *
-                    </label>
-                    <input
-                      type="number"
-                      name="loanPeriod"
-                      value={customer.loanPeriod || ""}
-                      onChange={handleFieldChange}
-                      onBlur={() => handleBlur("loanPeriod")}
-                      className={`w-full p-2 border rounded-md ${
-                        errors.loanPeriod && touched.loanPeriod
-                          ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      }`}
-                      min="1"
-                      placeholder="Enter loan period in months"
-                      required
-                    />
-                    {errors.loanPeriod && touched.loanPeriod && (
-                      <p className="mt-1 text-sm text-red-600">{errors.loanPeriod}</p>
-                    )}
-                  </div>
-
-                  {/* Mode of Repayment */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Mode of Repayment *
-                    </label>
-                    <input
-                      type="text"
-                      name="modeOfRepayment"
-                      value={customer.modeOfRepayment || ""}
-                      onChange={handleFieldChange}
-                      onBlur={() => handleBlur("modeOfRepayment")}
-                      className={`w-full p-2 border rounded-md ${
-                        errors.modeOfRepayment && touched.modeOfRepayment
-                          ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      }`}
-                      placeholder="e.g., Monthly installments, Quarterly payments"
-                      required
-                    />
-                    {errors.modeOfRepayment && touched.modeOfRepayment && (
-                      <p className="mt-1 text-sm text-red-600">{errors.modeOfRepayment}</p>
-                    )}
-                  </div>
+            {/* Other Line of Business */}
+            <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-100">
+              <h3 className="text-lg font-medium mb-3">
+                Other Line of Business
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Business Description
+                  </label>
+                  <textarea
+                    name="otherLineBusiness"
+                    value={lineOfBusiness.otherLineBusiness}
+                    onChange={handleLineOfBusinessChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+                    rows={3}
+                    placeholder="Describe any additional business activities (optional)"
+                  />
                 </div>
-              </div>
-
-              {/* Shareholders Details Document (OPTIONAL) */}
-              <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-100">
-                <h3 className="text-lg font-medium mb-3">
-                  Shareholders Details Document
-                  <span className="text-sm font-normal text-gray-500 ml-1">(Optional)</span>
-                </h3>
-                <input
-                  type="file"
-                  onChange={(e) => handleDocumentUpload(e, 'shareholdersDetails')}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                />
-                {uploading === 'shareholdersDetails' && (
-                  <p className="mt-1 text-sm text-blue-600">Uploading...</p>
-                )}
-                {customer.shareholdersDetailsUrl && (
-                  <p className="mt-1 text-sm text-green-600">✓ Document uploaded successfully</p>
-                )}
-                <p className="mt-1 text-sm text-gray-500">
-                  Upload shareholders details document if available
-                </p>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date of Establishment
+                  </label>
+                  <input
+                    type="date"
+                    name="dateOfEstablishmentOLB"
+                    value={customer.dateOfEstablishmentOLB ? new Date(customer.dateOfEstablishmentOLB).toISOString().split('T')[0] : ""}
+                    onChange={handleCustomerFieldChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Supporting Document
+                  </label>
+                  <input
+                    type="file"
+                    onChange={(e) => handleDocumentUpload(e, "otherLineBusiness")}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  />
+                  {uploading === "otherLineBusiness" && (
+                    <p className="mt-1 text-sm text-blue-600">Uploading...</p>
+                  )}
+                  {customer.otherLineBusinessUrl && (
+                    <p className="mt-1 text-sm text-green-600">
+                      ✓ Document uploaded successfully
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    Upload PDF, Word, or image files (max 10MB)
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Required fields note */}
+          {/* Note */}
           <div className="mt-4 p-3 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-700">
-              <span className="font-medium">Note:</span> Fields marked with * are required. 
-              Shareholders details document is optional but recommended if available.
+              <span className="font-medium">Note:</span> Fields marked with * are
+              required. Major Line of Business information must be provided to
+              continue.
             </p>
           </div>
 
@@ -499,9 +477,12 @@ export default function LoanDetailsPage() {
             <button
               onClick={saveAndContinue}
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={Object.values(errors).some(error => error) && Object.keys(touched).length > 0}
+              disabled={
+                Object.values(errors).some((error) => error) &&
+                Object.keys(touched).length > 0
+              }
             >
-              Next: Documents
+              Next: Loan Details
             </button>
           </div>
         </div>

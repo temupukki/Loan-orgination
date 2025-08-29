@@ -60,6 +60,11 @@ const ROLE_LINKS: Record<string, NavLink[]> = {
       label: "Manage", 
       icon: FileText 
     },
+       { 
+      href: "/dashboard/request", 
+      label: "Requested Comments", 
+      icon: Edit3 
+    },
   ],
   CREDIT_ANALYST: [
     { 

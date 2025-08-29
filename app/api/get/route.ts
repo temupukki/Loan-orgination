@@ -29,7 +29,11 @@ export async function GET(request: NextRequest) {
       case "COMMITTE_REVIEW":
         status = ApplicationStatus.COMMITTE_REVIEW;
         break;
+         case "RM_RECCOMENDATION":
+        status = ApplicationStatus.RM_RECCOMENDATION;
+        break;
       default:
+        
         return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 

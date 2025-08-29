@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 import { parseDateSafe } from '@/app/utils/dateUtils';
 import { PrismaClient } from "@prisma/client"; 
@@ -6,6 +8,21 @@ const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
   try {
+    // Get the session
+   const session = await auth.api.getSession({
+     headers: await headers(),
+   });
+    
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Please log in.' },
+        { status: 401 }
+      );
+    }
+    
+    // Extract relation manager ID from session
+    const relationManagerID = session.user.id;
+    
     const body = await request.json();
     
     const {
@@ -31,15 +48,13 @@ export async function POST(request: NextRequest) {
       status,
       accountType,
       
-      // Business information (all required except optional fields)
       majorLineBusiness,
       majorLineBusinessUrl,
       otherLineBusiness,
       otherLineBusinessUrl,
       dateOfEstablishmentMLB,
       dateOfEstablishmentOLB,
-      
-      // Loan application details (all required)
+ 
       purposeOfLoan,
       loanType,
       loanAmount,
@@ -50,7 +65,6 @@ export async function POST(request: NextRequest) {
       creditInitiationCenter,
       applicationReferenceNumber,
       
-      // Document URLs (all required except shareholdersDetailsUrl)
       nationalidUrl,
       agreementFormUrl,
       applicationFormUrl,
@@ -158,6 +172,9 @@ export async function POST(request: NextRequest) {
         status,
         accountType,
         
+        // Add relation manager ID from session
+        relationManagerID,
+        
         // Business information
         majorLineBusiness,
         majorLineBusinessUrl,
@@ -200,6 +217,7 @@ export async function POST(request: NextRequest) {
         customerNumber: customer.customerNumber,
         applicationReferenceNumber: customer.applicationReferenceNumber,
         applicationStatus: customer.applicationStatus,
+        relationManagerID: customer.relationManagerID,
         createdAt: customer.createdAt
       }
     }, { status: 201 });

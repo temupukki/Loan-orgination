@@ -54,7 +54,10 @@ model Customer {
   collateralProfileUrl       String
   financialProfileUrl        String
   creditAnalystID            String?
-  supervisorID                String?
+  supervisorID               String?
+  relationManagerID          String?
+  rmRecommendation           String?     
+  creditAnalystComment       String?
   applicationStatus          ApplicationStatus @default(PENDING)
   createdAt                  DateTime          @default(now())
   updatedAt                  DateTime          @updatedAt
@@ -77,6 +80,7 @@ enum ApplicationStatus {
   COMMITTE_REVIEW
   COMMITTE_REVERSED
   WITHDRAWN // Customer withdrew application
+  RM_RECCOMENDATION
 }
 
 model User {
@@ -154,7 +158,7 @@ model LoanAnalysis {
   financialNeedUrl     String?          @map("financial_need_url")
   analystConclusion    String?          @map("analyst_conclusion")
   analystRecommendation String?          @map("analyst_recommendation")
-  rmRecommendation String?       @map("rm_reccommendation")
+
   pestelanalysisScore Int? 
   swotanalysisScore Int? 
    riskassesmentScore Int? 
