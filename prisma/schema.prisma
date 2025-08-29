@@ -65,6 +65,7 @@ model Customer {
   @@map("customers")
   LoanAnalysis LoanAnalysis[]
   Decision Decision[]
+  MembersDecision MembersDecision[]
 }
 
 enum ApplicationStatus {
@@ -81,6 +82,7 @@ enum ApplicationStatus {
   COMMITTE_REVERSED
   WITHDRAWN // Customer withdrew application
   RM_RECCOMENDATION
+  MEMBER_REVIEW
 }
 
 model User {
@@ -97,6 +99,7 @@ model User {
 
   @@unique([email])
   @@map("user")
+  MembersDecision MembersDecision[]
 }
 
 model Session {
@@ -184,7 +187,19 @@ model Decision {
 
   @@map("decisions")
 }
-
+model MembersDecision {
+  id          String   @id @default(cuid())
+  userId  String @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationReferenceNumber String            @unique @map("application_reference_number")
+  customer             Customer @relation(fields: [applicationReferenceNumber], references: [applicationReferenceNumber])
+  decision    String
+  decisionReason String
+  decisionDate DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@map("memberdecisions")
+}
 
 
 enum Userrole {

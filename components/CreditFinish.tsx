@@ -19,7 +19,7 @@ export function CreditFinish({ customerId, onSuccess }: CreditFinishProps) {
       const response = await fetch(`/api/customer/${customerId}/edit`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newStatus: "COMMITTE_REVIEW" }),
+        body: JSON.stringify({ newStatus: "MEMBER_REVIEW" }),
       });
 
       if (!response.ok) {

@@ -32,6 +32,9 @@ export async function GET(request: NextRequest) {
          case "RM_RECCOMENDATION":
         status = ApplicationStatus.RM_RECCOMENDATION;
         break;
+          case "MEMBER_REVIEW":
+        status = ApplicationStatus.MEMBER_REVIEW;
+        break;
       default:
         
         return NextResponse.json({ error: "Invalid status" }, { status: 400 });

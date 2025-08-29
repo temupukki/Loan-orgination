@@ -15,7 +15,7 @@ export async function PATCH(
         id: id,
       },
       data: {
-        applicationStatus: 'COMMITTE_REVIEW', // Update the status to 'UNDER_REVIEW'
+        applicationStatus: 'MEMBER_REVIEW', // Update the status to 'UNDER_REVIEW'
       },
     });
 
