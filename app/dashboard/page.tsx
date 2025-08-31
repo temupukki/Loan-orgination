@@ -4,21 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  BarChart3, 
   Users, 
   FileText, 
   Clock, 
   AlertCircle,
   Plus,
-  Search,
-  Filter,
-  Download,
-  Shield,
-  UserCheck,
-  Loader2
+  Eye,
+  Loader2,
+  RefreshCw
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
@@ -34,41 +28,26 @@ interface UserSession {
   };
 }
 
-interface DashboardStats {
-  totalClients?: number;
-  totalUsers?: number;
-  activeLoans: number;
-  pendingApplications: number;
-  overduePayments: number;
-  approvalRate?: number;
-  clientSatisfaction?: number;
-  newClientsThisMonth?: number;
-}
-
-interface Application {
+interface Customer {
   id: string;
-  client: string;
-  amount: string;
-  status: "pending" | "approved" | "rejected" | string;
-  date: string;
-}
-
-interface Task {
-  id: string;
-  task: string;
-  time: string;
-  priority: "high" | "medium" | "low" | string;
+  applicationReferenceNumber: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string;
+  loanAmount: number;
+  loanType: string;
+  applicationStatus: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function Dashboard() {
   const [session, setSession] = useState<UserSession | null>(null);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [recentApplications, setRecentApplications] = useState<Application[]>([]);
-  const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [applicationsLoading, setApplicationsLoading] = useState(true);
-  const [tasksLoading, setTasksLoading] = useState(true);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -81,7 +60,7 @@ export default function Dashboard() {
           return;
         }
 
-        setSession(data as UserSession);
+        setSession(data as unknown as UserSession);
       } catch (error) {
         console.error("Session error:", error);
         router.push("/");
@@ -95,66 +74,28 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (session?.user?.role) {
-      fetchDashboardData();
+      fetchCustomers();
     }
   }, [session]);
 
-  const fetchDashboardData = async () => {
+  const fetchCustomers = async () => {
     try {
-      // Fetch stats
-      setStatsLoading(true);
-      const statsResponse = await fetch('/api/finaldecision?status=APPROVED');
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        setStats(statsData);
-      } else {
-        // Set default stats if API fails
-        setStats({
-          activeLoans: 0,
-          pendingApplications: 0,
-          overduePayments: 0,
-          approvalRate: 0,
-          clientSatisfaction: 0,
-          newClientsThisMonth: 0
-        });
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch('/api/manage');
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch customers");
       }
       
-      // Fetch recent applications
-      setApplicationsLoading(true);
-      const appsResponse = await fetch('/api/finaldecision?status=APPROVED');
-      if (appsResponse.ok) {
-        const appsData = await appsResponse.json();
-        setRecentApplications(Array.isArray(appsData) ? appsData : []);
-      } else {
-        setRecentApplications([]);
-      }
-      
-      // Fetch upcoming tasks
-      setTasksLoading(true);
-      const tasksResponse = await fetch('/api/finaldecision?status=APPROVED');
-      if (tasksResponse.ok) {
-        const tasksData = await tasksResponse.json();
-        setUpcomingTasks(Array.isArray(tasksData) ? tasksData : []);
-      } else {
-        setUpcomingTasks([]);
-      }
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      // Set fallback data
-      setStats({
-        activeLoans: 0,
-        pendingApplications: 0,
-        overduePayments: 0,
-        approvalRate: 0,
-        clientSatisfaction: 0,
-        newClientsThisMonth: 0
-      });
-      setRecentApplications([]);
-      setUpcomingTasks([]);
+      const customersData: Customer[] = await response.json();
+      setCustomers(customersData);
+    } catch (err: any) {
+      console.error("Error fetching customers:", err);
+      setError(err.message || "Failed to load customers");
+      setCustomers([]);
     } finally {
-      setStatsLoading(false);
-      setApplicationsLoading(false);
-      setTasksLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -163,47 +104,70 @@ export default function Dashboard() {
     const variants = {
       pending: "bg-yellow-100 text-yellow-800",
       approved: "bg-green-100 text-green-800",
-      rejected: "bg-red-100 text-red-800"
+      rejected: "bg-red-100 text-red-800",
+      under_review: "bg-blue-100 text-blue-800",
+      committee_review: "bg-purple-100 text-purple-800",
+      supervised: "bg-indigo-100 text-indigo-800",
+      analysis_completed: "bg-teal-100 text-teal-800",
+      rm_recomendation: "bg-orange-100 text-orange-800",
+      supervisor_reviewing: "bg-pink-100 text-pink-800",
+      final_analysis: "bg-cyan-100 text-cyan-800",
+      member_review: "bg-amber-100 text-amber-800",
+      committe_reversed: "bg-rose-100 text-rose-800"
     };
     return variants[safeStatus as keyof typeof variants] || "bg-gray-100 text-gray-800";
   };
 
-  const getPriorityBadge = (priority: string = "") => {
-    const safePriority = (priority || "").toLowerCase();
-    const variants = {
-      high: "bg-red-100 text-red-800",
-      medium: "bg-yellow-100 text-yellow-800",
-      low: "bg-blue-100 text-blue-800"
-    };
-    return variants[safePriority as keyof typeof variants] || "bg-gray-100 text-gray-800";
-  };
-
-  const getRoleBadge = (role: string = "") => {
-    const safeRole = (role || "").toLowerCase();
-    const variants = {
-      admin: "bg-red-100 text-red-800",
-      relationship_manager: "bg-blue-100 text-blue-800",
-      credit_analyst: "bg-green-100 text-green-800",
-      supervisor: "bg-purple-100 text-purple-800",
-      committe_member: "bg-orange-100 text-orange-800"
-    };
-    return variants[safeRole as keyof typeof variants] || "bg-gray-100 text-gray-800";
-  };
-
   const formatStatusText = (status: string = "") => {
-    return (status || "unknown").toUpperCase();
+    const statusMap: Record<string, string> = {
+      pending: "PENDING",
+      approved: "APPROVED",
+      rejected: "REJECTED",
+      under_review: "UNDER REVIEW",
+      committee_review: "COMMITTEE REVIEW",
+      supervised: "SUPERVISED",
+      analysis_completed: "ANALYSIS COMPLETED",
+      rm_recomendation: "RM RECOMMENDATION",
+      supervisor_reviewing: "SUPERVISOR REVIEWING",
+      final_analysis: "FINAL ANALYSIS",
+      member_review: "MEMBER REVIEW",
+      committe_reversed: "COMMITTEE REVERSED"
+    };
+    return statusMap[status.toLowerCase()] || status.toUpperCase();
   };
 
-  const formatPriorityText = (priority: string = "") => {
-    return (priority || "unknown").toUpperCase();
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-ET", {
+      style: "currency",
+      currency: "ETB",
+    }).format(amount);
   };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getStats = () => {
+    const total = customers.length;
+    const pending = customers.filter(c => c.applicationStatus.toLowerCase().includes('pending')).length;
+    const approved = customers.filter(c => c.applicationStatus.toLowerCase() === 'approved').length;
+    const rejected = customers.filter(c => c.applicationStatus.toLowerCase() === 'rejected').length;
+
+    return { total, pending, approved, rejected };
+  };
+
+  const stats = getStats();
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading your dashboard...</p>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -213,41 +177,31 @@ export default function Dashboard() {
     return null;
   }
 
-  const userRole = session.user.role;
-  if (userRole !== "ADMIN" && userRole !== "RELATIONSHIP_MANAGER") {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-600">Redirecting to your dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <title>Dashboard | Loan Origination System</title>
+      <title>Customer Dashboard | Loan System</title>
       
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, {session.user.name}!
+            Customer Applications
           </h1>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge className={getRoleBadge(userRole)}>
-              {userRole.replace(/_/g, ' ')}
-            </Badge>
-            <p className="text-gray-600">Here's your overview for today</p>
-          </div>
+          <p className="text-gray-600 mt-1">
+            Manage and review all customer applications
+          </p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Filter
+          <Button 
+            onClick={fetchCustomers} 
+            variant="outline" 
+            className="flex items-center gap-2"
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            Refresh
           </Button>
-          <Link href={userRole === "RELATIONSHIP_MANAGER" ? "/dashboard/fetch" : "/clients/create"}>
+          <Link href="/clients/create">
             <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
               <Plus className="h-4 w-4" />
               New Application
@@ -256,281 +210,138 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Admin-specific features */}
-      {userRole === "ADMIN" && (
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="bg-blue-50 border-blue-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Admin Tools</CardTitle>
-              <Shield className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <Link href="/dashboard/user">
-                <Button variant="outline" size="sm" className="w-full mb-2">
-                  User Management
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-green-50 border-green-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
-              <UserCheck className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <Link href="/dashboard/new">
-                <Button variant="outline" size="sm" className="w-full mb-2">
-                  Register Employee
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {userRole === "ADMIN" ? "Total Users" : "Total Clients"}
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
             <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            {statsLoading ? (
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400 mx-auto" />
-            ) : (
-              <>
-                <div className="text-2xl font-bold">
-                  {userRole === "ADMIN" ? stats?.totalUsers || 0 : stats?.totalClients || 0}
-                </div>
-                <p className="text-xs text-gray-600">Loading data...</p>
-              </>
-            )}
+            <div className="text-2xl font-bold">{stats.total}</div>
+            <p className="text-xs text-gray-600">All applications</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Loans</CardTitle>
-            <FileText className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            {statsLoading ? (
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400 mx-auto" />
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{stats?.activeLoans || 0}</div>
-                <p className="text-xs text-gray-600">Loading data...</p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Applications</CardTitle>
+            <CardTitle className="text-sm font-medium">Pending</CardTitle>
             <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            {statsLoading ? (
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400 mx-auto" />
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{stats?.pendingApplications || 0}</div>
-                <p className="text-xs text-gray-600">Needs review</p>
-              </>
-            )}
+            <div className="text-2xl font-bold">{stats.pending}</div>
+            <p className="text-xs text-gray-600">Needs review</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overdue Payments</CardTitle>
+            <CardTitle className="text-sm font-medium">Approved</CardTitle>
+            <FileText className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.approved}</div>
+            <p className="text-xs text-gray-600">Approved applications</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
             <AlertCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            {statsLoading ? (
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400 mx-auto" />
-            ) : (
-              <>
-                <div className="text-2xl font-bold">{stats?.overduePayments || 0}</div>
-                <p className="text-xs text-gray-600">Requires follow-up</p>
-              </>
-            )}
+            <div className="text-2xl font-bold">{stats.rejected}</div>
+            <p className="text-xs text-gray-600">Rejected applications</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <Link href={userRole === "ADMIN" ? "/admin/users" : "/clients"}>
-            <TabsTrigger value={userRole === "ADMIN" ? "users" : "clients"}>
-              {userRole === "ADMIN" ? "Users" : "Clients"}
-            </TabsTrigger>
-          </Link>
-          <Link href="/applications">
-            <TabsTrigger value="applications">Applications</TabsTrigger>
-          </Link>
-          <Link href="/loans">
-            <TabsTrigger value="loans">Loans</TabsTrigger>
-          </Link>
-          <Link href="/reports">
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-          </Link>
-          {userRole === "ADMIN" && (
-            <Link href="/admin">
-              <TabsTrigger value="admin">Admin</TabsTrigger>
-            </Link>
+      {/* Applications List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>All Applications</span>
+            <span className="text-sm font-normal text-gray-500">
+              {customers.length} application(s)
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-12 w-12 animate-spin text-gray-400" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 text-red-600">
+              <AlertCircle className="h-12 w-12 mx-auto mb-4" />
+              <p>{error}</p>
+              <Button onClick={fetchCustomers} className="mt-4">
+                Try Again
+              </Button>
+            </div>
+          ) : customers.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <FileText className="h-12 w-12 mx-auto mb-4" />
+              <p>No applications found</p>
+              <Link href="/clients/create">
+                <Button className="mt-4">Create First Application</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {customers.map((customer) => (
+                <div key={customer.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <p className="font-medium text-lg">
+                        {customer.firstName} {customer.lastName}
+                      </p>
+                      <Badge className={getStatusBadge(customer.applicationStatus)}>
+                        {formatStatusText(customer.applicationStatus)}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                      <div>
+                        <span className="font-medium">Loan: </span>
+                        {customer.loanType}
+                      </div>
+                      <div>
+                        <span className="font-medium">Amount: </span>
+                        {formatCurrency(customer.loanAmount)}
+                      </div>
+                      <div>
+                        <span className="font-medium">Applied: </span>
+                        {formatDate(customer.createdAt)}
+                      </div>
+                    </div>
+                    <div className="mt-2 text-sm text-gray-500">
+                      <span className="font-medium">Ref: </span>
+                      {customer.applicationReferenceNumber}
+                      {customer.email && (
+                        <>
+                          <span className="mx-2">•</span>
+                          <span className="font-medium">Email: </span>
+                          {customer.email}
+                        </>
+                      )}
+                      <span className="mx-2">•</span>
+                      <span className="font-medium">Phone: </span>
+                      {customer.phone}
+                    </div>
+                  </div>
+                  <Link href={`/applications/${customer.applicationReferenceNumber}`}>
+                    <Button variant="outline" size="sm">
+                      <Eye className="h-4 w-4 mr-2" />
+                      View
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
           )}
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          {/* Two-column layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Applications */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Recent Applications</span>
-                  <Link href="/applications">
-                    <Button variant="ghost" size="sm">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {applicationsLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                  </div>
-                ) : recentApplications.length > 0 ? (
-                  <div className="space-y-4">
-                    {recentApplications.map((app) => (
-                      <Link key={app.id} href={`/applications/${app.id}`}>
-                        <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                          <div>
-                            <p className="font-medium">{app.client || "Unknown Client"}</p>
-                            <p className="text-sm text-gray-600">{app.amount || "N/A"}</p>
-                            <p className="text-xs text-gray-500">{app.date || "Unknown Date"}</p>
-                          </div>
-                          <Badge className={getStatusBadge(app.status)}>
-                            {formatStatusText(app.status)}
-                          </Badge>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    No recent applications found
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Upcoming Tasks */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Upcoming Tasks</span>
-                  <Link href="/tasks">
-                    <Button variant="ghost" size="sm">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {tasksLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                  </div>
-                ) : upcomingTasks.length > 0 ? (
-                  <div className="space-y-4">
-                    {upcomingTasks.map((task) => (
-                      <Link key={task.id} href={`/tasks/${task.id}`}>
-                        <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                          <div>
-                            <p className="font-medium">{task.task || "Unknown Task"}</p>
-                            <p className="text-sm text-gray-600">{task.time || "No time specified"}</p>
-                          </div>
-                          <Badge className={getPriorityBadge(task.priority)}>
-                            {formatPriorityText(task.priority)}
-                          </Badge>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    No upcoming tasks
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Performance Metrics */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Performance Metrics
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Link href="/reports/approval-rate">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 cursor-pointer transition-colors">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {stats?.approvalRate || 0}%
-                    </div>
-                    <p className="text-sm text-gray-600">Approval Rate</p>
-                  </div>
-                </Link>
-                <Link href="/reports/satisfaction">
-                  <div className="text-center p-4 bg-green-50 rounded-lg hover:bg-green-100 cursor-pointer transition-colors">
-                    <div className="text-2xl font-bold text-green-600">
-                      {stats?.clientSatisfaction || 0}%
-                    </div>
-                    <p className="text-sm text-gray-600">Client Satisfaction</p>
-                  </div>
-                </Link>
-                <Link href="/reports/new-clients">
-                  <div className="text-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 cursor-pointer transition-colors">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {stats?.newClientsThisMonth || 0}
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      {userRole === "ADMIN" ? "New Users" : "New Clients"} This Month
-                    </p>
-                  </div>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Quick Actions Footer */}
-      <div className="fixed bottom-6 right-6 flex gap-2">
-        <Link href={userRole === "ADMIN" ? "/admin/users/create" : "/clients/create"}>
-          <Button className="rounded-full w-12 h-12 p-0 bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-6 w-6" />
-          </Button>
-        </Link>
-        <Link href="/applications/create">
-          <Button variant="outline" className="rounded-full w-12 h-12 p-0">
-            <FileText className="h-6 w-6" />
-          </Button>
-        </Link>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
