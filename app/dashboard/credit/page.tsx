@@ -195,8 +195,8 @@ export default function PendingCustomersPage() {
 
       {error && (
         <div className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto border-4 border-dashed border-gray-200 text-gray-700">
-          <div className="mb-6 p-4 bg-gray-100 rounded-full">
-            <Info className="text-gray-500" size={48} />
+          <div className="mb-6 p-4 bg-green-100 rounded-full">
+             <CheckCircle2 className="text-green-600" size={48} />
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">All Applications are Taken</h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
@@ -204,7 +204,7 @@ export default function PendingCustomersPage() {
           </p>
           <Button
             onClick={fetchPendingCustomers}
-            className="gap-2 bg-gray-600 hover:bg-gray-700 text-white"
+            className="gap-2 bg-red-600 hover:bg-gray-700 text-white"
             size="sm"
           >
             <RefreshCw size={14} />

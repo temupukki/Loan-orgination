@@ -36,9 +36,12 @@ import {
   RotateCcw,
   ChevronDown,
   ChevronUp,
+  Eye,
 } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
-// Define the interface for the LoanAnalysis model
+const { data: session, error } = await authClient.getSession();
+const currentUserId = session?.user.id;
 interface LoanAnalysis {
   id: string;
   applicationReferenceNumber: string;
@@ -104,6 +107,16 @@ interface Customer {
   loanAnalysis: LoanAnalysis | null;
 }
 
+interface Decision {
+  id: string;
+  customerId: string;
+  applicationReferenceNumber: string;
+  decision: string;
+  decisionReason: string;
+  committeeMember: string;
+  createdAt: string;
+}
+
 export default function CommitteeDecisionPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -116,6 +129,9 @@ export default function CommitteeDecisionPage() {
   >({});
   const [isSubmitting, setIsSubmitting] = useState<Record<string, boolean>>({});
   const [refreshing, setRefreshing] = useState(false);
+  const [existingDecisions, setExistingDecisions] = useState<
+    Record<string, Decision>
+  >({});
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -123,16 +139,16 @@ export default function CommitteeDecisionPage() {
   }, []);
 
   const toggleRow = (applicationRef: string) => {
-    setExpandedRows(prev => ({
+    setExpandedRows((prev) => ({
       ...prev,
-      [applicationRef]: !prev[applicationRef]
+      [applicationRef]: !prev[applicationRef],
     }));
   };
 
   const fetchPendingCustomers = async () => {
     try {
       setRefreshing(true);
-      const response = await fetch(`/api/finaldecision?status=COMMITTE_REVIEW`);
+      const response = await fetch(`/api/get?status=MEMBER_REVIEW`);
       if (!response.ok) {
         throw new Error("Failed to fetch pending customers");
       }
@@ -169,6 +185,41 @@ export default function CommitteeDecisionPage() {
         })
       );
 
+      // Fetch existing decisions for these customers
+      const decisionsMap: Record<string, Decision> = {};
+      await Promise.all(
+        customersWithAnalysis.map(async (customer) => {
+          try {
+            const decisionResponse = await fetch(
+              `/api/member/${customer.applicationReferenceNumber}`
+            );
+            if (decisionResponse.ok) {
+              const decisionData = await decisionResponse.json();
+              if (decisionData && decisionData.userId === currentUserId) {
+                decisionsMap[customer.applicationReferenceNumber] =
+                  decisionData;
+                // Pre-populate the selected decision and reason
+                setSelectedDecisions((prev) => ({
+                  ...prev,
+                  [customer.applicationReferenceNumber]: decisionData.decision,
+                }));
+                setDecisionReasons((prev) => ({
+                  ...prev,
+                  [customer.applicationReferenceNumber]:
+                    decisionData.decisionReason,
+                }));
+              }
+            }
+          } catch (err) {
+            console.error(
+              `Failed to fetch decision for ${customer.applicationReferenceNumber}:`,
+              err
+            );
+          }
+        })
+      );
+
+      setExistingDecisions(decisionsMap);
       setCustomers(customersWithAnalysis);
       setError(null);
     } catch (err: any) {
@@ -210,7 +261,7 @@ export default function CommitteeDecisionPage() {
 
     try {
       // First, record the decision using the new API
-      const decisionResponse = await fetch("/api/decisions", {
+      const decisionResponse = await fetch("/api/members", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -230,46 +281,40 @@ export default function CommitteeDecisionPage() {
         throw new Error(decisionData.error || "Failed to record decision");
       }
 
-      // Then, update the customer status with PATCH
-      const patchResponse = await fetch(
-        `/api/customer/${customerId}/decision`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+      if (decision !== "COMMITTE_REVERSED") {
+        setCustomers((prev) => prev.filter((c) => c.id !== customerId));
+      } else {
+        // If it's "Need More Analysis", just update the existing decisions
+        setExistingDecisions((prev) => ({
+          ...prev,
+          [applicationRef]: {
+            id: decisionData.id,
+            customerId,
+            applicationReferenceNumber: applicationRef,
             decision,
             decisionReason: decisionReasons[applicationRef] || "",
-          }),
-        }
-      );
-
-      const patchData = await patchResponse.json();
-
-      if (!patchResponse.ok) {
-        throw new Error(
-          patchData.error || "Failed to update application status"
-        );
+            committeeMember: "Current User",
+            createdAt: new Date().toISOString(),
+          },
+        }));
       }
-
-      // Remove the customer from the list
-      setCustomers((prev) => prev.filter((c) => c.id !== customerId));
 
       toast.success(`Decision submitted successfully`);
 
-      // Clean up state
-      setDecisionReasons((prev) => {
-        const newReasons = { ...prev };
-        delete newReasons[applicationRef];
-        return newReasons;
-      });
+      // Clean up state if the customer is removed
+      if (decision !== "COMMITTE_REVERSED") {
+        setDecisionReasons((prev) => {
+          const newReasons = { ...prev };
+          delete newReasons[applicationRef];
+          return newReasons;
+        });
 
-      setSelectedDecisions((prev) => {
-        const newDecisions = { ...prev };
-        delete newDecisions[applicationRef];
-        return newDecisions;
-      });
+        setSelectedDecisions((prev) => {
+          const newDecisions = { ...prev };
+          delete newDecisions[applicationRef];
+          return newDecisions;
+        });
+      }
     } catch (err: any) {
       console.error("Error submitting decision:", err);
       toast.error(err.message || "Failed to submit decision");
@@ -313,6 +358,10 @@ export default function CommitteeDecisionPage() {
       REJECTED: {
         label: "Rejected",
         color: "bg-red-100 text-red-800 border-red-200",
+      },
+      MEMBER_REVIEW: {
+        label: "Member Review",
+        color: "bg-orange-100 text-orange-800 border-orange-200",
       },
     };
 
@@ -421,15 +470,14 @@ export default function CommitteeDecisionPage() {
 
       {error && (
         <div className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto border-4 border-dashed border-gray-200 text-gray-700 mb-8">
-          <div className="mb-6 p-4 bg-green-100 rounded-full">
-              <CheckCircle2 className="text-green-600" size={48} />
+          <div className="mb-6 p-4 bg-red-100 rounded-full">
+            <XCircle className="text-red-600" size={48} />
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
-           All Clear!
+            Error Loading Applications
           </h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
-           No applications pending committee review. Check back later for new
-            submissions.
+            {error}
           </p>
           <Button
             onClick={fetchPendingCustomers}
@@ -478,12 +526,16 @@ export default function CommitteeDecisionPage() {
 
           {/* Table Rows */}
           {customers.map((customer) => {
-            const isExpanded = expandedRows[customer.applicationReferenceNumber];
+            const existingDecision =
+              existingDecisions[customer.applicationReferenceNumber];
+            const hasExistingDecision = !!existingDecision;
+            const isExpanded =
+              expandedRows[customer.applicationReferenceNumber];
 
             return (
               <div key={customer.id} className="border-b border-gray-100">
                 {/* Collapsed Row View */}
-                <div 
+                <div
                   className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
                   onClick={() => toggleRow(customer.applicationReferenceNumber)}
                 >
@@ -497,19 +549,40 @@ export default function CommitteeDecisionPage() {
                     {customer.applicationReferenceNumber}
                   </div>
                   <div className="col-span-2 text-sm">
-                    <div className="font-medium">{formatData(customer.loanAmount)}</div>
+                    <div className="font-medium">
+                      {formatData(customer.loanAmount)}
+                    </div>
                     <div className="text-gray-500">{customer.loanType}</div>
                   </div>
                   <div className="col-span-2 text-sm">
                     <div>{customer.majorLineBusiness}</div>
-                    <div className="text-gray-500">{customer.economicSector}</div>
+                    <div className="text-gray-500">
+                      {customer.economicSector}
+                    </div>
                   </div>
-                  <div className="col-span-2">
-                    {getStatusBadge(customer.applicationStatus)}
+                  <div className="col-span-2 flex items-center gap-2">
+                    {existingDecisions[customer.applicationReferenceNumber] && (
+                      <Badge className="bg-green-100 text-green-800 border-green-200">
+                        <Check size={12} className="mr-1" />
+                        Decided
+                      </Badge>
+                    )}
+                    {!existingDecisions[
+                      customer.applicationReferenceNumber
+                    ] && (
+                      <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+                        <Clock size={12} className="mr-1" />
+                        Pending
+                      </Badge>
+                    )}
                   </div>
                   <div className="col-span-2 flex justify-end items-center">
                     <Button variant="ghost" size="sm" className="mr-2">
-                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      {isExpanded ? (
+                        <ChevronUp size={16} />
+                      ) : (
+                        <ChevronDown size={16} />
+                      )}
                       {isExpanded ? "Less" : "Details"}
                     </Button>
                   </div>
@@ -576,7 +649,9 @@ export default function CommitteeDecisionPage() {
                               </p>
                               <p className="font-medium text-gray-800">
                                 {formatData(
-                                  new Date(customer.dateOfBirth).toLocaleDateString()
+                                  new Date(
+                                    customer.dateOfBirth
+                                  ).toLocaleDateString()
                                 )}
                               </p>
                             </div>
@@ -677,7 +752,9 @@ export default function CommitteeDecisionPage() {
                               </p>
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <p className="text-gray-600">Initiation Center:</p>
+                              <p className="text-gray-600">
+                                Initiation Center:
+                              </p>
                               <p className="font-medium text-gray-800">
                                 {formatData(customer.creditInitiationCenter)}
                               </p>
@@ -717,7 +794,7 @@ export default function CommitteeDecisionPage() {
                               </p>
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <p className="text-gray-600">Purpose:</p>
+                              <p className="text-gray-600">Loan Purpose:</p>
                               <p className="font-medium text-gray-800">
                                 {formatData(customer.purposeOfLoan)}
                               </p>
@@ -725,268 +802,295 @@ export default function CommitteeDecisionPage() {
                           </div>
                         </div>
 
-                        {/* Supporting Documents */}
-                        <div className="space-y-4 md:col-span-2">
+                        {/* Documents */}
+                        <div className="space-y-4">
                           <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
                             <FileText size={18} className="text-blue-600" />
-                            Supporting Documents
+                            Documents
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="space-y-3">
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">National ID:</span>
+                              <p className="text-gray-600">National ID:</p>
                               {formatData(customer.nationalidUrl)}
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Agreement Form:</span>
+                              <p className="text-gray-600">Agreement Form:</p>
                               {formatData(customer.agreementFormUrl)}
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Major Business Doc:</span>
+                              <p className="text-gray-600">
+                                Major Business Doc:
+                              </p>
                               {formatData(customer.majorLineBusinessUrl)}
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Application Form:</span>
+                              <p className="text-gray-600">Application Form:</p>
                               {formatData(customer.applicationFormUrl)}
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Shareholders Details:</span>
-                              {formatData(customer.shareholdersDetailsUrl)}
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Credit Profile:</span>
+                              <p className="text-gray-600">Credit Profile:</p>
                               {formatData(customer.creditProfileUrl)}
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Transaction Profile:</span>
-                              {formatData(customer.transactionProfileUrl)}
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Collateral Profile:</span>
-                              {formatData(customer.collateralProfileUrl)}
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Financial Profile:</span>
+                              <p className="text-gray-600">
+                                Financial Profile:
+                              </p>
                               {formatData(customer.financialProfileUrl)}
                             </div>
+                            {customer.otherLineBusinessUrl && (
+                              <div className="flex justify-between items-center text-sm">
+                                <p className="text-gray-600">
+                                  Other Business Doc:
+                                </p>
+                                {formatData(customer.otherLineBusinessUrl)}
+                              </div>
+                            )}
                           </div>
                         </div>
 
-                        {/* Loan Analysis Section */}
+                        {/* Loan Analysis */}
                         {customer.loanAnalysis && (
-                          <div className="space-y-4 md:col-span-2">
+                          <div className="space-y-4">
                             <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
                               <BarChart3 size={18} className="text-blue-600" />
                               Loan Analysis
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="space-y-3">
                               {customer.loanAnalysis.financialProfileUrl && (
                                 <div className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">Financial Profile:</span>
-                                  {formatData(customer.loanAnalysis.financialProfileUrl)}
+                                  <p className="text-gray-600">
+                                    Financial Profile:
+                                  </p>
+                                  {formatData(
+                                    customer.loanAnalysis.financialProfileUrl
+                                  )}
                                 </div>
                               )}
                               {customer.loanAnalysis.pestelAnalysisUrl && (
                                 <div className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">PESTEL Analysis:</span>
-                                  {formatData(customer.loanAnalysis.pestelAnalysisUrl)}
+                                  <p className="text-gray-600">
+                                    PESTEL Analysis:
+                                  </p>
+                                  {formatData(
+                                    customer.loanAnalysis.pestelAnalysisUrl
+                                  )}
                                 </div>
                               )}
                               {customer.loanAnalysis.swotAnalysisUrl && (
                                 <div className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">SWOT Analysis:</span>
-                                  {formatData(customer.loanAnalysis.swotAnalysisUrl)}
+                                  <p className="text-gray-600">
+                                    SWOT Analysis:
+                                  </p>
+                                  {formatData(
+                                    customer.loanAnalysis.swotAnalysisUrl
+                                  )}
                                 </div>
                               )}
                               {customer.loanAnalysis.riskAssessmentUrl && (
                                 <div className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">Risk Assessment:</span>
-                                  {formatData(customer.loanAnalysis.riskAssessmentUrl)}
+                                  <p className="text-gray-600">
+                                    Risk Assessment:
+                                  </p>
+                                  {formatData(
+                                    customer.loanAnalysis.riskAssessmentUrl
+                                  )}
                                 </div>
                               )}
                               {customer.loanAnalysis.esgAssessmentUrl && (
                                 <div className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">ESG Assessment:</span>
-                                  {formatData(customer.loanAnalysis.esgAssessmentUrl)}
+                                  <p className="text-gray-600">
+                                    ESG Assessment:
+                                  </p>
+                                  {formatData(
+                                    customer.loanAnalysis.esgAssessmentUrl
+                                  )}
                                 </div>
                               )}
                               {customer.loanAnalysis.financialNeedUrl && (
                                 <div className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">Financial Need:</span>
-                                  {formatData(customer.loanAnalysis.financialNeedUrl)}
+                                  <p className="text-gray-600">
+                                    Financial Need:
+                                  </p>
+                                  {formatData(
+                                    customer.loanAnalysis.financialNeedUrl
+                                  )}
                                 </div>
                               )}
-
                               {customer.loanAnalysis.analystConclusion && (
-                                <div className="col-span-2">
-                                  <div className="flex flex-col text-sm">
-                                    <span className="text-gray-600 mb-1">Analyst Conclusion:</span>
-                                    <span className="font-medium text-gray-800 bg-blue-50 p-3 rounded-md">
-                                      {formatData(customer.loanAnalysis.analystConclusion)}
-                                    </span>
-                                  </div>
+                                <div className="text-sm">
+                                  <p className="text-gray-600 mb-1">
+                                    Analyst Conclusion:
+                                  </p>
+                                  <p className="font-medium text-gray-800">
+                                    {customer.loanAnalysis.analystConclusion}
+                                  </p>
                                 </div>
                               )}
-
                               {customer.loanAnalysis.analystRecommendation && (
-                                <div className="col-span-2">
-                                  <div className="flex flex-col text-sm">
-                                    <span className="text-gray-600 mb-1">Analyst Recommendation:</span>
-                                    <span className="font-medium text-gray-800 bg-blue-50 p-3 rounded-md">
-                                      {formatData(customer.loanAnalysis.analystRecommendation)}
-                                    </span>
-                                  </div>
+                                <div className="text-sm">
+                                  <p className="text-gray-600 mb-1">
+                                    Analyst Recommendation:
+                                  </p>
+                                  <p className="font-medium text-gray-800">
+                                    {
+                                      customer.loanAnalysis
+                                        .analystRecommendation
+                                    }
+                                  </p>
+                                </div>
+                              )}
+                              {customer.loanAnalysis.rmRecommendation && (
+                                <div className="text-sm">
+                                  <p className="text-gray-600 mb-1">
+                                    RM Recommendation:
+                                  </p>
+                                  <p className="font-medium text-gray-800">
+                                    {customer.loanAnalysis.rmRecommendation}
+                                  </p>
                                 </div>
                               )}
                             </div>
                           </div>
                         )}
+                      </CardContent>
 
-                        {/* Decision Section */}
-                        <div className="space-y-4 md:col-span-2">
-                          <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
-                            <ClipboardList size={18} className="text-blue-600" />
+                      {/* Decision Form */}
+                      <CardFooter className="bg-gray-50 border-t border-gray-200 p-6">
+                        <div className="w-full space-y-4">
+                          <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                            <ClipboardList
+                              size={18}
+                              className="text-blue-600"
+                            />
                             Committee Decision
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                            <div className="space-y-2">
-                              <label className="flex items-center space-x-2 p-3 rounded-md border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name={`decision-${customer.applicationReferenceNumber}`}
-                                  value="APPROVED"
-                                  checked={
-                                    selectedDecisions[customer.applicationReferenceNumber] === "APPROVED"
-                                  }
-                                  onChange={(e) =>
-                                    handleDecisionChange(
-                                      customer.applicationReferenceNumber,
-                                      e.target.value
-                                    )
-                                  }
-                                  className="h-4 w-4 text-green-600 focus:ring-green-500"
-                                />
-                                <div className="flex items-center gap-2">
-                                  <Check className="h-5 w-5 text-green-600" />
-                                  <span className="text-gray-700 font-medium">Approve</span>
-                                </div>
+
+                          {hasExistingDecision && (
+                            <div className="mb-4 p-3 bg-blue-50 rounded-md border border-blue-200">
+                              <p className="text-sm text-blue-700 font-medium">
+                                You previously submitted a decision for this
+                                application on{" "}
+                                {new Date(
+                                  existingDecision.createdAt
+                                ).toLocaleDateString()}
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Decision
                               </label>
+                              <select
+                                value={
+                                  selectedDecisions[
+                                    customer.applicationReferenceNumber
+                                  ] || ""
+                                }
+                                onChange={(e) =>
+                                  handleDecisionChange(
+                                    customer.applicationReferenceNumber,
+                                    e.target.value
+                                  )
+                                }
+                                disabled={!!hasExistingDecision} // 👈 disable if decision already exists
+                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+                              >
+                                <option value="">Select Decision</option>
+                                <option value="APPROVED">Approve</option>
+                                <option value="REJECTED">Reject</option>
+                                <option value="COMMITTE_REVERSED">
+                                  Need More Analysis
+                                </option>
+                              </select>
                             </div>
 
-                            <div className="space-y-2">
-                              <label className="flex items-center space-x-2 p-3 rounded-md border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name={`decision-${customer.applicationReferenceNumber}`}
-                                  value="COMMITTE_REVERSED"
-                                  checked={
-                                    selectedDecisions[customer.applicationReferenceNumber] === "COMMITTE_REVERSED"
-                                  }
-                                  onChange={(e) =>
-                                    handleDecisionChange(
-                                      customer.applicationReferenceNumber,
-                                      e.target.value
-                                    )
-                                  }
-                                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                                />
-                                <div className="flex items-center gap-2">
-                                  <RotateCcw className="h-5 w-5 text-blue-600" />
-                                  <span className="text-gray-700 font-medium">Need More Analysis</span>
-                                </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Decision Reason
+                                {(selectedDecisions[
+                                  customer.applicationReferenceNumber
+                                ] === "REJECTED" ||
+                                  selectedDecisions[
+                                    customer.applicationReferenceNumber
+                                  ] === "COMMITTE_REVERSED") && (
+                                  <span className="text-red-500 ml-1">*</span>
+                                )}
                               </label>
+                              <textarea
+                                value={
+                                  decisionReasons[
+                                    customer.applicationReferenceNumber
+                                  ] || ""
+                                }
+                                onChange={(e) =>
+                                  handleReasonChange(
+                                    customer.applicationReferenceNumber,
+                                    e.target.value
+                                  )
+                                }
+                                placeholder={
+                                  selectedDecisions[
+                                    customer.applicationReferenceNumber
+                                  ] === "REJECTED"
+                                    ? "Please provide reason for rejection"
+                                    : selectedDecisions[
+                                        customer.applicationReferenceNumber
+                                      ] === "COMMITTE_REVERSED"
+                                    ? "Please specify what additional analysis is needed"
+                                    : "Optional comments"
+                                }
+                                rows={3}
+                                disabled={!!hasExistingDecision} // 👈 disable if decision exists
+                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+                              />
                             </div>
+                          </div>
 
-                            <div className="space-y-2">
-                              <label className="flex items-center space-x-2 p-3 rounded-md border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name={`decision-${customer.applicationReferenceNumber}`}
-                                  value="REJECTED"
-                                  checked={
-                                    selectedDecisions[customer.applicationReferenceNumber] === "REJECTED"
-                                  }
-                                  onChange={(e) =>
-                                    handleDecisionChange(
-                                      customer.applicationReferenceNumber,
-                                      e.target.value
-                                    )
-                                  }
-                                  className="h-4 w-4 text-red-600 focus:ring-red-500"
-                                />
-                                <div className="flex items-center gap-2">
-                                  <X className="h-5 w-5 text-red-600" />
-                                  <span className="text-gray-700 font-medium">Reject</span>
-                                </div>
-                              </label>
-                            </div>
+                          <div className="flex justify-end gap-3">
+                            <Button
+                              onClick={() =>
+                                toggleRow(customer.applicationReferenceNumber)
+                              }
+                              variant="outline"
+                              className="border-gray-300 p-2"
+                            >
+                              <ChevronUp size={16} />
+                            </Button>
 
-                            {(selectedDecisions[customer.applicationReferenceNumber] === "REJECTED" ||
-                              selectedDecisions[customer.applicationReferenceNumber] === "COMMITTE_REVERSED" ||
-                              selectedDecisions[customer.applicationReferenceNumber] === "APPROVED") && (
-                              <div className="col-span-3 space-y-2 mt-4">
-                                <h4 className="font-semibold text-gray-700 flex items-center gap-2">
-                                  <AlertCircle size={16} className="text-red-500" />
-                                  {selectedDecisions[customer.applicationReferenceNumber] === "REJECTED"
-                                    ? "Rejection Reason (Required):"
-                                    : selectedDecisions[customer.applicationReferenceNumber] === "APPROVED"
-                                    ? "Approval Comments:"
-                                    : "Feedback for Additional Analysis (Required):"}
-                                </h4>
-                                <textarea
-                                  placeholder={
-                                    selectedDecisions[customer.applicationReferenceNumber] === "REJECTED"
-                                      ? "Enter detailed reason for rejecting this application..."
-                                      : selectedDecisions[customer.applicationReferenceNumber] === "APPROVED"
-                                      ? "Add approval comments..."
-                                      : "Specify what additional analysis is needed..."
-                                  }
-                                  value={decisionReasons[customer.applicationReferenceNumber] || ""}
-                                  onChange={(e) =>
-                                    handleReasonChange(
-                                      customer.applicationReferenceNumber,
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
-                                  required
-                                />
-                                <p className="text-sm text-gray-500">
-                                  {selectedDecisions[customer.applicationReferenceNumber] === "REJECTED"
-                                    ? "Please provide a detailed reason for rejection."
-                                    : selectedDecisions[customer.applicationReferenceNumber] === "APPROVED"
-                                    ? "Add approval reasons."
-                                    : "Please specify what additional analysis or information is required."}
-                                </p>
-                              </div>
+                            {!hasExistingDecision && (
+                              <Button
+                                onClick={() =>
+                                  handleDecision(
+                                    customer.id,
+                                    customer.applicationReferenceNumber
+                                  )
+                                }
+                                disabled={
+                                  isSubmitting[
+                                    customer.applicationReferenceNumber
+                                  ]
+                                }
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                              >
+                                {isSubmitting[
+                                  customer.applicationReferenceNumber
+                                ] ? (
+                                  <>
+                                    <RefreshCw
+                                      size={16}
+                                      className="animate-spin mr-2"
+                                    />
+                                    Submitting...
+                                  </>
+                                ) : (
+                                  "Submit Decision"
+                                )}
+                              </Button>
                             )}
                           </div>
                         </div>
-                      </CardContent>
-
-                      <CardFooter className="bg-gray-50 border-t border-gray-200 flex justify-between items-center py-4 px-6">
-                        <div className="text-sm text-gray-600 flex items-center gap-2">
-                          <Clock size={14} />
-                          Application ready for committee decision
-                        </div>
-                        <Button
-                          onClick={() =>
-                            handleDecision(customer.id, customer.applicationReferenceNumber)
-                          }
-                          disabled={isSubmitting[customer.applicationReferenceNumber]}
-                          className="gap-2 bg-blue-600 hover:bg-blue-700"
-                        >
-                          {isSubmitting[customer.applicationReferenceNumber] ? (
-                            <>
-                              <RefreshCw size={14} className="animate-spin" />
-                              Processing...
-                            </>
-                          ) : (
-                            <>
-                              <Check size={14} />
-                              Submit Decision
-                            </>
-                          )}
-                        </Button>
                       </CardFooter>
                     </Card>
                   </div>

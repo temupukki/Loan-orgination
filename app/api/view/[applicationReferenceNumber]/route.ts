@@ -21,26 +21,38 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch the decision made by this user for the given application
-    const decision = await prisma.membersDecision.findFirst({
+    // Fetch ALL decisions for the given application reference number
+    const decisions = await prisma.membersDecision.findMany({
       where: {
         applicationReferenceNumber,
-        userId, // ✅ ensures only the current user's decision is fetched
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            // include any other user fields you need
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc' // Optional: order by creation date
+      }
     });
 
-    if (!decision) {
+    if (!decisions || decisions.length === 0) {
       return NextResponse.json(
-        { error: "Decision not found for this user" },
+        { error: "No decisions found for this application" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(decision, { status: 200 });
+    return NextResponse.json(decisions, { status: 200 });
   } catch (err: any) {
-    console.error("Error fetching decision:", err);
+    console.error("Error fetching decisions:", err);
     return NextResponse.json(
-      { error: "Failed to fetch decision" },
+      { error: "Failed to fetch decisions" },
       { status: 500 }
     );
   }

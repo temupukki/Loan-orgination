@@ -55,6 +55,7 @@ model Customer {
   financialProfileUrl        String
   creditAnalystID            String?
   supervisorID               String?
+  committeManagerID               String?
   relationManagerID          String?
   rmRecommendation           String?     
   creditAnalystComment       String?
@@ -69,18 +70,16 @@ model Customer {
 }
 
 enum ApplicationStatus {
-  PENDING // Application submitted, awaiting review
-  UNDER_REVIEW // Currently being reviewed by staff
-  APPROVED // Application approved
-  REJECTED // Application rejected
-  MORE_INFO // Requires additional information from customer
-  CONDITIONAL // Approved with conditions
+  PENDING 
+  UNDER_REVIEW 
+  APPROVED 
+  REJECTED 
+  ANALYSIS_COMPLETED
   SUPERVISOR_REVIEWING
   FINAL_ANALYSIS
   SUPERVISED
   COMMITTE_REVIEW
   COMMITTE_REVERSED
-  WITHDRAWN // Customer withdrew application
   RM_RECCOMENDATION
   MEMBER_REVIEW
 }
@@ -100,6 +99,7 @@ model User {
   @@unique([email])
   @@map("user")
   MembersDecision MembersDecision[]
+ 
 }
 
 model Session {
@@ -181,6 +181,14 @@ model Decision {
   decision    String
   decisionReason String?
  
+  responsibleUnitName      String?
+ 
+  responsibleUnitEmail  String?
+  responsibleUnitPhone  String?
+ 
+
+
+ 
   decisionDate DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -189,9 +197,13 @@ model Decision {
 }
 model MembersDecision {
   id          String   @id @default(cuid())
-  userId  String @unique
+  userId  String 
+  responsibleUnitName      String?
+ 
+  responsibleUnitEmail  String?
+  responsibleUnitPhone  String?
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  applicationReferenceNumber String            @unique @map("application_reference_number")
+  applicationReferenceNumber String      @map("application_reference_number")
   customer             Customer @relation(fields: [applicationReferenceNumber], references: [applicationReferenceNumber])
   decision    String
   decisionReason String
@@ -208,4 +220,6 @@ enum Userrole {
   CREDIT_ANALYST
   SUPERVISOR
   COMMITTE_MEMBER
+  COMMITTE_MANAGER
+
 }

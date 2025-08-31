@@ -9,6 +9,13 @@ export async function POST(request: NextRequest) {
     headers: await headers(),
   });
   const userId = session?.user.id;
+  const responsibleUnitName = session?.user.name;
+  const image:any= session?.user.image;
+  const parts = image.split("-");
+  const responsibleUnitPhone=parts[1];
+  const responsibleUnitEmail=session?.user.email
+
+
 
   try {
     const body = await request.json();
@@ -31,6 +38,10 @@ export async function POST(request: NextRequest) {
     const decisionRecord = await prisma.membersDecision.create({
       data: {
         userId,
+        responsibleUnitName,
+        responsibleUnitEmail,
+        responsibleUnitPhone,
+
         applicationReferenceNumber,
         decision,
         decisionReason,
@@ -45,13 +56,7 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     console.error("Error creating/updating decision record:", err);
 
-    if (err.code === "P2002") {
-      const target = err.meta?.target;
-      return NextResponse.json(
-        { error: `A decision with this ${target} already exists` },
-        { status: 409 }
-      );
-    }
+
 
     return NextResponse.json(
       { error: "Failed to create decision record" },

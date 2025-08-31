@@ -1,8 +1,20 @@
-// app/api/decisions/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export async function POST(request: NextRequest) {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+   
+    const responsibleUnitName = session?.user.name;
+    const image:any= session?.user.image;
+    const parts = image.split("-");
+    const responsibleUnitPhone=parts[1];
+    const responsibleUnitEmail=session?.user.email
+    
   try {
     const body = await request.json();
     const { customerId, applicationReferenceNumber, decision, decisionReason, committeeMember } = body;
@@ -29,8 +41,10 @@ export async function POST(request: NextRequest) {
           id: existingDecision.id,
         },
         data: {
-          decision,
-          decisionReason,
+        decision,
+        decisionReason,
+       
+        
          
           decisionDate: new Date(),
         },
@@ -49,6 +63,9 @@ export async function POST(request: NextRequest) {
         applicationReferenceNumber,
         decision,
         decisionReason,
+        responsibleUnitName,
+        responsibleUnitEmail,
+        responsibleUnitPhone,
        
         decisionDate: new Date(),
       },

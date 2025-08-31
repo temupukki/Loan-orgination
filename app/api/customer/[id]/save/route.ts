@@ -15,7 +15,7 @@ export async function PATCH(
         id: id,
       },
       data: {
-        applicationStatus: 'CONDITIONAL', // Update the status to 'UNDER_REVIEW'
+        applicationStatus: 'ANALYSIS_COMPLETED', // Update the status to 'UNDER_REVIEW'
       },
     });
 

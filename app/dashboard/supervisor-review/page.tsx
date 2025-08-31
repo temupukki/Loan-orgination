@@ -108,7 +108,7 @@ export default function PendingCustomersPage() {
   const fetchPendingCustomers = async () => {
     try {
       setRefreshing(true);
-      const response = await fetch(`/api/get?status=CONDITIONAL`);
+      const response = await fetch(`/api/get?status=ANALYSIS_COMPLETED`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(

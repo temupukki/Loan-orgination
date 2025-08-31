@@ -109,10 +109,24 @@ const ROLE_LINKS: Record<string, NavLink[]> = {
   ],
   COMMITTE_MEMBER: [
     { 
-      href: "/dashboard/committe", 
+      href: "/dashboard/members", 
       label: "Available", 
       icon: Users,
       pulse: true
+    },
+  ],
+    COMMITTE_MANAGER: [
+    { 
+      href: "/dashboard/view", 
+      label: "Available", 
+      icon: Users,
+      pulse: true
+    },
+       { 
+      href: "/dashboard/committe", 
+      label: "Final Decision", 
+      icon: Briefcase,
+      
     },
   ]
 };

@@ -135,7 +135,8 @@ export default function UsersPage() {
                           <option value="RELATIONSHIP_MANAGER">Relationship Manager</option>
                           <option value="CREDIT_ANALYST">Credit Analysis</option>
                           <option value="SUPERVISOR">Supervisor</option>
-                          <option value="COMMITTE_MEMBER">Committe member</option>
+                          <option value="COMMITTE_MEMBER">Committe Member</option>
+                             <option value="COMMITTE_MANAGER">Committe Manager</option>
                         </select>
                       ) : (
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${

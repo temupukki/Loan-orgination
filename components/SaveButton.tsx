@@ -55,7 +55,7 @@ export function SaveButton({
       const statusResponse = await fetch(`/api/customer/${customerId}/save`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newStatus: "CONDITIONAL" }),
+        body: JSON.stringify({ newStatus: "ANALYSIS_COMPLETED" }),
       });
 
       if (!statusResponse.ok) {
@@ -79,7 +79,7 @@ export function SaveButton({
       const response = await fetch(`/api/customer/${customerId}/save`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newStatus: "CONDITIONAL" }),
+        body: JSON.stringify({ newStatus: "ANALYSIS_COMPLETED" }),
       });
 
       if (!response.ok) {
