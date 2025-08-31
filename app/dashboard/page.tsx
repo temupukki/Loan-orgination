@@ -103,7 +103,7 @@ export default function Dashboard() {
     try {
       // Fetch stats
       setStatsLoading(true);
-      const statsResponse = await fetch('/api/dashboard/stats');
+      const statsResponse = await fetch('/api/get?status=MEMBER_REVIEW');
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setStats(statsData);
@@ -111,7 +111,7 @@ export default function Dashboard() {
       
       // Fetch recent applications
       setApplicationsLoading(true);
-      const appsResponse = await fetch('/api/dashboard/applications');
+      const appsResponse = await fetch('/api/get?status=MEMBER_REVIEW');
       if (appsResponse.ok) {
         const appsData = await appsResponse.json();
         setRecentApplications(appsData);
@@ -119,7 +119,7 @@ export default function Dashboard() {
       
       // Fetch upcoming tasks
       setTasksLoading(true);
-      const tasksResponse = await fetch('/api/dashboard/tasks');
+      const tasksResponse = await fetch('/api/get?status=MEMBER_REVIEW');
       if (tasksResponse.ok) {
         const tasksData = await tasksResponse.json();
         setUpcomingTasks(tasksData);
