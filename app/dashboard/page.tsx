@@ -49,7 +49,7 @@ interface Application {
   id: string;
   client: string;
   amount: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | string;
   date: string;
 }
 
@@ -57,7 +57,7 @@ interface Task {
   id: string;
   task: string;
   time: string;
-  priority: "high" | "medium" | "low";
+  priority: "high" | "medium" | "low" | string;
 }
 
 export default function Dashboard() {
@@ -103,29 +103,54 @@ export default function Dashboard() {
     try {
       // Fetch stats
       setStatsLoading(true);
-      const statsResponse = await fetch('/api/get?status=MEMBER_REVIEW');
+      const statsResponse = await fetch('/api/finaldecision?status=APPROVED');
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setStats(statsData);
+      } else {
+        // Set default stats if API fails
+        setStats({
+          activeLoans: 0,
+          pendingApplications: 0,
+          overduePayments: 0,
+          approvalRate: 0,
+          clientSatisfaction: 0,
+          newClientsThisMonth: 0
+        });
       }
       
       // Fetch recent applications
       setApplicationsLoading(true);
-      const appsResponse = await fetch('/api/get?status=MEMBER_REVIEW');
+      const appsResponse = await fetch('/api/finaldecision?status=APPROVED');
       if (appsResponse.ok) {
         const appsData = await appsResponse.json();
-        setRecentApplications(appsData);
+        setRecentApplications(Array.isArray(appsData) ? appsData : []);
+      } else {
+        setRecentApplications([]);
       }
       
       // Fetch upcoming tasks
       setTasksLoading(true);
-      const tasksResponse = await fetch('/api/get?status=MEMBER_REVIEW');
+      const tasksResponse = await fetch('/api/finaldecision?status=APPROVED');
       if (tasksResponse.ok) {
         const tasksData = await tasksResponse.json();
-        setUpcomingTasks(tasksData);
+        setUpcomingTasks(Array.isArray(tasksData) ? tasksData : []);
+      } else {
+        setUpcomingTasks([]);
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+      // Set fallback data
+      setStats({
+        activeLoans: 0,
+        pendingApplications: 0,
+        overduePayments: 0,
+        approvalRate: 0,
+        clientSatisfaction: 0,
+        newClientsThisMonth: 0
+      });
+      setRecentApplications([]);
+      setUpcomingTasks([]);
     } finally {
       setStatsLoading(false);
       setApplicationsLoading(false);
@@ -133,33 +158,44 @@ export default function Dashboard() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string = "") => {
+    const safeStatus = (status || "").toLowerCase();
     const variants = {
       pending: "bg-yellow-100 text-yellow-800",
       approved: "bg-green-100 text-green-800",
       rejected: "bg-red-100 text-red-800"
     };
-    return variants[status as keyof typeof variants] || "bg-gray-100 text-gray-800";
+    return variants[safeStatus as keyof typeof variants] || "bg-gray-100 text-gray-800";
   };
 
-  const getPriorityBadge = (priority: string) => {
+  const getPriorityBadge = (priority: string = "") => {
+    const safePriority = (priority || "").toLowerCase();
     const variants = {
       high: "bg-red-100 text-red-800",
       medium: "bg-yellow-100 text-yellow-800",
       low: "bg-blue-100 text-blue-800"
     };
-    return variants[priority as keyof typeof variants] || "bg-gray-100 text-gray-800";
+    return variants[safePriority as keyof typeof variants] || "bg-gray-100 text-gray-800";
   };
 
-  const getRoleBadge = (role: string) => {
+  const getRoleBadge = (role: string = "") => {
+    const safeRole = (role || "").toLowerCase();
     const variants = {
-      ADMIN: "bg-red-100 text-red-800",
-      RELATIONSHIP_MANAGER: "bg-blue-100 text-blue-800",
-      CREDIT_ANALYST: "bg-green-100 text-green-800",
-      SUPERVISOR: "bg-purple-100 text-purple-800",
-      COMMITTE_MEMBER: "bg-orange-100 text-orange-800"
+      admin: "bg-red-100 text-red-800",
+      relationship_manager: "bg-blue-100 text-blue-800",
+      credit_analyst: "bg-green-100 text-green-800",
+      supervisor: "bg-purple-100 text-purple-800",
+      committe_member: "bg-orange-100 text-orange-800"
     };
-    return variants[role as keyof typeof variants] || "bg-gray-100 text-gray-800";
+    return variants[safeRole as keyof typeof variants] || "bg-gray-100 text-gray-800";
+  };
+
+  const formatStatusText = (status: string = "") => {
+    return (status || "unknown").toUpperCase();
+  };
+
+  const formatPriorityText = (priority: string = "") => {
+    return (priority || "unknown").toUpperCase();
   };
 
   if (loading) {
@@ -234,7 +270,6 @@ export default function Dashboard() {
                   User Management
                 </Button>
               </Link>
-              
             </CardContent>
           </Card>
 
@@ -249,15 +284,10 @@ export default function Dashboard() {
                   Register Employee
                 </Button>
               </Link>
-             
             </CardContent>
           </Card>
-
-        
         </div>
       )}
-
-   
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -385,12 +415,12 @@ export default function Dashboard() {
                       <Link key={app.id} href={`/applications/${app.id}`}>
                         <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                           <div>
-                            <p className="font-medium">{app.client}</p>
-                            <p className="text-sm text-gray-600">{app.amount}</p>
-                            <p className="text-xs text-gray-500">{app.date}</p>
+                            <p className="font-medium">{app.client || "Unknown Client"}</p>
+                            <p className="text-sm text-gray-600">{app.amount || "N/A"}</p>
+                            <p className="text-xs text-gray-500">{app.date || "Unknown Date"}</p>
                           </div>
                           <Badge className={getStatusBadge(app.status)}>
-                            {app.status.toUpperCase()}
+                            {formatStatusText(app.status)}
                           </Badge>
                         </div>
                       </Link>
@@ -427,11 +457,11 @@ export default function Dashboard() {
                       <Link key={task.id} href={`/tasks/${task.id}`}>
                         <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                           <div>
-                            <p className="font-medium">{task.task}</p>
-                            <p className="text-sm text-gray-600">{task.time}</p>
+                            <p className="font-medium">{task.task || "Unknown Task"}</p>
+                            <p className="text-sm text-gray-600">{task.time || "No time specified"}</p>
                           </div>
                           <Badge className={getPriorityBadge(task.priority)}>
-                            {task.priority.toUpperCase()}
+                            {formatPriorityText(task.priority)}
                           </Badge>
                         </div>
                       </Link>
