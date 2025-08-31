@@ -330,7 +330,7 @@ export default function Dashboard() {
                       {customer.phone}
                     </div>
                   </div>
-                  <Link href={`/applications/${customer.applicationReferenceNumber}`}>
+                  <Link href={`/dashboard/manage`}>
                     <Button variant="outline" size="sm">
                       <Eye className="h-4 w-4 mr-2" />
                       View
