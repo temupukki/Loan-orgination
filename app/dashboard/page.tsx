@@ -56,7 +56,7 @@ export default function Dashboard() {
         const { data, error } = await authClient.getSession();
         
         if (error || !data) {
-          router.push("/login");
+          router.push("/");
           return;
         }
 
@@ -153,7 +153,17 @@ export default function Dashboard() {
 
   const getStats = () => {
     const total = customers.length;
-    const pending = customers.filter(c => c.applicationStatus.toLowerCase().includes('pending')).length;
+  const pending = customers.filter(c => 
+  c.applicationStatus.toLowerCase().includes('pending') || 
+  c.applicationStatus.toLowerCase().includes('under_review')|| 
+  c.applicationStatus.toLowerCase().includes('committee_review')|| 
+  c.applicationStatus.toLowerCase().includes('supervised')|| 
+  c.applicationStatus.toLowerCase().includes('analysis_completed')|| 
+  c.applicationStatus.toLowerCase().includes('rm_recomendation')|| 
+  c.applicationStatus.toLowerCase().includes('supervisor_reviewing')|| 
+  c.applicationStatus.toLowerCase().includes('ufinal_analysis')|| 
+  c.applicationStatus.toLowerCase().includes('committe_reversed')
+).length;
     const approved = customers.filter(c => c.applicationStatus.toLowerCase() === 'approved').length;
     const rejected = customers.filter(c => c.applicationStatus.toLowerCase() === 'rejected').length;
 
