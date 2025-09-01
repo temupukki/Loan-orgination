@@ -131,18 +131,18 @@ export default function PendingCustomersPage() {
     const checkRoleStatus = async () => {
       try {
         const response = await fetch("/api/session");
-        
+
         if (!response.ok) {
           throw new Error("Failed to fetch user session");
         }
-        
+
         const data = await response.json();
-        
+
         if (!data || !data.user) {
           router.push("/");
           return;
         }
-        
+
         if (data.user.role === "CREDIT_ANALYST") {
           setIsCREDIT_ANALYST(true);
         } else {
@@ -288,10 +288,16 @@ export default function PendingCustomersPage() {
     if (!analysis?.financialNeedUrl) {
       errors.push("Financial Need document is required");
     }
-    if (!analysis?.analystConclusion || analysis.analystConclusion.trim() === "") {
+    if (
+      !analysis?.analystConclusion ||
+      analysis.analystConclusion.trim() === ""
+    ) {
       errors.push("Analyst Conclusion is required");
     }
-    if (!analysis?.analystRecommendation || analysis.analystRecommendation.trim() === "") {
+    if (
+      !analysis?.analystRecommendation ||
+      analysis.analystRecommendation.trim() === ""
+    ) {
       errors.push("Analyst Recommendation is required");
     }
 
@@ -356,7 +362,8 @@ export default function PendingCustomersPage() {
           Under Review Applications
         </h1>
         <p className="text-gray-600 text-center max-w-2xl">
-          Complete your analysis for applications assigned to you. All analysis fields are mandatory.
+          Complete your analysis for applications assigned to you. All analysis
+          fields are mandatory.
         </p>
         <Button
           onClick={fetchPendingCustomers}
@@ -418,8 +425,9 @@ export default function PendingCustomersPage() {
       {!isLoading && customers.length > 0 && (
         <div className="grid grid-cols-1 gap-6">
           {customers.map((customer) => {
-            const customerErrors = validationErrors[customer.applicationReferenceNumber] || [];
-            
+            const customerErrors =
+              validationErrors[customer.applicationReferenceNumber] || [];
+
             return (
               <Card
                 key={customer.id}
@@ -675,7 +683,9 @@ export default function PendingCustomersPage() {
                         {formatData(customer.agreementFormUrl)}
                       </div>
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">Major Business Doc:</span>
+                        <span className="text-gray-600">
+                          Major Business Doc:
+                        </span>
                         {formatData(customer.majorLineBusinessUrl)}
                       </div>
                       <div className="flex justify-between items-center text-sm">
@@ -699,11 +709,15 @@ export default function PendingCustomersPage() {
                         {formatData(customer.transactionProfileUrl)}
                       </div>
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">Collateral Profile:</span>
+                        <span className="text-gray-600">
+                          Collateral Profile:
+                        </span>
                         {formatData(customer.collateralProfileUrl)}
                       </div>
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">Financial Profile:</span>
+                        <span className="text-gray-600">
+                          Financial Profile:
+                        </span>
                         {formatData(customer.financialProfileUrl)}
                       </div>
                     </div>
@@ -713,9 +727,11 @@ export default function PendingCustomersPage() {
                     <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
                       <UserCheck size={18} className="text-blue-600" />
                       Loan Analysis & Recommendation
-                      <span className="text-red-500 text-sm">* All fields are mandatory</span>
+                      <span className="text-red-500 text-sm">
+                        * All fields are mandatory
+                      </span>
                     </h3>
-                    
+
                     {customerErrors.length > 0 && (
                       <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                         <div className="flex items-center gap-2 text-red-700 font-medium mb-2">
@@ -729,7 +745,7 @@ export default function PendingCustomersPage() {
                         </ul>
                       </div>
                     )}
-                    
+
                     <Separator />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -753,7 +769,22 @@ export default function PendingCustomersPage() {
                         />
                         <p className="text-xs text-gray-500 mt-1">
                           {analysisData[customer.applicationReferenceNumber]
-                            ?.pestelAnalysisUrl || "No file uploaded"}
+                            ?.pestelAnalysisUrl ? (
+                            <a
+                              href={
+                                analysisData[
+                                  customer.applicationReferenceNumber
+                                ].pestelAnalysisUrl
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              View Document
+                            </a>
+                          ) : (
+                            "No file uploaded"
+                          )}
                         </p>
                       </div>
 
@@ -778,7 +809,22 @@ export default function PendingCustomersPage() {
                         />
                         <p className="text-xs text-gray-500 mt-1">
                           {analysisData[customer.applicationReferenceNumber]
-                            ?.swotAnalysisUrl || "No file uploaded"}
+                            ?.swotAnalysisUrl ? (
+                            <a
+                              href={
+                                analysisData[
+                                  customer.applicationReferenceNumber
+                                ].swotAnalysisUrl
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              View Document
+                            </a>
+                          ) : (
+                            "No file uploaded"
+                          )}
                         </p>
                       </div>
 
@@ -803,7 +849,22 @@ export default function PendingCustomersPage() {
                         />
                         <p className="text-xs text-gray-500 mt-1">
                           {analysisData[customer.applicationReferenceNumber]
-                            ?.riskAssessmentUrl || "No file uploaded"}
+                            ?.riskAssessmentUrl ? (
+                            <a
+                              href={
+                                analysisData[
+                                  customer.applicationReferenceNumber
+                                ].riskAssessmentUrl
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              View Document
+                            </a>
+                          ) : (
+                            "No file uploaded"
+                          )}
                         </p>
                       </div>
 
@@ -828,7 +889,22 @@ export default function PendingCustomersPage() {
                         />
                         <p className="text-xs text-gray-500 mt-1">
                           {analysisData[customer.applicationReferenceNumber]
-                            ?.esgAssessmentUrl || "No file uploaded"}
+                            ?.esgAssessmentUrl ? (
+                            <a
+                              href={
+                                analysisData[
+                                  customer.applicationReferenceNumber
+                                ].esgAssessmentUrl
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              View Document
+                            </a>
+                          ) : (
+                            "No file uploaded"
+                          )}
                         </p>
                       </div>
 
@@ -853,7 +929,22 @@ export default function PendingCustomersPage() {
                         />
                         <p className="text-xs text-gray-500 mt-1">
                           {analysisData[customer.applicationReferenceNumber]
-                            ?.financialNeedUrl || "No file uploaded"}
+                            ?.financialNeedUrl ? (
+                            <a
+                              href={
+                                analysisData[
+                                  customer.applicationReferenceNumber
+                                ].financialNeedUrl
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              View Document
+                            </a>
+                          ) : (
+                            "No file uploaded"
+                          )}
                         </p>
                       </div>
                     </div>
@@ -883,7 +974,12 @@ export default function PendingCustomersPage() {
                           )
                         }
                         rows={4}
-                        className={!analysisData[customer.applicationReferenceNumber]?.analystConclusion ? "border-red-300" : ""}
+                        className={
+                          !analysisData[customer.applicationReferenceNumber]
+                            ?.analystConclusion
+                            ? "border-red-300"
+                            : ""
+                        }
                       />
                     </div>
 
@@ -912,15 +1008,21 @@ export default function PendingCustomersPage() {
                           )
                         }
                         rows={4}
-                        className={!analysisData[customer.applicationReferenceNumber]?.analystRecommendation ? "border-red-300" : ""}
+                        className={
+                          !analysisData[customer.applicationReferenceNumber]
+                            ?.analystRecommendation
+                            ? "border-red-300"
+                            : ""
+                        }
                       />
                     </div>
-                    
+
                     {customer.rmRecommendation && (
                       <div className="space-y-4 md:col-span-2">
                         <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
                           <MessageSquare size={16} className="text-blue-600" />
-                          Relationship Manager Answer/Recommendation for the request
+                          Relationship Manager Answer/Recommendation for the
+                          request
                         </h3>
                         <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                           <textarea
@@ -951,8 +1053,6 @@ export default function PendingCustomersPage() {
                     analysisData={analysisData}
                     onSuccess={handleSaveSuccess}
                     actionType="saveAnalysis"
-                   
-                    
                   />
                 </CardFooter>
               </Card>
