@@ -128,7 +128,21 @@ const ROLE_LINKS: Record<string, NavLink[]> = {
       icon: Briefcase,
       
     },
-  ]
+  ],
+    ADMIN: [
+    { 
+      href: "/dashboard/user", 
+      label: "Manage Employee", 
+      icon: Users,
+      
+    },
+     { 
+      href: "/dashboard/register", 
+      label: "Register Employee", 
+      icon: Users,
+     
+    },
+  ],
 };
 
 interface UserSession {
@@ -225,7 +239,7 @@ export default function Navbar() {
   return (
     <>
       <nav className={cn(
-        "w-full bg-gradient-to-r from-blue-800 to-indigo-900 sticky top-0 z-50 shadow-lg border-b border-blue-600 p-4 transition-all duration-300",
+        "w-full bg-gradient-to-r from-blue-900 to-indigo-900 sticky top-0 z-50 shadow-lg border-b border-blue-600 p-4 transition-all duration-300",
         isScrolled && "bg-gradient-to-r from-blue-900 to-indigo-950 shadow-xl"
       )}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -236,11 +250,11 @@ export default function Navbar() {
                 href="/" 
                 className="flex items-center gap-3 group transition-transform duration-300 hover:scale-105"
               >
-                <div className="flex items-center justify-center w-12 h-12 bg-white rounded-full p-1 transition-all duration-300 group-hover:rotate-12">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full p-1 transition-all duration-300 group-hover:rotate-12">
                   <img
                     src="/dashen logo.png"
                     alt="Dashen Bank Logo"
-                    className="w-10 h-10 object-contain"
+                    className="w-10 h-10 object-cover "
                   />
                 </div>
                 <div className="hidden md:flex flex-col">

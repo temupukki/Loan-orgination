@@ -1,12 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Customer } from "@/app/types/loan";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function HomePage() {
   const [customerNumber, setCustomerNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isRelationshipManager, setIsRelationshipManager] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if the current user is a relationship manager
+    const checkRoleStatus = async () => {
+      try {
+        // Get the current user's role from your API
+        const response = await fetch("/api/session");
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch user session");
+        }
+        
+        const data = await response.json();
+        
+        // Check if we have a valid session with user data
+        if (!data || !data.user) {
+          router.push("/");
+          return;
+        }
+        
+        // Check if user has relationship manager role
+        if (data.user.role === "RELATIONSHIP_MANAGER") {
+          setIsRelationshipManager(true);
+        } else {
+          // Redirect non-relationship manager users to dashboard
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        console.error("Error checking role status:", error);
+        toast.error("Authentication check failed");
+        router.push("/dashboard");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkRoleStatus();
+  }, [router]);
 
   const fetchCustomer = async () => {
     if (!customerNumber.trim()) {
@@ -35,6 +79,23 @@ export default function HomePage() {
       setLoading(false);
     }
   };
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="mt-4 text-gray-700">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not relationship manager (will redirect due to useEffect)
+  if (!isRelationshipManager) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 px-4">
@@ -110,7 +171,7 @@ export default function HomePage() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don’t have a customer number?{" "}
+              Don't have a customer number?{" "}
               <a href="/new-customer" className="text-blue-600 hover:underline">
                 Create new customer
               </a>

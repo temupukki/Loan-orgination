@@ -1,27 +1,70 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Customer } from "@/app/types/loan";
 import {
   economicSectors,
   customerSegmentations,
   creditInitiationCenters,
 } from "@/app/utils/constants";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function BasicInfoPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [isRelationshipManager, setIsRelationshipManager] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const customerData = localStorage.getItem("currentCustomer");
-    if (customerData) {
-      setCustomer(JSON.parse(customerData));
-    } else {
-      window.location.href = "/";
-    }
-  }, []);
+    // Check if the current user is a relationship manager
+    const checkRoleStatus = async () => {
+      try {
+        // Get the current user's role from your API
+        const response = await fetch("/api/session");
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch user session");
+        }
+        
+        const data = await response.json();
+        
+        // Check if we have a valid session with user data
+        if (!data || !data.user) {
+          router.push("/");
+          return;
+        }
+        
+        // Check if user has relationship manager role
+        if (data.user.role === "RELATIONSHIP_MANAGER") {
+          setIsRelationshipManager(true);
+          
+          // Load customer data only if user has the correct role
+          const customerData = localStorage.getItem("currentCustomer");
+          if (customerData) {
+            setCustomer(JSON.parse(customerData));
+          } else {
+            router.push("/dashboard");
+          }
+        } else {
+          // Redirect non-relationship manager users to dashboard
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        console.error("Error checking role status:", error);
+        toast.error("Authentication check failed");
+        router.push("/dashboard");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkRoleStatus();
+  }, [router]);
 
   const handleFieldChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -108,18 +151,38 @@ export default function BasicInfoPage() {
 
     if (customer) {
       localStorage.setItem("currentCustomer", JSON.stringify(customer));
-      window.location.href = "/dashboard/business-info";
+      router.push("/dashboard/business-info");
     }
   };
 
   const goBack = () => {
-    window.location.href = "/dashboard";
+    router.push("/dashboard");
   };
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="mt-4 text-gray-700">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not relationship manager (will redirect due to useEffect)
+  if (!isRelationshipManager) {
+    return null;
+  }
 
   if (!customer)
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="mt-4 text-gray-700">Loading customer data...</p>
+        </div>
       </div>
     );
 
@@ -170,7 +233,7 @@ export default function BasicInfoPage() {
               Loan Origination – Step 2
             </h1>
             <p className="text-gray-600">
-              Provide the customer’s basic information to continue
+              Provide the customer's basic information to continue
             </p>
           </div>
 

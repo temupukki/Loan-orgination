@@ -1,6 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+
+interface UserSession {
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    image?: string;
+  };
+}
 
 interface User {
   id: number;
@@ -11,32 +24,71 @@ interface User {
 }
 
 export default function UsersPage() {
+  const [session, setSession] = useState<UserSession | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [tempRole, setTempRole] = useState<string>("");
-  const [notification, setNotification] = useState<{message: string, type: string} | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
+    async function getSession() {
+      try {
+        const res = await fetch("/api/session");
+        
+        if (!res.ok) {
+          throw new Error("Failed to fetch session");
+        }
+        
+        const sessionData = await res.json();
+
+        if (!sessionData || !sessionData.user) {
+          router.push("/");
+          return;
+        }
+
+        // Check if user has admin role
+        if (sessionData.user.role !== "ADMIN") {
+          router.push("/dashboard");
+          return;
+        }
+
+        setSession(sessionData);
+        setIsAdmin(true);
+      } catch (error) {
+        console.error("Session error:", error);
+        router.push("/");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    getSession();
+  }, [router]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+
     async function fetchUsers() {
       try {
         const res = await fetch("/api/users");
+        if (!res.ok) {
+          throw new Error("Failed to fetch users");
+        }
         const data = await res.json();
         setUsers(data);
       } catch (err) {
         console.error("Failed to load users", err);
-        showNotification("Failed to load users", "error");
+        toast.error("Failed to load users");
       } finally {
         setLoading(false);
       }
     }
+    
     fetchUsers();
-  }, []);
-
-  const showNotification = (message: string, type: string) => {
-    setNotification({message, type});
-    setTimeout(() => setNotification(null), 3000);
-  };
+  }, [isAdmin]);
 
   const handleEditClick = (user: User) => {
     setEditingId(user.id);
@@ -67,10 +119,9 @@ export default function UsersPage() {
       ));
       
       setEditingId(null);
-      showNotification("User role updated successfully", "success");
+      toast.success("User role updated successfully");
     } catch (err) {
-      console.error("Failed to update user", err);
-      showNotification("Failed to update user", "error");
+      toast.error("Failed to update user");
     }
   };
 
@@ -78,10 +129,27 @@ export default function UsersPage() {
     setEditingId(null);
   };
 
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="mt-4 text-gray-700">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not admin (will redirect due to useEffect)
+  if (!isAdmin) {
+    return null;
+  }
+
   if (loading) return (
     <div className="p-6">
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
       </div>
     </div>
   );
@@ -92,12 +160,6 @@ export default function UsersPage() {
         <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
         <p className="text-gray-600 mt-2">Manage user roles and permissions</p>
       </div>
-
-      {notification && (
-        <div className={`mb-6 p-4 rounded-md ${notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-          {notification.message}
-        </div>
-      )}
 
       {users.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-8 text-center">
@@ -130,19 +192,23 @@ export default function UsersPage() {
                           onChange={handleRoleChange}
                           className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                         >
-                          
                           <option value="ADMIN">Admin</option>
                           <option value="RELATIONSHIP_MANAGER">Relationship Manager</option>
-                          <option value="CREDIT_ANALYST">Credit Analysis</option>
+                          <option value="CREDIT_ANALYST">Credit Analyst</option>
                           <option value="SUPERVISOR">Supervisor</option>
-                          <option value="COMMITTE_MEMBER">Committe Member</option>
-                             <option value="COMMITTE_MANAGER">Committe Manager</option>
+                          <option value="COMMITTE_MEMBER">Committee Member</option>
+                          <option value="COMMITTE_MANAGER">Committee Manager</option>
+                          <option value="BANNED">Ban Employee</option>
                         </select>
                       ) : (
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
-                          user.role === 'EDITOR' ? 'bg-blue-100 text-blue-800' :
-                          user.role === 'VIEWER' ? 'bg-green-100 text-green-800' :
+                          user.role === 'RELATIONSHIP_MANAGER' ? 'bg-blue-100 text-blue-800' :
+                          user.role === 'CREDIT_ANALYST' ? 'bg-green-100 text-green-800' :
+                          user.role === 'SUPERVISOR' ? 'bg-yellow-100 text-yellow-800' :
+                          user.role === 'COMMITTE_MEMBER' ? 'bg-indigo-100 text-indigo-800' :
+                          user.role === 'COMMITTE_MANAGER' ? 'bg-pink-100 text-pink-800' :
+                          user.role === 'BANNED' ? 'bg-red-100 text-red-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
                           {user.role}

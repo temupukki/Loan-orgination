@@ -37,8 +37,10 @@ import {
   ChevronDown,
   ChevronUp,
   Eye,
+  Loader2,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 const { data: session, error } = await authClient.getSession();
 const currentUserId = session?.user.id;
@@ -133,6 +135,48 @@ export default function CommitteeDecisionPage() {
     Record<string, Decision>
   >({});
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+
+   const [isCOMMITTE_MEMBER, setIsCOMMITTE_MEMBER] = useState(false);
+    
+     const router = useRouter();
+  
+    useEffect(() => {
+      // Check if the current user is a relationship manager
+      const checkRoleStatus = async () => {
+        try {
+          // Get the current user's role from your API
+          const response = await fetch("/api/session");
+          
+          if (!response.ok) {
+            throw new Error("Failed to fetch user session");
+          }
+          
+          const data = await response.json();
+          
+          // Check if we have a valid session with user data
+          if (!data || !data.user) {
+            router.push("/");
+            return;
+          }
+          
+          // Check if user has relationship manager role
+          if (data.user.role === "COMMITTE_MEMBER") {
+            setIsCOMMITTE_MEMBER(true);
+          } else {
+            // Redirect non-relationship manager users to dashboard
+            router.push("/dashboard");
+          }
+        } catch (error) {
+          console.error("Error checking role status:", error);
+          toast.error("Authentication check failed");
+          router.push("/dashboard");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+  
+      checkRoleStatus();
+    }, [router]);
 
   useEffect(() => {
     fetchPendingCustomers();
@@ -443,7 +487,19 @@ export default function CommitteeDecisionPage() {
       </div>
     );
   }
-
+if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="mt-4 text-gray-700">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+   if (!isCOMMITTE_MEMBER) {
+    return null;
+  }
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col items-center mb-8">
