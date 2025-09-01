@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { Customer } from "@/app/types/loan";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function BusinessInfoPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -13,6 +16,58 @@ export default function BusinessInfoPage() {
   const [uploading, setUploading] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+const [isRelationshipManager, setIsRelationshipManager] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if the current user is a relationship manager
+    const checkRoleStatus = async () => {
+      try {
+        // Get the current user's role from your API
+        const response = await fetch("/api/session");
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch user session");
+        }
+        
+        const data = await response.json();
+        
+        // Check if we have a valid session with user data
+        if (!data || !data.user) {
+          router.push("/");
+          return;
+        }
+        
+        // Check if user has relationship manager role
+        if (data.user.role === "RELATIONSHIP_MANAGER") {
+          setIsRelationshipManager(true);
+          
+          // Load customer data only if user has the correct role
+          const customerData = localStorage.getItem("currentCustomer");
+          if (customerData) {
+            setCustomer(JSON.parse(customerData));
+          } else {
+            router.push("/dashboard");
+          }
+        } else {
+          // Redirect non-relationship manager users to dashboard
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        console.error("Error checking role status:", error);
+        toast.error("Authentication check failed");
+        router.push("/dashboard");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkRoleStatus();
+  }, [router]);
+
+
 
   useEffect(() => {
     const customerData = localStorage.getItem("currentCustomer");
@@ -252,6 +307,20 @@ export default function BusinessInfoPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+
+      if (!isRelationshipManager) {
+    return null;
+  }
+
+  if (!customer)
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="mt-4 text-gray-700">Loading customer data...</p>
+        </div>
       </div>
     );
 
