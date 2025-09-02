@@ -153,17 +153,17 @@ export default function CommitteeDecisionPage() {
             
             const data = await response.json();
             
-            // Check if we have a valid session with user data
+            
             if (!data || !data.user) {
               router.push("/");
               return;
             }
             
-            // Check if user has relationship manager role
+            
             if (data.user.role === "COMMITTE_MANAGER") {
               setIsCOMMITTE_MANAGER(true);
             } else {
-              // Redirect non-relationship manager users to dashboard
+       
               router.push("/dashboard");
             }
           } catch (error) {
