@@ -198,6 +198,7 @@ export default function UsersPage() {
                           <option value="SUPERVISOR">Supervisor</option>
                           <option value="COMMITTE_MEMBER">Committee Member</option>
                           <option value="COMMITTE_MANAGER">Committee Manager</option>
+                          <option value="APPROVAL_COMMITTE">Approval Committe</option>
                           <option value="BANNED">Ban Employee</option>
                         </select>
                       ) : (
@@ -208,6 +209,7 @@ export default function UsersPage() {
                           user.role === 'SUPERVISOR' ? 'bg-yellow-100 text-yellow-800' :
                           user.role === 'COMMITTE_MEMBER' ? 'bg-indigo-100 text-indigo-800' :
                           user.role === 'COMMITTE_MANAGER' ? 'bg-pink-100 text-pink-800' :
+                          user.role === 'APPROVAL_COMMITTE' ? 'bg-pink-100 text-pink-800' :
                           user.role === 'BANNED' ? 'bg-red-100 text-red-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
