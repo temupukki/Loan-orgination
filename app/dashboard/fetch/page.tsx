@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Customer } from "@/app/types/loan";
+import { Customer, Company } from "@/app/types/loan";
 import { Loader2, Building, User, Search, ArrowLeft, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,6 +15,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchType, setSearchType] = useState<"customer" | "company">("customer");
   const [customerData, setCustomerData] = useState<Customer | null>(null);
+  const [companyData, setCompanyData] = useState<Company | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export default function HomePage() {
     checkRoleStatus();
   }, [router]);
 
-  const fetchCustomer = async () => {
+  const fetchEntity = async () => {
     if (searchType === "customer" && !customerNumber.trim()) {
       setError("Please enter a customer number");
       return;
@@ -82,10 +83,16 @@ export default function HomePage() {
         const err = await res.json();
         throw new Error(err.error || "Failed to fetch");
       }
-      const customer: Customer = await res.json();
       
-      // Set customer data to display before proceeding
-      setCustomerData(customer);
+      if (searchType === "customer") {
+        const customer: Customer = await res.json();
+        setCustomerData(customer);
+        setCompanyData(null);
+      } else {
+        const company: Company = await res.json();
+        setCompanyData(company);
+        setCustomerData(null);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -94,20 +101,20 @@ export default function HomePage() {
   };
 
   const proceedToNextStep = () => {
-    if (customerData) {
+    if (searchType === "customer" && customerData) {
       // Store customer data and navigate to appropriate page
       localStorage.setItem("currentCustomer", JSON.stringify(customerData));
-      
-      if (searchType === "customer") {
-        window.location.href = "/dashboard/basic-info";
-      } else {
-        window.location.href = "/dashboard/basic-info";
-      }
+      window.location.href = "/dashboard/basic-info";
+    } else if (searchType === "company" && companyData) {
+      // Store company data and navigate to appropriate page
+      localStorage.setItem("currentCompany", JSON.stringify(companyData));
+      window.location.href = "/dashboard/basic-info-company";
     }
   };
 
   const searchAgain = () => {
     setCustomerData(null);
+    setCompanyData(null);
     setCustomerNumber("");
     setCompanyNumber("");
   };
@@ -200,7 +207,7 @@ export default function HomePage() {
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          {!customerData ? (
+          {!customerData && !companyData ? (
             <>
               <div className="text-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-800 mb-2">
@@ -227,7 +234,7 @@ export default function HomePage() {
                         : setCustomerNumber(e.target.value)
                     }
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") fetchCustomer();
+                      if (e.key === "Enter") fetchEntity();
                     }}
                     className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -241,7 +248,7 @@ export default function HomePage() {
               )}
 
               <button
-                onClick={fetchCustomer}
+                onClick={fetchEntity}
                 disabled={loading}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 flex items-center justify-center"
               >
@@ -294,31 +301,46 @@ export default function HomePage() {
                   {searchType === "company" ? "Company" : "Customer"} Information
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-blue-50/50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600 font-medium">First Name</p>
-                    <p className="font-semibold text-gray-900 text-lg">{customerData.firstName || "N/A"}</p>
+                {searchType === "customer" && customerData ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-blue-50/50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 font-medium">First Name</p>
+                      <p className="font-semibold text-gray-900 text-lg">{customerData.firstName || "N/A"}</p>
+                    </div>
+                    
+                    <div className="bg-blue-50/50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 font-medium">Middle Name</p>
+                      <p className="font-semibold text-gray-900 text-lg">{customerData.middleName || "N/A"}</p>
+                    </div>
+                    
+                    <div className="bg-blue-50/50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 font-medium">Last Name</p>
+                      <p className="font-semibold text-gray-900 text-lg">{customerData.lastName || "N/A"}</p>
+                    </div>
+                    
+                    <div className="bg-blue-50/50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 font-medium">Customer Number</p>
+                      <p className="font-semibold text-gray-900 text-lg">{customerNumber}</p>
+                    </div>
                   </div>
-                  
-                  <div className="bg-blue-50/50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600 font-medium">Middle Name</p>
-                    <p className="font-semibold text-gray-900 text-lg">{customerData.middleName || "N/A"}</p>
+                ) : companyData ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-blue-50/50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 font-medium">Company Name</p>
+                      <p className="font-semibold text-gray-900 text-lg">{companyData.companyName || "N/A"}</p>
+                    </div>
+                    
+                    <div className="bg-blue-50/50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 font-medium">Business Type</p>
+                      <p className="font-semibold text-gray-900 text-lg">{companyData.businessType || "N/A"}</p>
+                    </div>
+                    
+                    <div className="bg-blue-50/50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 font-medium">Company Number</p>
+                      <p className="font-semibold text-gray-900 text-lg">{companyNumber}</p>
+                    </div>
                   </div>
-                  
-                  <div className="bg-blue-50/50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600 font-medium">Last Name</p>
-                    <p className="font-semibold text-gray-900 text-lg">{customerData.lastName || "N/A"}</p>
-                  </div>
-                  
-                  <div className="bg-blue-50/50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600 font-medium">
-                      {searchType === "company" ? "Company" : "Customer"} Number
-                    </p>
-                    <p className="font-semibold text-gray-900 text-lg">
-                      {searchType === "company" ? companyNumber : customerNumber}
-                    </p>
-                  </div>
-                </div>
+                ) : null}
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
