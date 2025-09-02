@@ -136,7 +136,7 @@ export default function CommitteeDecisionPage() {
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
 
-  const [isCOMMITTE_MANAGER, setIsCOMMITTE_MANAGER] = useState(false);
+  const [isAPPROVAL_COMMITTE, setIsAPPROVAL_COMMITTE] = useState(false);
       
        const router = useRouter();
     
@@ -160,8 +160,8 @@ export default function CommitteeDecisionPage() {
             }
             
             
-            if (data.user.role === "COMMITTE_MANAGER") {
-              setIsCOMMITTE_MANAGER(true);
+            if (data.user.role === "APPROVAL_COMMITTE") {
+              setIsAPPROVAL_COMMITTE(true);
             } else {
        
               router.push("/dashboard");
@@ -389,7 +389,7 @@ if (isLoading) {
       </div>
     );
   }
-   if (!isCOMMITTE_MANAGER) {
+   if (!isAPPROVAL_COMMITTE) {
     return null;
   }
   return (
