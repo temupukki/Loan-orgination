@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -2089,22 +2089,11 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between items-center pt-5 border-t border-gray-200 gap-4">
-              <p className="text-sm text-gray-600 flex items-center">
-                <HelpCircle className="h-4 w-4 mr-1 text-gray-500" />
-                Need support? Contact Business Development Support at{" "}
-                <span className="text-orange-700 font-medium ml-1">
-                  bizdev-support@company.com
-                </span>
-              </p>
-              <div className="flex space-x-3">
-                <Button variant="outline" className="flex items-center border-gray-300">
-                  <Download className="h-4 w-4 mr-2" />
-                  Product & Service Guide
-                </Button>
-              </div>
-            </div>
-          </div></>
+          </div>
+              <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-500 text-sm">
+        &copy; {new Date().getFullYear()} Dashen Bank. All rights reserved.
+      </div>
+          </>
       )}
 
       {session.user.role === "BANNED" && (
@@ -2130,6 +2119,11 @@ export default function Dashboard() {
           <p>For more information communicate the system admin </p>
          
         </CardContent>
+        <CardFooter>
+           <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-500 text-sm">
+        &copy; {new Date().getFullYear()} Dashen Bank. All rights reserved.
+      </div>
+        </CardFooter>
       </Card>
     </div>
    )}
