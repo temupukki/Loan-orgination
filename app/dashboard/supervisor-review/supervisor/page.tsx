@@ -262,6 +262,38 @@ export default function PendingCustomersPage() {
     }
   };
 
+  const validateSupervisorData = (refNumber: string) => {
+    const errors: string[] = [];
+    const review = reviewData[refNumber];
+
+    // Check all required fields
+    if (!review?.pestelanalysisScore) {
+      errors.push("PESTEL Analysis document is required");
+    }
+    if (!review?.swotanalysisScore) {
+      errors.push("SWOT Analysis document is required");
+    }
+    if (!review?.riskassesmentScore) {
+      errors.push("Risk Assessment document is required");
+    }
+    if (!review?.esgassesmentScore) {
+      errors.push("ESG Assessment document is required");
+    }
+    if (!review?.financialneedScore) {
+      errors.push("Financial Need document is required");
+    }
+    if (
+      !review?.reviewNotes ||
+      review?.reviewNotes.trim() === ""
+    ) {
+      errors.push("Analyst Conclusion is required");
+    }
+ 
+
+    return errors;
+  };
+
+
   const handleReviewChange = (
     refNumber: string,
     field: keyof LoanAnalysis,
@@ -1003,12 +1035,14 @@ export default function PendingCustomersPage() {
                       <SaveReviewButton
                         customerId={customer.id}
                         refNumber={customer.applicationReferenceNumber}
+                        validateSupervisorData={validateSupervisorData}
                         reviewData={reviewData}
                         onSuccess={() => {
                           console.log("Analysis saved successfully");
                           toast.success("Review saved successfully!");
                           fetchPendingCustomers();
                         }}
+                       
                       />
                     </div>
                   </div>

@@ -23,15 +23,49 @@ export function SaveReviewButton({
 }: SaveReviewButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
+  // ✅ Validation function
+  const validateSupervisorData = (refNumber: string) => {
+    const errors: string[] = [];
+    const review = reviewData?.[refNumber];
+
+    if (!review?.pestelanalysisScore) {
+      errors.push("PESTEL Analysis score is required");
+    }
+    if (!review?.swotanalysisScore) {
+      errors.push("SWOT Analysis score is required");
+    }
+    if (!review?.riskassesmentScore) {
+      errors.push("Risk Assessment score is required");
+    }
+    if (!review?.esgassesmentScore) {
+      errors.push("ESG Assessment score is required");
+    }
+    if (!review?.financialneedScore) {
+      errors.push("Financial Need score is required");
+    }
+    if (!review?.reviewNotes || review.reviewNotes.trim() === "") {
+      errors.push("Review Notes are required");
+    }
+
+    return errors;
+  };
+
   const handleSaveReview = async () => {
     if (!refNumber || !reviewData) {
       toast.error("Missing reference number or review data.");
       return;
     }
 
+    // ✅ Run validation
+    const errors = validateSupervisorData(refNumber);
+    if (errors.length > 0) {
+      errors.forEach((err) => toast.error(err));
+      return;
+    }
+
     const analysisPayload = reviewData[refNumber];
     if (!analysisPayload) {
-      toast.error("No analysis data found for this reference number.");
+      toast.error("No review data found for this reference number.");
       return;
     }
 
@@ -53,19 +87,17 @@ export function SaveReviewButton({
         throw new Error(errorData.error || 'Failed to save review data.');
       }
 
-      // 2️⃣ Update the application status if newStatus is provided
-     
-        const statusResponse = await fetch(`/api/customer/${customerId}/review`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ newStatus: "SUPERVISED" }),
-        });
+      // 2️⃣ Update status (default SUPERVISED if newStatus not passed)
+      const statusResponse = await fetch(`/api/customer/${customerId}/review`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newStatus: newStatus || "SUPERVISED" }),
+      });
 
-        if (!statusResponse.ok) {
-          const errorData = await statusResponse.json();
-          throw new Error(errorData.error || 'Failed to update application status.');
-        }
-      
+      if (!statusResponse.ok) {
+        const errorData = await statusResponse.json();
+        throw new Error(errorData.error || 'Failed to update application status.');
+      }
 
       toast.success("Review saved and status updated!");
       onSuccess();
