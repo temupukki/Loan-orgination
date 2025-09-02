@@ -108,11 +108,11 @@ export default function BankSignin() {
       <title>Sign In </title>
       <Card className="w-full max-w-md p-6 sm:p-8 bg-white rounded-2xl shadow-lg border border-blue-200">
         <CardHeader className="text-center space-y-2 mb-4 sm:mb-6">
-          <CardTitle className="text-3xl sm:text-4xl font-extrabold text-blue-700">
-          Sign in
+          <CardTitle className="text-3xl sm:text-4xl font-extrabold text-blue-700 ml-16">
+          <img src="/dashen logo.png" alt="dashen bank logo" className="flex flex-col justify-center items-center ml-7" />
           </CardTitle>
-          <CardDescription className="text-blue-500 text-base sm:text-lg">
-            Sign in to your account
+          <CardDescription className="text-blue-900 text-base sm:text-lg font-bold mt-8">
+             Welcome to Dashen Bank Loan Orgination
           </CardDescription>
         </CardHeader>
 
