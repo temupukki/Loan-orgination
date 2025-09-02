@@ -96,8 +96,9 @@ export default function Dashboard() {
             "SUPERVISOR",
             "COMMITTE_MEMBER",
             "BANNED",
+            "APPROVAL_COMMITTE"
 
-            "COMMITTE_MANAGER",
+            
           ].includes(sessionData.user.role)
         ) {
           router.push("/unauthorized");
@@ -1336,7 +1337,7 @@ export default function Dashboard() {
             </div>
           </div></>
       )}
-      {session.user.role === "COMMITTE_MANAGER" && (
+      {session.user.role === "APPROVAL_COMMITTE" && (
         <><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 mb-8">
           <Link href="/dashboard/members">
             <Card

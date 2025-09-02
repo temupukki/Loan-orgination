@@ -115,7 +115,7 @@ const ROLE_LINKS: Record<string, NavLink[]> = {
       pulse: true
     },
   ],
-    COMMITTE_MANAGER: [
+    APPROVAL_COMMITTE: [
     { 
       href: "/dashboard/view", 
       label: "Available", 
