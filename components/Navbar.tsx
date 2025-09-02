@@ -52,7 +52,12 @@ const ROLE_LINKS: Record<string, NavLink[]> = {
   RELATIONSHIP_MANAGER: [
     { 
       href: "/dashboard/fetch", 
-      label: "Start", 
+      label: "Personal Accounts", 
+      icon: Briefcase 
+    },
+       { 
+      href: "/dashboard/fetchcompany", 
+      label: "Company Accounts", 
       icon: Briefcase 
     },
     { 

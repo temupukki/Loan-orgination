@@ -92,3 +92,51 @@ export interface LineOfBusiness {
   majorLineBusiness: string;
   otherLineBusiness: string;
 }
+
+
+
+
+export interface CompanyCustomer {
+  id: string;
+  customerNumber: string;
+  tinNumber: string;
+  companyName: string;
+  businessType: string;
+  registrationNumber: string;
+  registrationDate: string;
+  numberOfEmployees: number;
+  contactPersonName: string;
+  contactPersonPosition: string;
+  phone: string;
+  email: string;
+  region: string;
+  zone: string;
+  city: string;
+  subcity: string;
+  woreda: string;
+  annualRevenue: number;
+  businessLicenseUrl: string;
+  memorandumUrl: string;
+  accountType: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  
+  // Loan specific fields
+  customerSegmentation?: string;
+  creditInitiationCenter?: string;
+  economicSector?: string;
+  businessInfo?: string;
+  loanDetails?: string;
+  documents?: Document[];
+  creditScore?: number;
+  riskRating?: string;
+  relationshipManager?: string;
+  loanOfficer?: string;
+  applicationDate?: string;
+  applicationStatus?: 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'disbursed';
+  lastUpdated?: string;
+
+  shareholders?: string;
+
+}

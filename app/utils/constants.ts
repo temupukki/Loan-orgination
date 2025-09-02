@@ -31,3 +31,40 @@ export const creditInitiationCenters = [
   "IFB – Retail",
   "Branches with their own branch code"
 ];
+// app/utils/constants.ts
+
+export const companyEconomicSectors = [
+  "Agriculture & Agro-processing",
+  "Manufacturing & Industry",
+  "Construction & Real Estate",
+  "Wholesale & Retail Trade",
+  "Transportation & Logistics",
+  "Information Technology",
+  "Financial Services",
+  "Healthcare & Pharmaceuticals",
+  "Education & Training",
+  "Tourism & Hospitality",
+  "Energy & Utilities",
+  "Mining & Extraction",
+  "Telecommunications",
+  "Professional Services",
+  "Other Services"
+];
+
+export const companyCustomerSegmentations = [
+  "Micro Enterprise",
+  "Small Enterprise",
+  "Medium Enterprise",
+  "Large Enterprise",
+  "Corporate",
+  "Multinational",
+  "Startup",
+  "SME",
+  "Government Entity",
+  "NGO/Non-Profit"
+];
+
+// Keep the existing personal customer constants
+
+
+
