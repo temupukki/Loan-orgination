@@ -108,7 +108,7 @@ export default function HomePage() {
     } else if (searchType === "company" && companyData) {
       // Store company data and navigate to appropriate page
       localStorage.setItem("currentCompany", JSON.stringify(companyData));
-      window.location.href = "/dashboard/basic-info-company";
+      window.location.href = "/dashboard/basic-info";
     }
   };
 
