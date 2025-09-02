@@ -8,6 +8,7 @@ interface SaveButtonProps {
   customerId: string;
   refNumber?: string;
   analysisData?: Record<string, any>;
+  validateAnalysisData?: (refNumber: string) => string[]; // ✅ new
   onSuccess: () => void;
   actionType: 'saveAnalysis' | 'takeApplication';
   buttonText?: string;
@@ -17,6 +18,7 @@ export function SaveButton({
   customerId,
   refNumber,
   analysisData,
+  validateAnalysisData, // ✅
   onSuccess,
   actionType,
   buttonText
@@ -26,6 +28,15 @@ export function SaveButton({
   // 🔹 Save analysis + update status
   const handleSaveAnalysis = async () => {
     if (!refNumber || !analysisData) return;
+
+    // ✅ Run validation before saving
+    if (validateAnalysisData) {
+      const errors = validateAnalysisData(refNumber);
+      if (errors.length > 0) {
+        toast.error("Please fix the following before saving:\n" + errors.join("\n"));
+        return;
+      }
+    }
 
     const analysisPayload = analysisData[refNumber];
     if (!analysisPayload) {

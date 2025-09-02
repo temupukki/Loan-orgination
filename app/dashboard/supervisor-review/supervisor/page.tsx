@@ -858,7 +858,7 @@ export default function PendingCustomersPage() {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        <label className="block text-sm font-medium text-gray-700  items-center gap-1">
                           <Percent size={14} />
                           PESTEL Score
                         </label>
@@ -879,7 +879,7 @@ export default function PendingCustomersPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        <label className="block text-sm font-medium text-gray-700 items-center gap-1">
                           <Percent size={14} />
                           SWOT Score
                         </label>
@@ -900,7 +900,7 @@ export default function PendingCustomersPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        <label className="block text-sm font-medium text-gray-700  items-center gap-1">
                           <Percent size={14} />
                           Risk Score
                         </label>
@@ -921,7 +921,7 @@ export default function PendingCustomersPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        <label className="block text-sm font-medium text-gray-700 items-center gap-1">
                           <Percent size={14} />
                           ESG Score
                         </label>
@@ -942,7 +942,7 @@ export default function PendingCustomersPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        <label className="block text-sm font-medium text-gray-700  items-center gap-1">
                           <Percent size={14} />
                           Financial Need
                         </label>
@@ -963,7 +963,7 @@ export default function PendingCustomersPage() {
                         />
                       </div>
                       <div className="space-y-2 md:col-span-2 lg:col-span-5">
-                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        <label className="block text-sm font-medium text-gray-700  items-center gap-1">
                           <Star size={14} />
                           Overall Score
                         </label>
@@ -980,7 +980,7 @@ export default function PendingCustomersPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                      <label className="block text-sm font-medium text-gray-700  items-center gap-1">
                         <FileEdit size={14} />
                         Review Notes
                       </label>

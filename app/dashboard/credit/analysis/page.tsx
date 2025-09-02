@@ -1051,6 +1051,7 @@ export default function PendingCustomersPage() {
                     customerId={customer.id}
                     refNumber={customer.applicationReferenceNumber}
                     analysisData={analysisData}
+                    validateAnalysisData={validateAnalysisData}
                     onSuccess={handleSaveSuccess}
                     actionType="saveAnalysis"
                   />
