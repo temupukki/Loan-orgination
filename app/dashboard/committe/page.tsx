@@ -121,7 +121,7 @@ export default function CommitteeDecisionPage() {
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
 
-    const [isCOMMITTE_MANAGER, setIsCOMMITTE_MANAGER] = useState(false);
+    const [isAPPROVAL_COMMITTE, setIsAPPROVAL_COMMITTE] = useState(false);
         
          const router = useRouter();
       
@@ -145,8 +145,8 @@ export default function CommitteeDecisionPage() {
               }
               
               // Check if user has relationship manager role
-              if (data.user.role === "COMMITTE_MANAGER") {
-                setIsCOMMITTE_MANAGER(true);
+              if (data.user.role === "APPROVAL_COMMITTE") {
+                setIsAPPROVAL_COMMITTE(true);
               } else {
                 // Redirect non-relationship manager users to dashboard
                 router.push("/dashboard");
@@ -450,7 +450,7 @@ export default function CommitteeDecisionPage() {
         </div>
       );
     }
-     if (!isCOMMITTE_MANAGER) {
+     if (!isAPPROVAL_COMMITTE) {
       return null;
     }
   return (
