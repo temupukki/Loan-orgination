@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Customer, Company } from "@/app/types/loan";
+import { Customer, CompanyCustomer } from "@/app/types/loan";
 import { Loader2, Building, User, Search, ArrowLeft, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,7 +15,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchType, setSearchType] = useState<"customer" | "company">("customer");
   const [customerData, setCustomerData] = useState<Customer | null>(null);
-  const [companyData, setCompanyData] = useState<Company | null>(null);
+  const [companyData, setCompanyData] = useState<CompanyCustomer | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function HomePage() {
         setCustomerData(customer);
         setCompanyData(null);
       } else {
-        const company: Company = await res.json();
+        const company: CompanyCustomer = await res.json();
         setCompanyData(company);
         setCustomerData(null);
       }
