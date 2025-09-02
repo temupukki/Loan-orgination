@@ -96,12 +96,13 @@ export default function Dashboard() {
             "SUPERVISOR",
             "COMMITTE_MEMBER",
             "BANNED",
-            "APPROVAL_COMMITTE"
+            "APPROVAL_COMMITTE",
+            
 
             
           ].includes(sessionData.user.role)
         ) {
-          router.push("/unauthorized");
+          router.push("/sign-in");
           return;
         }
 
