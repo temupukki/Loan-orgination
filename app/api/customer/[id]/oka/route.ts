@@ -4,16 +4,17 @@ import prisma from "@/lib/prisma";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     const body = await request.json();
-    const { newStatus,    supervisorID } = body;
+    const { newStatus, supervisorID } = body;
 
-    if (!newStatus || !   supervisorID) {
+    if (!newStatus || !supervisorID) {
       return NextResponse.json(
-        { error: "Both newStatus and assignedTo are required." },
+        { error: "Both newStatus and supervisorID are required." },
         { status: 400 }
       );
     }
@@ -21,8 +22,8 @@ export async function PATCH(
     const updatedCustomer = await prisma.customer.update({
       where: { id },
       data: {
-        applicationStatus: "SUPERVISOR_REVIEWING", // e.g. "UNDER_REVIEW"
-        supervisorID:    supervisorID,       // make sure your schema has this column
+        applicationStatus: "SUPERVISOR_REVIEWING",
+        supervisorID: supervisorID,
       },
     });
 
