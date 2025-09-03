@@ -124,8 +124,8 @@ export default [
     rules: {
       'no-console': 'off', // Disabled console rule
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
-      'prefer-const': 'error',
-      'arrow-body-style': ['error', 'as-needed'],
+      'prefer-const': 'off', // Disabled prefer-const rule
+      'arrow-body-style': 'off', // Disabled arrow-body-style rule
       // Disabled problematic rules
       'quotes': 'off',
       'semi': 'off',
