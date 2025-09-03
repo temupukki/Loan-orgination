@@ -10,7 +10,7 @@ interface SaveReviewButtonProps {
   reviewData?: Record<string, any>;
   onSuccess: () => void;
   buttonText?: string;
-  newStatus?: string; // Optional status to update after save
+  newStatus?: string;
 }
 
 export function SaveReviewButton({
@@ -23,24 +23,25 @@ export function SaveReviewButton({
 }: SaveReviewButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  // ✅ Validation function
+  // ✅ Internal validation function
   const validateSupervisorData = (refNumber: string) => {
     const errors: string[] = [];
     const review = reviewData?.[refNumber];
 
-    if (!review?.pestelanalysisScore) {
+    // Check all required fields with correct field names
+    if (!review?.pestelAnalysisScore) {
       errors.push("PESTEL Analysis score is required");
     }
-    if (!review?.swotanalysisScore) {
+    if (!review?.swotAnalysisScore) {
       errors.push("SWOT Analysis score is required");
     }
-    if (!review?.riskassesmentScore) {
+    if (!review?.riskAssessmentScore) {
       errors.push("Risk Assessment score is required");
     }
-    if (!review?.esgassesmentScore) {
+    if (!review?.esgAssessmentScore) {
       errors.push("ESG Assessment score is required");
     }
-    if (!review?.financialneedScore) {
+    if (!review?.financialNeedScore) {
       errors.push("Financial Need score is required");
     }
     if (!review?.reviewNotes || review.reviewNotes.trim() === "") {
@@ -51,8 +52,13 @@ export function SaveReviewButton({
   };
 
   const handleSaveReview = async () => {
-    if (!refNumber || !reviewData) {
-      toast.error("Missing reference number or review data.");
+    if (!refNumber) {
+      toast.error("Missing reference number.");
+      return;
+    }
+
+    if (!reviewData || !reviewData[refNumber]) {
+      toast.error("No review data found for this reference number.");
       return;
     }
 
@@ -64,11 +70,6 @@ export function SaveReviewButton({
     }
 
     const analysisPayload = reviewData[refNumber];
-    if (!analysisPayload) {
-      toast.error("No review data found for this reference number.");
-      return;
-    }
-
     setIsLoading(true);
 
     try {

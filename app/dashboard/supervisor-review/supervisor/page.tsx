@@ -127,49 +127,47 @@ export default function PendingCustomersPage() {
   >({});
   const [refreshing, setRefreshing] = useState(false);
 
-
   const [isSupervisor, setIsSupervisor] = useState(false);
-      
-       const router = useRouter();
-    
-      useEffect(() => {
-        // Check if the current user is a relationship manager
-        const checkRoleStatus = async () => {
-          try {
-            // Get the current user's role from your API
-            const response = await fetch("/api/session");
-            
-            if (!response.ok) {
-              throw new Error("Failed to fetch user session");
-            }
-            
-            const data = await response.json();
-            
-            // Check if we have a valid session with user data
-            if (!data || !data.user) {
-              router.push("/");
-              return;
-            }
-            
-            // Check if user has relationship manager role
-            if (data.user.role === "SUPERVISOR") {
-              setIsSupervisor(true);
-            } else {
-              // Redirect non-relationship manager users to dashboard
-              router.push("/dashboard");
-            }
-          } catch (error) {
-            console.error("Error checking role status:", error);
-            toast.error("Authentication check failed");
-            router.push("/dashboard");
-          } finally {
-            setIsLoading(false);
-          }
-        };
-    
-        checkRoleStatus();
-      }, [router]);
-    
+
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if the current user is a relationship manager
+    const checkRoleStatus = async () => {
+      try {
+        // Get the current user's role from your API
+        const response = await fetch("/api/session");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch user session");
+        }
+
+        const data = await response.json();
+
+        // Check if we have a valid session with user data
+        if (!data || !data.user) {
+          router.push("/");
+          return;
+        }
+
+        // Check if user has relationship manager role
+        if (data.user.role === "SUPERVISOR") {
+          setIsSupervisor(true);
+        } else {
+          // Redirect non-relationship manager users to dashboard
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        console.error("Error checking role status:", error);
+        toast.error("Authentication check failed");
+        router.push("/dashboard");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkRoleStatus();
+  }, [router]);
 
   useEffect(() => {
     fetchPendingCustomers();
@@ -284,17 +282,12 @@ export default function PendingCustomersPage() {
     if (!review?.financialneedScore) {
       errors.push("Financial Need document is required");
     }
-    if (
-      !review?.reviewNotes ||
-      review?.reviewNotes.trim() === ""
-    ) {
+    if (!review?.reviewNotes || review?.reviewNotes.trim() === "") {
       errors.push("Analyst Conclusion is required");
     }
- 
 
     return errors;
   };
-
 
   const handleReviewChange = (
     refNumber: string,
@@ -437,7 +430,7 @@ export default function PendingCustomersPage() {
       </div>
     );
   }
-   if (isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="flex flex-col items-center">
@@ -447,7 +440,7 @@ export default function PendingCustomersPage() {
       </div>
     );
   }
-   if (!isSupervisor) {
+  if (!isSupervisor) {
     return null;
   }
   return (
@@ -471,7 +464,6 @@ export default function PendingCustomersPage() {
             <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
             {refreshing ? "Refreshing..." : "Refresh Applications"}
           </Button>
-         
         </div>
       </div>
 
@@ -484,7 +476,7 @@ export default function PendingCustomersPage() {
             All Clear!
           </h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
-             No applications pending supervisor review. Check back later for new
+            No applications pending supervisor review. Check back later for new
             submissions.
           </p>
           <Button
@@ -535,12 +527,12 @@ export default function PendingCustomersPage() {
                 <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 py-4 px-6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                     <CardTitle className="text-2xl text-gray-900 flex items-center gap-2 font-extrabold">
-  <User size={24} className="text-blue-600" />
-  {customer.customerNumber?.startsWith("COMP")
-    ? customer.companyName
-    : `${customer.firstName} ${customer.middleName} ${customer.lastName}`}
-</CardTitle>
+                      <CardTitle className="text-2xl text-gray-900 flex items-center gap-2 font-extrabold">
+                        <User size={24} className="text-blue-600" />
+                        {customer.customerNumber?.startsWith("COMP")
+                          ? customer.companyName
+                          : `${customer.firstName} ${customer.middleName} ${customer.lastName}`}
+                      </CardTitle>
 
                       <CardDescription className="flex flex-col md:flex-row md:gap-4 mt-2 text-sm text-gray-600">
                         <span className="flex items-center gap-1">
@@ -618,7 +610,6 @@ export default function PendingCustomersPage() {
                           {formatData(customer.maritalStatus)}
                         </p>
                       </div>
-                      
                     </div>
                   </div>
 
@@ -661,17 +652,18 @@ export default function PendingCustomersPage() {
                       </div>
                       <div className="flex justify-between items-center text-sm">
                         <p className="text-gray-600 flex items-center gap-1">
-  <DollarSign size={14} />
-  {customer.customerNumber?.startsWith("COMP") ? "Annual Revenue:" : "Monthly Income:"}
-</p>
-<p className="font-medium text-gray-800">
-  {formatData(
-    customer.customerNumber?.startsWith("COMP")
-      ? customer.annualRevenue || 0
-      : customer.monthlyIncome || 0
-  )}
-</p>
-
+                          <DollarSign size={14} />
+                          {customer.customerNumber?.startsWith("COMP")
+                            ? "Annual Revenue:"
+                            : "Monthly Income:"}
+                        </p>
+                        <p className="font-medium text-gray-800">
+                          {formatData(
+                            customer.customerNumber?.startsWith("COMP")
+                              ? customer.annualRevenue || 0
+                              : customer.monthlyIncome || 0
+                          )}
+                        </p>
                       </div>
                       <div className="flex justify-between items-center text-sm">
                         <p className="text-gray-600">Account Type:</p>
@@ -1034,14 +1026,14 @@ export default function PendingCustomersPage() {
                       <SaveReviewButton
                         customerId={customer.id}
                         refNumber={customer.applicationReferenceNumber}
-                        validateSupervisorData={validateSupervisorData}
                         reviewData={reviewData}
                         onSuccess={() => {
                           console.log("Analysis saved successfully");
                           toast.success("Review saved successfully!");
                           fetchPendingCustomers();
                         }}
-                       
+                        buttonText="Save Review"
+                        newStatus="SUPERVISED"
                       />
                     </div>
                   </div>
