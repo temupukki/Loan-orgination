@@ -4,11 +4,10 @@ import prisma from "@/lib/prisma";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const resolvedParams = await params;
-    const { id } = resolvedParams;
+    const { id } = params;
 
     // Use prisma.customer.update to target a single record by its unique ID
     const updatedCustomer = await prisma.customer.update({
@@ -16,7 +15,7 @@ export async function PATCH(
         id: id,
       },
       data: {
-        applicationStatus: 'MEMBER_REVIEW', // Update the status to 'MEMBER_REVIEW'
+        applicationStatus: 'MEMBER_REVIEW', // Update the status to 'UNDER_REVIEW'
       },
     });
 

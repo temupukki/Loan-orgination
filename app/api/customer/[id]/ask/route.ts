@@ -2,18 +2,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 export async function PATCH(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     const body = await request.json();
     const { newStatus, creditAnalystComment } = body;
 
@@ -27,7 +22,7 @@ export async function PATCH(
     const updatedCustomer = await prisma.customer.update({
       where: { id },
       data: {
-        applicationStatus: "RM_RECCOMENDATION",
+        applicationStatus:"RM_RECCOMENDATION",
         creditAnalystComment: creditAnalystComment,
       },
     });
