@@ -2,9 +2,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const { id } = params;
@@ -20,7 +26,7 @@ export async function PATCH(
     }
 
     // Validate decision value
-    const validDecisions = [ "APPROVED","COMMITTE_REVERSED","REJECTED"];
+    const validDecisions = ["APPROVED", "COMMITTE_REVERSED", "REJECTED"];
     if (!validDecisions.includes(decision)) {
       return NextResponse.json(
         { error: "Invalid decision value" },
@@ -28,7 +34,7 @@ export async function PATCH(
       );
     }
 
-    // Atomically update the customer's status only if it is PENDING
+    // Atomically update the customer's status only if it is COMMITTE_REVIEW
     const result = await prisma.customer.updateMany({
       where: {
         id: id,
@@ -41,7 +47,7 @@ export async function PATCH(
 
     if (result.count === 0) {
       return NextResponse.json(
-        { error: "Application already taken or not pending" },
+        { error: "Application already taken or not in committee review" },
         { status: 409 }
       );
     }

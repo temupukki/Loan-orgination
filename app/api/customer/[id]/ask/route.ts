@@ -1,19 +1,25 @@
-// app/api/customer/[id]/take/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const { id } = params;
     const body = await request.json();
-    const { newStatus,  creditAnalystComment   } = body;
+    const { newStatus, creditAnalystComment } = body;
 
-    if (!newStatus || ! creditAnalystComment  ) {
+    if (!newStatus || !creditAnalystComment) {
       return NextResponse.json(
-        { error: "Both newStatus and assignedTo are required." },
+        { error: "Both newStatus and creditAnalystComment are required." },
         { status: 400 }
       );
     }
@@ -21,8 +27,8 @@ export async function PATCH(
     const updatedCustomer = await prisma.customer.update({
       where: { id },
       data: {
-        applicationStatus: "RM_RECCOMENDATION", // e.g. "UNDER_REVIEW"
-        creditAnalystComment  :  creditAnalystComment  ,       // make sure your schema has this column
+        applicationStatus: "RM_RECCOMENDATION",
+        creditAnalystComment: creditAnalystComment,
       },
     });
 
