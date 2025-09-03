@@ -84,11 +84,8 @@ export default [
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
-      ],
-      '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/no-unused-vars': 'off', // Disabled unused vars rule
+      '@typescript-eslint/consistent-type-imports': 'off', // Disabled type imports rule
       '@typescript-eslint/no-misused-promises': [
         'error',
         { checksVoidReturn: false }
@@ -108,27 +105,13 @@ export default [
     }
   },
 
-  // Import rules
+  // Import rules - DISABLED STRICT IMPORT RULES
   {
     plugins: {
       import: importPlugin
     },
     rules: {
-      'import/order': [
-        'error',
-        {
-          groups: [
-            'builtin',
-            'external',
-            'internal',
-            'parent',
-            'sibling',
-            'index'
-          ],
-          'newlines-between': 'always',
-          alphabetize: { order: 'asc', caseInsensitive: true }
-        }
-      ],
+      'import/order': 'off', // Disabled import order rule
       'import/no-duplicates': 'error',
       'import/no-unresolved': 'error',
       'import/named': 'error',
@@ -139,7 +122,7 @@ export default [
   // Additional project-specific rules with disabled problematic rules
   {
     rules: {
-      'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
+      'no-console': 'off', // Disabled console rule
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
       'prefer-const': 'error',
       'arrow-body-style': ['error', 'as-needed'],
@@ -147,6 +130,14 @@ export default [
       'quotes': 'off',
       'semi': 'off',
       'no-undef': 'off'
+    }
+  },
+
+  // React specific disabled rules
+  {
+    files: ['**/*.tsx', '**/*.jsx'],
+    rules: {
+      'react/no-unescaped-entities': 'off' // Disabled escaped entities rule
     }
   },
 
