@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       financialNeedUrl,
       analystConclusion,
       analystRecommendation,
-      rmRecommendation,
+     
     } = body;
 
     if (!applicationReferenceNumber) {
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
         financialNeedUrl,
         analystConclusion,
         analystRecommendation,
-        rmRecommendation,
+        
       },
       update: {
    
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
         financialNeedUrl,
         analystConclusion,
         analystRecommendation,
-        rmRecommendation,
+       
       },
     });
 
