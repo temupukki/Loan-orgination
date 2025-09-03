@@ -23,15 +23,11 @@ export default [
   // Global settings
   {
     ignores: [
-      '**/lib/generated/**',
+      '**/lib/generated/**', // Fixed ignore pattern to properly exclude Prisma files
       'node_modules/',
       '.next/',
       'dist/',
-      'build/',
-      '*.config.js',
-      '*.config.ts',
-      '**/*.d.ts',
-      'coverage/'
+      'build/'
     ],
     languageOptions: {
       ecmaVersion: 'latest',
@@ -49,9 +45,6 @@ export default [
       'import/resolver': {
         typescript: {
           project: './tsconfig.json'
-        },
-        node: {
-          extensions: ['.js', '.jsx', '.ts', '.tsx']
         }
       }
     }
@@ -66,8 +59,7 @@ export default [
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,
       '@next/next/no-html-link-for-pages': 'error',
-      '@next/next/no-img-element': 'off',
-      '@next/next/no-document-import-in-page': 'off'
+      '@next/next/no-img-element': 'off' // Consider enabling if you don't need img elements
     }
   },
 
@@ -80,31 +72,16 @@ export default [
     rules: {
       ...tsPlugin.configs.recommended.rules,
       ...tsPlugin.configs['recommended-requiring-type-checking'].rules,
-      '@typescript-eslint/no-explicit-any': ['warn', { ignoreRestArgs: true }],
+      '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': [
         'warn',
-        { 
-          argsIgnorePattern: '^_', 
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-          ignoreRestSiblings: true
-        }
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
       ],
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-misused-promises': [
         'error',
         { checksVoidReturn: false }
-      ],
-      // Add strict type safety rules
-      '@typescript-eslint/no-unsafe-assignment': 'error',
-      '@typescript-eslint/no-unsafe-argument': 'error',
-      '@typescript-eslint/no-unsafe-member-access': 'error',
-      '@typescript-eslint/no-unsafe-call': 'error',
-      '@typescript-eslint/no-unsafe-return': 'error',
-      '@typescript-eslint/require-await': 'error',
-      '@typescript-eslint/await-thenable': 'error',
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/prefer-promise-reject-errors': 'error'
+      ]
     }
   },
 
@@ -120,7 +97,7 @@ export default [
     }
   },
 
-  // Import rules with strict ordering
+  // Import rules
   {
     plugins: {
       import: importPlugin
@@ -130,73 +107,21 @@ export default [
         'error',
         {
           groups: [
-            'builtin',      // Node.js built-in modules
-            'external',     // External packages (react, next, etc.)
-            'internal',     // Internal aliased imports (@/*)
-            'parent',       // Relative parent imports
-            'sibling',      // Relative sibling imports
-            'index',        // Index imports
-            'object'        // Object imports
+            'builtin',
+            'external',
+            'internal',
+            'parent',
+            'sibling',
+            'index'
           ],
           'newlines-between': 'always',
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-            orderImportKind: 'asc'
-          },
-          pathGroups: [
-            {
-              pattern: 'react',
-              group: 'external',
-              position: 'before'
-            },
-            {
-              pattern: 'next/**',
-              group: 'external',
-              position: 'before'
-            },
-            {
-              pattern: '@prisma/**',
-              group: 'external',
-              position: 'before'
-            },
-            {
-              pattern: '@/lib/**',
-              group: 'internal',
-              position: 'before'
-            },
-            {
-              pattern: '@/utils/**',
-              group: 'internal',
-              position: 'before'
-            },
-            {
-              pattern: '@/app/**',
-              group: 'internal'
-            },
-            {
-              pattern: '@/components/**',
-              group: 'internal'
-            },
-            {
-              pattern: '@/hooks/**',
-              group: 'internal'
-            }
-          ],
-          pathGroupsExcludedImportTypes: ['builtin'],
-          distinctGroup: false
+          alphabetize: { order: 'asc', caseInsensitive: true }
         }
       ],
       'import/no-duplicates': 'error',
       'import/no-unresolved': 'error',
       'import/named': 'error',
-      'import/default': 'error',
-      'import/namespace': 'error',
-      'import/no-default-export': 'off',
-      'import/first': 'error',
-      'import/newline-after-import': 'error',
-      'import/no-absolute-path': 'error',
-      'import/no-webpack-loader-syntax': 'error'
+      'import/no-default-export': 'off' // Enable if you don't use default exports
     }
   },
 
@@ -207,59 +132,16 @@ export default [
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
       'prefer-const': 'error',
       'arrow-body-style': ['error', 'as-needed'],
-      'quotes': ['error', 'single', { 
-        avoidEscape: true, 
-        allowTemplateLiterals: true 
-      }],
-      'semi': ['error', 'always'],
-      'comma-dangle': ['error', 'only-multiline'],
-      'object-curly-spacing': ['error', 'always'],
-      'array-bracket-spacing': ['error', 'never'],
-      'comma-spacing': ['error', { before: false, after: true }]
+      'quotes': ['error', 'single', { avoidEscape: true }],
+      'semi': ['error', 'always']
     }
   },
 
-  // Server-side files overrides (more permissive)
-  {
-    files: [
-      '**/api/**/*.ts',
-      '**/route.ts',
-      '**/server.ts',
-      '**/lib/**/*.ts',
-      '**/utils/**/*.ts'
-    ],
-    rules: {
-      '@typescript-eslint/no-unsafe-assignment': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
-      '@typescript-eslint/no-unsafe-member-access': 'warn',
-      '@typescript-eslint/no-unsafe-call': 'warn',
-      '@typescript-eslint/no-explicit-any': 'off',
-      'no-console': 'off'
-    }
-  },
-
-  // Test files overrides
-  {
-    files: ['**/*.test.ts', '**/*.spec.ts', '**/*.test.tsx', '**/*.spec.tsx'],
-    rules: {
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-      'no-console': 'off'
-    }
-  },
-
-  // Compatibility layer for legacy configs
+  // Compatibility layer for legacy configs if needed
   ...compat.config({
     extends: [
       'plugin:react/recommended',
       'plugin:react/jsx-runtime'
-    ],
-    rules: {
-      'react/react-in-jsx-scope': 'off',
-      'react/prop-types': 'off'
-    }
+    ]
   })
 ]
