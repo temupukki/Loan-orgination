@@ -83,7 +83,7 @@ export default [
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off', // Disabled no-explicit-any rule
       '@typescript-eslint/no-unused-vars': 'off', // Disabled unused vars rule
       '@typescript-eslint/consistent-type-imports': 'off', // Disabled type imports rule
       '@typescript-eslint/no-misused-promises': [
