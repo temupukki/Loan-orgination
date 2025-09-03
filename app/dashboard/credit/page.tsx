@@ -1,10 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TakeButton } from '@/components/TakeButton';
+import { TakeButton } from "@/components/TakeButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   RefreshCw,
@@ -21,11 +28,13 @@ import {
   CheckCircle2, // Changed from CheckCircle for a new look
   Info,
   Loader2, // New icon for the error state
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface Customer {
+  annualRevenue: number;
+  companyName: string;
   id: string;
   applicationReferenceNumber: string;
   customerNumber: string;
@@ -80,9 +89,9 @@ export default function PendingCustomersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-    const [isCREDIT_ANALYST, setIsCREDIT_ANALYST] = useState(false);
-  
-   const router = useRouter();
+  const [isCREDIT_ANALYST, setIsCREDIT_ANALYST] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     // Check if the current user is a relationship manager
@@ -90,19 +99,19 @@ export default function PendingCustomersPage() {
       try {
         // Get the current user's role from your API
         const response = await fetch("/api/session");
-        
+
         if (!response.ok) {
           throw new Error("Failed to fetch user session");
         }
-        
+
         const data = await response.json();
-        
+
         // Check if we have a valid session with user data
         if (!data || !data.user) {
           router.push("/");
           return;
         }
-        
+
         // Check if user has relationship manager role
         if (data.user.role === "CREDIT_ANALYST") {
           setIsCREDIT_ANALYST(true);
@@ -122,20 +131,23 @@ export default function PendingCustomersPage() {
     checkRoleStatus();
   }, [router]);
 
-
   const fetchPendingCustomers = async () => {
     try {
       setRefreshing(true);
       const response = await fetch(`/api/get?status=PENDING`);
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch available applications');
+        throw new Error(
+          errorData.error || "Failed to fetch available applications"
+        );
       }
       const data = await response.json();
       setCustomers(data);
       setError(null);
     } catch (err: any) {
-      setError("We're having trouble connecting to the server. Please try again in a moment.");
+      setError(
+        "We're having trouble connecting to the server. Please try again in a moment."
+      );
       setCustomers([]);
     } finally {
       setIsLoading(false);
@@ -151,7 +163,7 @@ export default function PendingCustomersPage() {
     if (value === undefined || value === null || value === "") {
       return <span className="text-gray-400">N/A</span>;
     }
-    if (typeof value === 'string' && value.startsWith('http')) {
+    if (typeof value === "string" && value.startsWith("http")) {
       return (
         <a
           href={value}
@@ -164,10 +176,10 @@ export default function PendingCustomersPage() {
         </a>
       );
     }
-    if (typeof value === 'number' && value > 1000) {
-      return new Intl.NumberFormat('en-ET', {
-        style: 'currency',
-        currency: 'ETB'
+    if (typeof value === "number" && value > 1000) {
+      return new Intl.NumberFormat("en-ET", {
+        style: "currency",
+        currency: "ETB",
       }).format(value);
     }
     return value;
@@ -189,7 +201,10 @@ export default function PendingCustomersPage() {
             <Skeleton className="h-6 w-48 mb-2" />
             <div className="space-y-2">
               {[...Array(4)].map((_, j) => (
-                <div key={j} className="flex justify-between items-center text-sm">
+                <div
+                  key={j}
+                  className="flex justify-between items-center text-sm"
+                >
                   <Skeleton className="h-4 w-1/3" />
                   <Skeleton className="h-4 w-1/2" />
                 </div>
@@ -204,7 +219,7 @@ export default function PendingCustomersPage() {
     </Card>
   );
 
-   if (isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="flex flex-col items-center">
@@ -214,11 +229,9 @@ export default function PendingCustomersPage() {
       </div>
     );
   }
-   if (!isCREDIT_ANALYST) {
+  if (!isCREDIT_ANALYST) {
     return null;
   }
-
-
 
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -226,7 +239,7 @@ export default function PendingCustomersPage() {
         <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-2">
           Available Applications
         </h1>
-      
+
         <Button
           onClick={fetchPendingCustomers}
           variant="outline"
@@ -241,9 +254,11 @@ export default function PendingCustomersPage() {
       {error && (
         <div className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto border-4 border-dashed border-gray-200 text-gray-700">
           <div className="mb-6 p-4 bg-green-100 rounded-full">
-             <CheckCircle2 className="text-green-600" size={48} />
+            <CheckCircle2 className="text-green-600" size={48} />
           </div>
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">All Applications are Taken</h2>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
+            All Applications are Taken
+          </h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
             All application are Taken ,come back later!
           </p>
@@ -263,7 +278,9 @@ export default function PendingCustomersPage() {
           <div className="mb-6 p-4 bg-green-100 rounded-full">
             <CheckCircle2 className="text-green-600" size={48} />
           </div>
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">All Clear! </h2>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
+            All Clear!{" "}
+          </h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
             All applications have been taken. Feel free to check back later!
           </p>
@@ -280,26 +297,41 @@ export default function PendingCustomersPage() {
       {!isLoading && customers.length > 0 && (
         <div className="grid grid-cols-1 gap-6">
           {customers.map((customer) => (
-            <Card key={customer.id} className="max-w-4xl mx-auto overflow-hidden border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <Card
+              key={customer.id}
+              className="max-w-4xl mx-auto overflow-hidden border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300"
+            >
               <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 py-4 px-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
                     <CardTitle className="text-2xl text-gray-900 flex items-center gap-2 font-extrabold">
                       <User size={24} className="text-blue-600" />
-                      {customer.firstName} {customer.middleName} {customer.lastName}
+                      {customer.customerNumber?.startsWith("COMP")
+                        ? customer.companyName
+                        : `${customer.firstName} ${customer.middleName} ${customer.lastName}`}
                     </CardTitle>
+
                     <CardDescription className="flex flex-col md:flex-row md:gap-4 mt-2 text-sm text-gray-600">
                       <span className="flex items-center gap-1">
                         <IdCard size={14} />
-                        Ref: <span className="font-medium text-gray-800">{customer.applicationReferenceNumber}</span>
+                        Ref:{" "}
+                        <span className="font-medium text-gray-800">
+                          {customer.applicationReferenceNumber}
+                        </span>
                       </span>
                       <span className="flex items-center gap-1">
                         <Building size={14} />
-                        Customer No: <span className="font-medium text-gray-800">{customer.customerNumber}</span>
+                        Customer No:{" "}
+                        <span className="font-medium text-gray-800">
+                          {customer.customerNumber}
+                        </span>
                       </span>
                     </CardDescription>
                   </div>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 self-start md:self-auto py-1 px-3 font-semibold text-sm">
+                  <Badge
+                    variant="secondary"
+                    className="bg-blue-100 text-blue-800 border-blue-200 self-start md:self-auto py-1 px-3 font-semibold text-sm"
+                  >
                     {customer.applicationStatus}
                   </Badge>
                 </div>
@@ -314,40 +346,56 @@ export default function PendingCustomersPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">TIN:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.tinNumber)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.tinNumber)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">National ID:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.nationalId)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.nationalId)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600 flex items-center gap-1">
                         <Phone size={14} />
                         Phone:
                       </p>
-                      <p className="font-medium text-gray-800">{formatData(customer.phone)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.phone)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600 flex items-center gap-1">
                         <Mail size={14} />
                         Email:
                       </p>
-                      <p className="font-medium text-gray-800">{formatData(customer.email)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.email)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Gender:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.gender)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.gender)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Marital Status:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.maritalStatus)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.maritalStatus)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600 flex items-center gap-1">
                         <Calendar size={14} />
                         Date of Birth:
                       </p>
-                      <p className="font-medium text-gray-800">{formatData(new Date(customer.dateOfBirth).toLocaleDateString())}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(
+                          new Date(customer.dateOfBirth).toLocaleDateString()
+                        )}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -360,34 +408,54 @@ export default function PendingCustomersPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Region:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.region)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.region)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Zone:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.zone)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.zone)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">City:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.city)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.city)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Subcity:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.subcity)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.subcity)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Woreda:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.woreda)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.woreda)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600 flex items-center gap-1">
                         <DollarSign size={14} />
-                        Monthly Income:
+                        {customer.customerNumber?.startsWith("COMP")
+                          ? "Annual Revenue:"
+                          : "Monthly Income:"}
                       </p>
-                      <p className="font-medium text-gray-800">{formatData(customer.monthlyIncome)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(
+                          customer.customerNumber?.startsWith("COMP")
+                            ? customer.annualRevenue || 0
+                            : customer.monthlyIncome || 0
+                        )}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Account Type:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.accountType)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.accountType)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -400,26 +468,40 @@ export default function PendingCustomersPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Major Business:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.majorLineBusiness)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.majorLineBusiness)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600 flex items-center gap-1">
                         <Calendar size={14} />
                         Established:
                       </p>
-                      <p className="font-medium text-gray-800">{formatData(new Date(customer.dateOfEstablishmentMLB).toLocaleDateString())}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(
+                          new Date(
+                            customer.dateOfEstablishmentMLB
+                          ).toLocaleDateString()
+                        )}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Economic Sector:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.economicSector)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.economicSector)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Customer Segment:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.customerSegmentation)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.customerSegmentation)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Initiation Center:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.creditInitiationCenter)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.creditInitiationCenter)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -432,23 +514,33 @@ export default function PendingCustomersPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Loan Type:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.loanType)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.loanType)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Loan Amount:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.loanAmount)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.loanAmount)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Loan Period:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.loanPeriod)} months</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.loanPeriod)} months
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Repayment Mode:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.modeOfRepayment)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.modeOfRepayment)}
+                      </p>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-600">Purpose:</p>
-                      <p className="font-medium text-gray-800">{formatData(customer.purposeOfLoan)}</p>
+                      <p className="font-medium text-gray-800">
+                        {formatData(customer.purposeOfLoan)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -476,7 +568,9 @@ export default function PendingCustomersPage() {
                       {formatData(customer.applicationFormUrl)}
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">Shareholders Details:</span>
+                      <span className="text-gray-600">
+                        Shareholders Details:
+                      </span>
                       {formatData(customer.shareholdersDetailsUrl)}
                     </div>
                     <div className="flex justify-between items-center text-sm">
@@ -484,7 +578,9 @@ export default function PendingCustomersPage() {
                       {formatData(customer.creditProfileUrl)}
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">Transaction Profile:</span>
+                      <span className="text-gray-600">
+                        Transaction Profile:
+                      </span>
                       {formatData(customer.transactionProfileUrl)}
                     </div>
                     <div className="flex justify-between items-center text-sm">

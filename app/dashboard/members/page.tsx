@@ -59,6 +59,8 @@ interface LoanAnalysis {
 }
 
 interface Customer {
+  annualRevenue: number;
+  companyName: ReactNode;
   id: string;
   applicationReferenceNumber: string;
   customerNumber: string;
@@ -598,8 +600,11 @@ if (isLoading) {
                   <div className="col-span-2 flex items-center">
                     <User size={16} className="text-blue-600 mr-2" />
                     <span className="font-medium">
-                      {customer.firstName} {customer.lastName}
-                    </span>
+  {customer.customerNumber?.startsWith("COMP")
+    ? customer.companyName
+    : `${customer.firstName} ${customer.lastName}`}
+</span>
+
                   </div>
                   <div className="col-span-2 text-sm text-gray-600">
                     {customer.applicationReferenceNumber}
@@ -698,19 +703,7 @@ if (isLoading) {
                                 {formatData(customer.maritalStatus)}
                               </p>
                             </div>
-                            <div className="flex justify-between items-center text-sm">
-                              <p className="text-gray-600 flex items-center gap-1">
-                                <Calendar size={14} />
-                                Date of Birth:
-                              </p>
-                              <p className="font-medium text-gray-800">
-                                {formatData(
-                                  new Date(
-                                    customer.dateOfBirth
-                                  ).toLocaleDateString()
-                                )}
-                              </p>
-                            </div>
+                          
                           </div>
                         </div>
 
@@ -752,13 +745,18 @@ if (isLoading) {
                               </p>
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <p className="text-gray-600 flex items-center gap-1">
-                                <DollarSign size={14} />
-                                Monthly Income:
-                              </p>
-                              <p className="font-medium text-gray-800">
-                                {formatData(customer.monthlyIncome)}
-                              </p>
+                             <p className="text-gray-600 flex items-center gap-1">
+  <DollarSign size={14} />
+  {customer.customerNumber?.startsWith("COMP") ? "Annual Revenue:" : "Monthly Income:"}
+</p>
+<p className="font-medium text-gray-800">
+  {formatData(
+    customer.customerNumber?.startsWith("COMP")
+      ? customer.annualRevenue || 0
+      : customer.monthlyIncome || 0
+  )}
+</p>
+
                             </div>
                             <div className="flex justify-between items-center text-sm">
                               <p className="text-gray-600">Account Type:</p>

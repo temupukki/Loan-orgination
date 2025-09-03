@@ -49,6 +49,8 @@ interface LoanAnalysis {
 
 // Update the Customer interface to include the LoanAnalysis relation
 interface Customer {
+  annualRevenue: number;
+  companyName: string;
   id: string;
   applicationReferenceNumber: string;
   customerNumber: string;
@@ -107,48 +109,47 @@ export default function PendingCustomersPage() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-   const [isSupervisor, setIsSupervisor] = useState(false);
-    
-     const router = useRouter();
-  
-    useEffect(() => {
-      // Check if the current user is a relationship manager
-      const checkRoleStatus = async () => {
-        try {
-          // Get the current user's role from your API
-          const response = await fetch("/api/session");
-          
-          if (!response.ok) {
-            throw new Error("Failed to fetch user session");
-          }
-          
-          const data = await response.json();
-          
-          // Check if we have a valid session with user data
-          if (!data || !data.user) {
-            router.push("/");
-            return;
-          }
-          
-          // Check if user has relationship manager role
-          if (data.user.role === "SUPERVISOR") {
-            setIsSupervisor(true);
-          } else {
-            // Redirect non-relationship manager users to dashboard
-            router.push("/dashboard");
-          }
-        } catch (error) {
-          console.error("Error checking role status:", error);
-          toast.error("Authentication check failed");
-          router.push("/dashboard");
-        } finally {
-          setIsLoading(false);
+  const [isSupervisor, setIsSupervisor] = useState(false);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if the current user is a relationship manager
+    const checkRoleStatus = async () => {
+      try {
+        // Get the current user's role from your API
+        const response = await fetch("/api/session");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch user session");
         }
-      };
-  
-      checkRoleStatus();
-    }, [router]);
-  
+
+        const data = await response.json();
+
+        // Check if we have a valid session with user data
+        if (!data || !data.user) {
+          router.push("/");
+          return;
+        }
+
+        // Check if user has relationship manager role
+        if (data.user.role === "SUPERVISOR") {
+          setIsSupervisor(true);
+        } else {
+          // Redirect non-relationship manager users to dashboard
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        console.error("Error checking role status:", error);
+        toast.error("Authentication check failed");
+        router.push("/dashboard");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkRoleStatus();
+  }, [router]);
 
   const fetchPendingCustomers = async () => {
     try {
@@ -280,7 +281,7 @@ export default function PendingCustomersPage() {
     );
   }
 
-   if (isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="flex flex-col items-center">
@@ -290,7 +291,7 @@ export default function PendingCustomersPage() {
       </div>
     );
   }
-   if (!isSupervisor) {
+  if (!isSupervisor) {
     return null;
   }
   return (
@@ -299,7 +300,6 @@ export default function PendingCustomersPage() {
         <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-2">
           Available Applications
         </h1>
-      
 
         <div className="flex gap-4 mt-6">
           <Button
@@ -311,20 +311,19 @@ export default function PendingCustomersPage() {
             <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
             {refreshing ? "Refreshing..." : "Refresh List"}
           </Button>
-       
         </div>
       </div>
 
       {error && (
         <div className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto border-4 border-dashed border-gray-200 text-gray-700 mb-8">
           <div className="mb-6 p-4 bg-green-100 rounded-full">
-             <CheckCircle2 className="text-green-600" size={48} />
+            <CheckCircle2 className="text-green-600" size={48} />
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
-             All Clear!
+            All Clear!
           </h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
-               All applications have been taken. Feel free to check back later!
+            All applications have been taken. Feel free to check back later!
           </p>
           <Button
             onClick={fetchPendingCustomers}
@@ -345,9 +344,7 @@ export default function PendingCustomersPage() {
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
             All Clear!
           </h2>
-          <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
-          
-          </p>
+          <p className="text-lg text-gray-600 text-center mb-6 max-w-md"></p>
           <Button
             onClick={fetchPendingCustomers}
             className="gap-2 bg-green-600 hover:bg-green-700 text-white"
@@ -372,9 +369,11 @@ export default function PendingCustomersPage() {
                     <div>
                       <CardTitle className="text-2xl text-gray-900 flex items-center gap-2 font-extrabold">
                         <User size={24} className="text-blue-600" />
-                        {customer.firstName} {customer.middleName}{" "}
-                        {customer.lastName}
+                        {customer.customerNumber?.startsWith("COMP")
+                          ? customer.companyName
+                          : `${customer.firstName} ${customer.middleName} ${customer.lastName}`}
                       </CardTitle>
+
                       <CardDescription className="flex flex-col md:flex-row md:gap-4 mt-2 text-sm text-gray-600">
                         <span className="flex items-center gap-1">
                           <IdCard size={14} />
@@ -503,10 +502,16 @@ export default function PendingCustomersPage() {
                       <div className="flex justify-between items-center text-sm">
                         <p className="text-gray-600 flex items-center gap-1">
                           <DollarSign size={14} />
-                          Monthly Income:
+                          {customer.customerNumber?.startsWith("COMP")
+                            ? "Annual Revenue:"
+                            : "Monthly Income:"}
                         </p>
                         <p className="font-medium text-gray-800">
-                          {formatData(customer.monthlyIncome)}
+                          {formatData(
+                            customer.customerNumber?.startsWith("COMP")
+                              ? customer.annualRevenue || 0
+                              : customer.monthlyIncome || 0
+                          )}
                         </p>
                       </div>
                       <div className="flex justify-between items-center text-sm">

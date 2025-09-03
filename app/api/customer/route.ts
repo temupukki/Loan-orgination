@@ -29,13 +29,15 @@ export async function POST(request: NextRequest) {
       // Customer basic info (all required in your schema)
       customerNumber,
       tinNumber,
+      companyName ,
+      annualRevenue,
       firstName,
       middleName,
       lastName,
       mothersName,
       gender,
       maritalStatus,
-      dateOfBirth,
+     
       nationalId,
       phone,
       email,
@@ -77,29 +79,11 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate all required fields based on your schema
-    const requiredFields = [
-      'customerNumber', 'tinNumber', 'firstName', 'lastName', 'gender',
-      'maritalStatus', 'dateOfBirth', 'nationalId', 'phone', 'region',
-      'zone', 'city', 'subcity', 'woreda', 'monthlyIncome', 'status',
-      'accountType', 'nationalidUrl', 'agreementFormUrl', 'majorLineBusiness',
-      'majorLineBusinessUrl', 'dateOfEstablishmentMLB', 'purposeOfLoan',
-      'loanType', 'loanAmount', 'loanPeriod', 'modeOfRepayment', 'economicSector',
-      'customerSegmentation', 'creditInitiationCenter', 'applicationFormUrl',
-      'creditProfileUrl', 'transactionProfileUrl', 'collateralProfileUrl',
-      'financialProfileUrl'
-    ];
 
-    const missingFields = requiredFields.filter(field => !body[field]);
+
+
     
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        { 
-          error: 'Missing required fields',
-          missingFields: missingFields
-        },
-        { status: 400 }
-      );
-    }
+
 
     // Check if customer already exists
     const existingCustomer = await prisma.customer.findUnique({
@@ -125,17 +109,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse date fields
-    const parsedDateOfBirth = parseDateSafe(dateOfBirth);
+ 
     const parsedDateEstablishmentMLB = parseDateSafe(dateOfEstablishmentMLB);
     const parsedDateEstablishmentOLB = parseDateSafe(dateOfEstablishmentOLB);
 
-    if (!parsedDateOfBirth) {
-      return NextResponse.json(
-        { error: 'Invalid date of birth format' },
-        { status: 400 }
-      );
-    }
 
     if (!parsedDateEstablishmentMLB) {
       return NextResponse.json(
@@ -153,13 +130,15 @@ export async function POST(request: NextRequest) {
         // Customer basic info (all required)
         customerNumber,
         tinNumber,
+         companyName ,
+          annualRevenue,
         firstName,
         middleName: middleName || null,
         lastName,
         mothersName: mothersName || null,
         gender,
         maritalStatus,
-        dateOfBirth: parsedDateOfBirth,
+     
         nationalId,
         phone,
         email: email || null,

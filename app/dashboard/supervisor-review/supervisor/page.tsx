@@ -63,6 +63,8 @@ interface LoanAnalysis {
 
 // Update the Customer interface to include the LoanAnalysis relation
 interface Customer {
+  companyName: string;
+  annualRevenue: number;
   id: string;
   applicationReferenceNumber: string;
   customerNumber: string;
@@ -533,11 +535,13 @@ export default function PendingCustomersPage() {
                 <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 py-4 px-6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                      <CardTitle className="text-2xl text-gray-900 flex items-center gap-2 font-extrabold">
-                        <User size={24} className="text-blue-600" />
-                        {customer.firstName} {customer.middleName}{" "}
-                        {customer.lastName}
-                      </CardTitle>
+                     <CardTitle className="text-2xl text-gray-900 flex items-center gap-2 font-extrabold">
+  <User size={24} className="text-blue-600" />
+  {customer.customerNumber?.startsWith("COMP")
+    ? customer.companyName
+    : `${customer.firstName} ${customer.middleName} ${customer.lastName}`}
+</CardTitle>
+
                       <CardDescription className="flex flex-col md:flex-row md:gap-4 mt-2 text-sm text-gray-600">
                         <span className="flex items-center gap-1">
                           <IdCard size={14} />
@@ -614,17 +618,7 @@ export default function PendingCustomersPage() {
                           {formatData(customer.maritalStatus)}
                         </p>
                       </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <p className="text-gray-600 flex items-center gap-1">
-                          <Calendar size={14} />
-                          Date of Birth:
-                        </p>
-                        <p className="font-medium text-gray-800">
-                          {formatData(
-                            new Date(customer.dateOfBirth).toLocaleDateString()
-                          )}
-                        </p>
-                      </div>
+                      
                     </div>
                   </div>
 
@@ -667,12 +661,17 @@ export default function PendingCustomersPage() {
                       </div>
                       <div className="flex justify-between items-center text-sm">
                         <p className="text-gray-600 flex items-center gap-1">
-                          <DollarSign size={14} />
-                          Monthly Income:
-                        </p>
-                        <p className="font-medium text-gray-800">
-                          {formatData(customer.monthlyIncome)}
-                        </p>
+  <DollarSign size={14} />
+  {customer.customerNumber?.startsWith("COMP") ? "Annual Revenue:" : "Monthly Income:"}
+</p>
+<p className="font-medium text-gray-800">
+  {formatData(
+    customer.customerNumber?.startsWith("COMP")
+      ? customer.annualRevenue || 0
+      : customer.monthlyIncome || 0
+  )}
+</p>
+
                       </div>
                       <div className="flex justify-between items-center text-sm">
                         <p className="text-gray-600">Account Type:</p>

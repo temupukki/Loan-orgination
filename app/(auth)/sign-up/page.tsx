@@ -45,44 +45,7 @@ export default function BankSignupPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Check if the current user is an admin
-    const checkAdminStatus = async () => {
-      try {
-        // Get the current user's role from your API - FIXED THE ENDPOINT
-        const response = await fetch("/api/session");
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch user session");
-        }
-        
-        const data = await response.json();
-        
-        // Check if we have a valid session with user data
-        if (!data || !data.user) {
-          router.push("/");
-          return;
-        }
-        
-        // Check if user has admin role - FIXED THE ACCESS PATTERN
-        if (data.user.role === "ADMIN") {
-          setIsAdmin(true);
-        } else {
-          // Redirect non-admin users to dashboard
-          router.push("/dashboard");
-        }
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-        toast.error("Authentication check failed");
-        router.push("/dashboard");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAdminStatus();
-  }, [router]);
-
+  
   const {
     register,
     handleSubmit,
@@ -156,21 +119,6 @@ export default function BankSignupPage() {
   }
 
   // Show loading state while checking authentication
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200">
-        <div className="flex flex-col items-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="mt-4 text-blue-700">Checking permissions...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Only render the form if user is admin
-  if (!isAdmin) {
-    return null; // Will redirect due to useEffect
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 p-4 sm:p-6">

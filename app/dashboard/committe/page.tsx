@@ -56,6 +56,8 @@ interface LoanAnalysis {
 }
 
 interface Customer {
+  annualRevenue: number;
+  companyName: string;
   id: string;
   applicationReferenceNumber: string;
   customerNumber: string;
@@ -120,57 +122,56 @@ export default function CommitteeDecisionPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
+  const [isAPPROVAL_COMMITTE, setIsAPPROVAL_COMMITTE] = useState(false);
 
-    const [isAPPROVAL_COMMITTE, setIsAPPROVAL_COMMITTE] = useState(false);
-        
-         const router = useRouter();
-      
-        useEffect(() => {
-          // Check if the current user is a relationship manager
-          const checkRoleStatus = async () => {
-            try {
-              // Get the current user's role from your API
-              const response = await fetch("/api/session");
-              
-              if (!response.ok) {
-                throw new Error("Failed to fetch user session");
-              }
-              
-              const data = await response.json();
-              
-              // Check if we have a valid session with user data
-              if (!data || !data.user) {
-                router.push("/");
-                return;
-              }
-              
-              // Check if user has relationship manager role
-              if (data.user.role === "APPROVAL_COMMITTE") {
-                setIsAPPROVAL_COMMITTE(true);
-              } else {
-                // Redirect non-relationship manager users to dashboard
-                router.push("/dashboard");
-              }
-            } catch (error) {
-              console.error("Error checking role status:", error);
-              toast.error("Authentication check failed");
-              router.push("/dashboard");
-            } finally {
-              setIsLoading(false);
-            }
-          };
-      
-          checkRoleStatus();
-        }, [router]);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if the current user is a relationship manager
+    const checkRoleStatus = async () => {
+      try {
+        // Get the current user's role from your API
+        const response = await fetch("/api/session");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch user session");
+        }
+
+        const data = await response.json();
+
+        // Check if we have a valid session with user data
+        if (!data || !data.user) {
+          router.push("/");
+          return;
+        }
+
+        // Check if user has relationship manager role
+        if (data.user.role === "APPROVAL_COMMITTE") {
+          setIsAPPROVAL_COMMITTE(true);
+        } else {
+          // Redirect non-relationship manager users to dashboard
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        console.error("Error checking role status:", error);
+        toast.error("Authentication check failed");
+        router.push("/dashboard");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkRoleStatus();
+  }, [router]);
 
   useEffect(() => {
     fetchPendingCustomers();
   }, []);
 
   const toggleRow = (applicationRef: string) => {
-    setExpandedRows(prev => ({
+    setExpandedRows((prev) => ({
       ...prev,
-      [applicationRef]: !prev[applicationRef]
+      [applicationRef]: !prev[applicationRef],
     }));
   };
 
@@ -441,18 +442,18 @@ export default function CommitteeDecisionPage() {
   }
 
   if (isLoading) {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            <p className="mt-4 text-gray-700">Checking permissions...</p>
-          </div>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="mt-4 text-gray-700">Checking permissions...</p>
         </div>
-      );
-    }
-     if (!isAPPROVAL_COMMITTE) {
-      return null;
-    }
+      </div>
+    );
+  }
+  if (!isAPPROVAL_COMMITTE) {
+    return null;
+  }
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col items-center mb-8">
@@ -480,13 +481,13 @@ export default function CommitteeDecisionPage() {
       {error && (
         <div className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto border-4 border-dashed border-gray-200 text-gray-700 mb-8">
           <div className="mb-6 p-4 bg-green-100 rounded-full">
-              <CheckCircle2 className="text-green-600" size={48} />
+            <CheckCircle2 className="text-green-600" size={48} />
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
-           All Clear!
+            All Clear!
           </h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
-           No applications pending committee review. Check back later for new
+            No applications pending committee review. Check back later for new
             submissions.
           </p>
           <Button
@@ -536,38 +537,49 @@ export default function CommitteeDecisionPage() {
 
           {/* Table Rows */}
           {customers.map((customer) => {
-            const isExpanded = expandedRows[customer.applicationReferenceNumber];
+            const isExpanded =
+              expandedRows[customer.applicationReferenceNumber];
 
             return (
               <div key={customer.id} className="border-b border-gray-100">
                 {/* Collapsed Row View */}
-                <div 
+                <div
                   className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
                   onClick={() => toggleRow(customer.applicationReferenceNumber)}
                 >
                   <div className="col-span-2 flex items-center">
                     <User size={16} className="text-blue-600 mr-2" />
                     <span className="font-medium">
-                      {customer.firstName} {customer.lastName}
+                      {customer.customerNumber?.startsWith("COMP")
+                        ? customer.companyName
+                        : `${customer.firstName} ${customer.lastName}`}
                     </span>
                   </div>
                   <div className="col-span-2 text-sm text-gray-600">
                     {customer.applicationReferenceNumber}
                   </div>
                   <div className="col-span-2 text-sm">
-                    <div className="font-medium">{formatData(customer.loanAmount)}</div>
+                    <div className="font-medium">
+                      {formatData(customer.loanAmount)}
+                    </div>
                     <div className="text-gray-500">{customer.loanType}</div>
                   </div>
                   <div className="col-span-2 text-sm">
                     <div>{customer.majorLineBusiness}</div>
-                    <div className="text-gray-500">{customer.economicSector}</div>
+                    <div className="text-gray-500">
+                      {customer.economicSector}
+                    </div>
                   </div>
                   <div className="col-span-2">
                     {getStatusBadge(customer.applicationStatus)}
                   </div>
                   <div className="col-span-2 flex justify-end items-center">
                     <Button variant="ghost" size="sm" className="mr-2">
-                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      {isExpanded ? (
+                        <ChevronUp size={16} />
+                      ) : (
+                        <ChevronDown size={16} />
+                      )}
                       {isExpanded ? "Less" : "Details"}
                     </Button>
                   </div>
@@ -627,17 +639,6 @@ export default function CommitteeDecisionPage() {
                                 {formatData(customer.maritalStatus)}
                               </p>
                             </div>
-                            <div className="flex justify-between items-center text-sm">
-                              <p className="text-gray-600 flex items-center gap-1">
-                                <Calendar size={14} />
-                                Date of Birth:
-                              </p>
-                              <p className="font-medium text-gray-800">
-                                {formatData(
-                                  new Date(customer.dateOfBirth).toLocaleDateString()
-                                )}
-                              </p>
-                            </div>
                           </div>
                         </div>
 
@@ -681,10 +682,16 @@ export default function CommitteeDecisionPage() {
                             <div className="flex justify-between items-center text-sm">
                               <p className="text-gray-600 flex items-center gap-1">
                                 <DollarSign size={14} />
-                                Monthly Income:
+                                {customer.customerNumber?.startsWith("COMP")
+                                  ? "Annual Revenue:"
+                                  : "Monthly Income:"}
                               </p>
                               <p className="font-medium text-gray-800">
-                                {formatData(customer.monthlyIncome)}
+                                {formatData(
+                                  customer.customerNumber?.startsWith("COMP")
+                                    ? customer.annualRevenue || 0
+                                    : customer.monthlyIncome || 0
+                                )}
                               </p>
                             </div>
                             <div className="flex justify-between items-center text-sm">
@@ -735,7 +742,9 @@ export default function CommitteeDecisionPage() {
                               </p>
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <p className="text-gray-600">Initiation Center:</p>
+                              <p className="text-gray-600">
+                                Initiation Center:
+                              </p>
                               <p className="font-medium text-gray-800">
                                 {formatData(customer.creditInitiationCenter)}
                               </p>
@@ -791,39 +800,57 @@ export default function CommitteeDecisionPage() {
                           </h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">National ID:</span>
+                              <span className="text-gray-600">
+                                National ID:
+                              </span>
                               {formatData(customer.nationalidUrl)}
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Agreement Form:</span>
+                              <span className="text-gray-600">
+                                Agreement Form:
+                              </span>
                               {formatData(customer.agreementFormUrl)}
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Major Business Doc:</span>
+                              <span className="text-gray-600">
+                                Major Business Doc:
+                              </span>
                               {formatData(customer.majorLineBusinessUrl)}
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Application Form:</span>
+                              <span className="text-gray-600">
+                                Application Form:
+                              </span>
                               {formatData(customer.applicationFormUrl)}
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Shareholders Details:</span>
+                              <span className="text-gray-600">
+                                Shareholders Details:
+                              </span>
                               {formatData(customer.shareholdersDetailsUrl)}
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Credit Profile:</span>
+                              <span className="text-gray-600">
+                                Credit Profile:
+                              </span>
                               {formatData(customer.creditProfileUrl)}
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Transaction Profile:</span>
+                              <span className="text-gray-600">
+                                Transaction Profile:
+                              </span>
                               {formatData(customer.transactionProfileUrl)}
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Collateral Profile:</span>
+                              <span className="text-gray-600">
+                                Collateral Profile:
+                              </span>
                               {formatData(customer.collateralProfileUrl)}
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Financial Profile:</span>
+                              <span className="text-gray-600">
+                                Financial Profile:
+                              </span>
                               {formatData(customer.financialProfileUrl)}
                             </div>
                           </div>
@@ -839,47 +866,75 @@ export default function CommitteeDecisionPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                               {customer.loanAnalysis.financialProfileUrl && (
                                 <div className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">Financial Profile:</span>
-                                  {formatData(customer.loanAnalysis.financialProfileUrl)}
+                                  <span className="text-gray-600">
+                                    Financial Profile:
+                                  </span>
+                                  {formatData(
+                                    customer.loanAnalysis.financialProfileUrl
+                                  )}
                                 </div>
                               )}
                               {customer.loanAnalysis.pestelAnalysisUrl && (
                                 <div className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">PESTEL Analysis:</span>
-                                  {formatData(customer.loanAnalysis.pestelAnalysisUrl)}
+                                  <span className="text-gray-600">
+                                    PESTEL Analysis:
+                                  </span>
+                                  {formatData(
+                                    customer.loanAnalysis.pestelAnalysisUrl
+                                  )}
                                 </div>
                               )}
                               {customer.loanAnalysis.swotAnalysisUrl && (
                                 <div className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">SWOT Analysis:</span>
-                                  {formatData(customer.loanAnalysis.swotAnalysisUrl)}
+                                  <span className="text-gray-600">
+                                    SWOT Analysis:
+                                  </span>
+                                  {formatData(
+                                    customer.loanAnalysis.swotAnalysisUrl
+                                  )}
                                 </div>
                               )}
                               {customer.loanAnalysis.riskAssessmentUrl && (
                                 <div className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">Risk Assessment:</span>
-                                  {formatData(customer.loanAnalysis.riskAssessmentUrl)}
+                                  <span className="text-gray-600">
+                                    Risk Assessment:
+                                  </span>
+                                  {formatData(
+                                    customer.loanAnalysis.riskAssessmentUrl
+                                  )}
                                 </div>
                               )}
                               {customer.loanAnalysis.esgAssessmentUrl && (
                                 <div className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">ESG Assessment:</span>
-                                  {formatData(customer.loanAnalysis.esgAssessmentUrl)}
+                                  <span className="text-gray-600">
+                                    ESG Assessment:
+                                  </span>
+                                  {formatData(
+                                    customer.loanAnalysis.esgAssessmentUrl
+                                  )}
                                 </div>
                               )}
                               {customer.loanAnalysis.financialNeedUrl && (
                                 <div className="flex justify-between items-center text-sm">
-                                  <span className="text-gray-600">Financial Need:</span>
-                                  {formatData(customer.loanAnalysis.financialNeedUrl)}
+                                  <span className="text-gray-600">
+                                    Financial Need:
+                                  </span>
+                                  {formatData(
+                                    customer.loanAnalysis.financialNeedUrl
+                                  )}
                                 </div>
                               )}
 
                               {customer.loanAnalysis.analystConclusion && (
                                 <div className="col-span-2">
                                   <div className="flex flex-col text-sm">
-                                    <span className="text-gray-600 mb-1">Analyst Conclusion:</span>
+                                    <span className="text-gray-600 mb-1">
+                                      Analyst Conclusion:
+                                    </span>
                                     <span className="font-medium text-gray-800 bg-blue-50 p-3 rounded-md">
-                                      {formatData(customer.loanAnalysis.analystConclusion)}
+                                      {formatData(
+                                        customer.loanAnalysis.analystConclusion
+                                      )}
                                     </span>
                                   </div>
                                 </div>
@@ -888,9 +943,14 @@ export default function CommitteeDecisionPage() {
                               {customer.loanAnalysis.analystRecommendation && (
                                 <div className="col-span-2">
                                   <div className="flex flex-col text-sm">
-                                    <span className="text-gray-600 mb-1">Analyst Recommendation:</span>
+                                    <span className="text-gray-600 mb-1">
+                                      Analyst Recommendation:
+                                    </span>
                                     <span className="font-medium text-gray-800 bg-blue-50 p-3 rounded-md">
-                                      {formatData(customer.loanAnalysis.analystRecommendation)}
+                                      {formatData(
+                                        customer.loanAnalysis
+                                          .analystRecommendation
+                                      )}
                                     </span>
                                   </div>
                                 </div>
@@ -902,7 +962,10 @@ export default function CommitteeDecisionPage() {
                         {/* Decision Section */}
                         <div className="space-y-4 md:col-span-2">
                           <h3 className="font-bold text-lg text-gray-800 border-b border-blue-200 pb-2 flex items-center gap-2">
-                            <ClipboardList size={18} className="text-blue-600" />
+                            <ClipboardList
+                              size={18}
+                              className="text-blue-600"
+                            />
                             Committee Decision
                           </h3>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -913,7 +976,9 @@ export default function CommitteeDecisionPage() {
                                   name={`decision-${customer.applicationReferenceNumber}`}
                                   value="APPROVED"
                                   checked={
-                                    selectedDecisions[customer.applicationReferenceNumber] === "APPROVED"
+                                    selectedDecisions[
+                                      customer.applicationReferenceNumber
+                                    ] === "APPROVED"
                                   }
                                   onChange={(e) =>
                                     handleDecisionChange(
@@ -925,7 +990,9 @@ export default function CommitteeDecisionPage() {
                                 />
                                 <div className="flex items-center gap-2">
                                   <Check className="h-5 w-5 text-green-600" />
-                                  <span className="text-gray-700 font-medium">Approve</span>
+                                  <span className="text-gray-700 font-medium">
+                                    Approve
+                                  </span>
                                 </div>
                               </label>
                             </div>
@@ -937,7 +1004,9 @@ export default function CommitteeDecisionPage() {
                                   name={`decision-${customer.applicationReferenceNumber}`}
                                   value="COMMITTE_REVERSED"
                                   checked={
-                                    selectedDecisions[customer.applicationReferenceNumber] === "COMMITTE_REVERSED"
+                                    selectedDecisions[
+                                      customer.applicationReferenceNumber
+                                    ] === "COMMITTE_REVERSED"
                                   }
                                   onChange={(e) =>
                                     handleDecisionChange(
@@ -949,7 +1018,9 @@ export default function CommitteeDecisionPage() {
                                 />
                                 <div className="flex items-center gap-2">
                                   <RotateCcw className="h-5 w-5 text-blue-600" />
-                                  <span className="text-gray-700 font-medium">Need More Analysis</span>
+                                  <span className="text-gray-700 font-medium">
+                                    Need More Analysis
+                                  </span>
                                 </div>
                               </label>
                             </div>
@@ -961,7 +1032,9 @@ export default function CommitteeDecisionPage() {
                                   name={`decision-${customer.applicationReferenceNumber}`}
                                   value="REJECTED"
                                   checked={
-                                    selectedDecisions[customer.applicationReferenceNumber] === "REJECTED"
+                                    selectedDecisions[
+                                      customer.applicationReferenceNumber
+                                    ] === "REJECTED"
                                   }
                                   onChange={(e) =>
                                     handleDecisionChange(
@@ -973,32 +1046,55 @@ export default function CommitteeDecisionPage() {
                                 />
                                 <div className="flex items-center gap-2">
                                   <X className="h-5 w-5 text-red-600" />
-                                  <span className="text-gray-700 font-medium">Reject</span>
+                                  <span className="text-gray-700 font-medium">
+                                    Reject
+                                  </span>
                                 </div>
                               </label>
                             </div>
 
-                            {(selectedDecisions[customer.applicationReferenceNumber] === "REJECTED" ||
-                              selectedDecisions[customer.applicationReferenceNumber] === "COMMITTE_REVERSED" ||
-                              selectedDecisions[customer.applicationReferenceNumber] === "APPROVED") && (
+                            {(selectedDecisions[
+                              customer.applicationReferenceNumber
+                            ] === "REJECTED" ||
+                              selectedDecisions[
+                                customer.applicationReferenceNumber
+                              ] === "COMMITTE_REVERSED" ||
+                              selectedDecisions[
+                                customer.applicationReferenceNumber
+                              ] === "APPROVED") && (
                               <div className="col-span-3 space-y-2 mt-4">
                                 <h4 className="font-semibold text-gray-700 flex items-center gap-2">
-                                  <AlertCircle size={16} className="text-red-500" />
-                                  {selectedDecisions[customer.applicationReferenceNumber] === "REJECTED"
+                                  <AlertCircle
+                                    size={16}
+                                    className="text-red-500"
+                                  />
+                                  {selectedDecisions[
+                                    customer.applicationReferenceNumber
+                                  ] === "REJECTED"
                                     ? "Rejection Reason (Required):"
-                                    : selectedDecisions[customer.applicationReferenceNumber] === "APPROVED"
+                                    : selectedDecisions[
+                                        customer.applicationReferenceNumber
+                                      ] === "APPROVED"
                                     ? "Approval Comments:"
                                     : "Feedback for Additional Analysis (Required):"}
                                 </h4>
                                 <textarea
                                   placeholder={
-                                    selectedDecisions[customer.applicationReferenceNumber] === "REJECTED"
+                                    selectedDecisions[
+                                      customer.applicationReferenceNumber
+                                    ] === "REJECTED"
                                       ? "Enter detailed reason for rejecting this application..."
-                                      : selectedDecisions[customer.applicationReferenceNumber] === "APPROVED"
+                                      : selectedDecisions[
+                                          customer.applicationReferenceNumber
+                                        ] === "APPROVED"
                                       ? "Add approval comments..."
                                       : "Specify what additional analysis is needed..."
                                   }
-                                  value={decisionReasons[customer.applicationReferenceNumber] || ""}
+                                  value={
+                                    decisionReasons[
+                                      customer.applicationReferenceNumber
+                                    ] || ""
+                                  }
                                   onChange={(e) =>
                                     handleReasonChange(
                                       customer.applicationReferenceNumber,
@@ -1009,9 +1105,13 @@ export default function CommitteeDecisionPage() {
                                   required
                                 />
                                 <p className="text-sm text-gray-500">
-                                  {selectedDecisions[customer.applicationReferenceNumber] === "REJECTED"
+                                  {selectedDecisions[
+                                    customer.applicationReferenceNumber
+                                  ] === "REJECTED"
                                     ? "Please provide a detailed reason for rejection."
-                                    : selectedDecisions[customer.applicationReferenceNumber] === "APPROVED"
+                                    : selectedDecisions[
+                                        customer.applicationReferenceNumber
+                                      ] === "APPROVED"
                                     ? "Add approval reasons."
                                     : "Please specify what additional analysis or information is required."}
                                 </p>
@@ -1028,9 +1128,14 @@ export default function CommitteeDecisionPage() {
                         </div>
                         <Button
                           onClick={() =>
-                            handleDecision(customer.id, customer.applicationReferenceNumber)
+                            handleDecision(
+                              customer.id,
+                              customer.applicationReferenceNumber
+                            )
                           }
-                          disabled={isSubmitting[customer.applicationReferenceNumber]}
+                          disabled={
+                            isSubmitting[customer.applicationReferenceNumber]
+                          }
                           className="gap-2 bg-blue-600 hover:bg-blue-700"
                         >
                           {isSubmitting[customer.applicationReferenceNumber] ? (
@@ -1054,7 +1159,6 @@ export default function CommitteeDecisionPage() {
           })}
         </div>
       )}
-      
     </div>
   );
 }

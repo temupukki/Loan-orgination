@@ -101,11 +101,11 @@ export default function BankSignupPage() {
 
       // Step 1: Register the user with the authentication client.
       const defaultPassword = `${values.lastName}@12341234`;
-      const employeeEmail = `${values.lastName}@dashenbank.com`;
+      const employeeEmail = `${values.lastName.toLowerCase()}@dashenbank.com`;
 
-      const { error: signUpError } = await authClient.signUp.email(
+      const { data: signUpData, error: signUpError } = await authClient.signUp.email(
         {
-          email: `${values.lastName}@dashenbank.com`,
+          email: employeeEmail,
           password: defaultPassword,
           name: `${values.firstName} ${values.middleName ? values.middleName + ' ' : ''}${values.lastName}`,
         },
@@ -114,6 +114,9 @@ export default function BankSignupPage() {
       if (signUpError) {
         throw new Error(signUpError.message || "User creation failed, please try again.");
       }
+
+      // Wait a moment to ensure the user is fully created in the system
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Step 2: Call your custom API endpoint to set the role.
       const response = await fetch("/api/set-role", {
@@ -127,6 +130,9 @@ export default function BankSignupPage() {
           nationalId: values.nationalId,
           phone: values.phone,
           address: values.address,
+          firstName: values.firstName,
+          middleName: values.middleName,
+          lastName: values.lastName,
         }),
       });
 
@@ -140,7 +146,7 @@ export default function BankSignupPage() {
         toast.dismiss(loadingToastId);
       }
       toast.success(
-        "Employee registered and role assigned successfully! The default password is their last name followed by @12341234"
+        `Employee registered successfully! Email: ${employeeEmail}, Password: ${defaultPassword}`
       );
       router.push("/dashboard"); // Redirect after successful registration
     } catch (err: any) {
@@ -284,8 +290,9 @@ export default function BankSignupPage() {
             
             <div className="bg-blue-50 p-3 rounded-md">
               <p className="text-sm text-blue-700">
-                Default password will be automatically generated as:{" "}
-                <strong>yourlastname@12341234</strong>
+                Default email will be: <strong>lastname@dashenbank.com</strong>
+                <br />
+                Default password will be: <strong>lastname@12341234</strong>
               </p>
             </div>
 

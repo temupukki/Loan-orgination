@@ -1,4 +1,6 @@
 export interface Customer {
+  annualRevenue: number;
+  companyName: string;
   shareholders: any;
   id: string;
   customerNumber: string;
@@ -97,6 +99,10 @@ export interface LineOfBusiness {
 
 
 export interface CompanyCustomer {
+  agreementFormUrl: any;
+  financialProfileUrl: any;
+  collateralProfileUrl: any;
+  transactionProfileUrl: any;
   id: string;
   customerNumber: string;
   tinNumber: string;
@@ -128,7 +134,7 @@ export interface CompanyCustomer {
   economicSector?: string;
   businessInfo?: string;
   loanDetails?: string;
-  documents?: Document[];
+creditProfileUrl?:string;
   creditScore?: number;
   riskRating?: string;
   relationshipManager?: string;

@@ -61,6 +61,7 @@ interface LoanAnalysis {
 
 // Update the Customer interface to include the LoanAnalysis relation
 interface Customer {
+  annualRevenue: number;
   rmRecommendation: any;
   id: string;
   applicationReferenceNumber: string;
@@ -568,10 +569,16 @@ export default function PendingCustomersPage() {
                       <div className="flex justify-between items-center text-sm">
                         <p className="text-gray-600 flex items-center gap-1">
                           <DollarSign size={14} />
-                          Monthly Income:
+                          {customer.customerNumber?.startsWith("COMP")
+                            ? "Annual Revenue:"
+                            : "Monthly Income:"}
                         </p>
                         <p className="font-medium text-gray-800">
-                          {formatData(customer.monthlyIncome)}
+                          {formatData(
+                            customer.customerNumber?.startsWith("COMP")
+                              ? customer.annualRevenue || 0
+                              : customer.monthlyIncome || 0
+                          )}
                         </p>
                       </div>
                       <div className="flex justify-between items-center text-sm">

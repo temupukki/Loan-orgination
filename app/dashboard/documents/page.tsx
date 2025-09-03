@@ -40,13 +40,6 @@ export default function DocumentsPage() {
         }
         break;
       
-      case "nationalidDoc":
-        if (!customer.nationalidUrl) {
-          errorMessage = "National ID document is required";
-          isValid = false;
-        }
-        break;
-      
       case "collateralProfileDoc":
         if (!customer.collateralProfileUrl) {
           errorMessage = "Collateral profile document is required";
@@ -57,13 +50,6 @@ export default function DocumentsPage() {
       case "financialProfileDoc":
         if (!customer.financialProfileUrl) {
           errorMessage = "Financial profile document is required";
-          isValid = false;
-        }
-        break;
-      
-      case "agreementFormDoc":
-        if (!customer.agreementFormUrl) {
-          errorMessage = "Agreement form is required";
           isValid = false;
         }
         break;
@@ -97,11 +83,6 @@ export default function DocumentsPage() {
       isValid = false;
     }
 
-    if (!customer.nationalidUrl) {
-      newErrors.nationalidDoc = "National ID document is required";
-      isValid = false;
-    }
-
     if (!customer.collateralProfileUrl) {
       newErrors.collateralProfileDoc = "Collateral profile document is required";
       isValid = false;
@@ -109,11 +90,6 @@ export default function DocumentsPage() {
 
     if (!customer.financialProfileUrl) {
       newErrors.financialProfileDoc = "Financial profile document is required";
-      isValid = false;
-    }
-
-    if (!customer.agreementFormUrl) {
-      newErrors.agreementFormDoc = "Agreement form is required";
       isValid = false;
     }
 
@@ -180,10 +156,8 @@ export default function DocumentsPage() {
     setTouched({
       creditProfileDoc: true,
       transactionProfileDoc: true,
-      nationalidDoc: true,
       collateralProfileDoc: true,
-      financialProfileDoc: true,
-      agreementFormDoc: true
+      financialProfileDoc: true
     });
 
     if (!validateForm()) {
@@ -318,33 +292,6 @@ export default function DocumentsPage() {
                   <p className="mt-1 text-sm text-green-600">✓ Document uploaded successfully</p>
                 )}
               </div>
-
-              {/* National ID Document */}
-              <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-100">
-                <h3 className="text-lg font-medium mb-3">
-                  National ID Document *
-                </h3>
-                <input
-                  type="file"
-                  onChange={(e) => handleDocumentUpload(e, 'nationalid')}
-                  className={`w-full p-2 border rounded-md ${
-                    errors.nationalidDoc && touched.nationalidDoc
-                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  }`}
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                  required
-                />
-                {uploading === 'nationalid' && (
-                  <p className="mt-1 text-sm text-blue-600">Uploading...</p>
-                )}
-                {errors.nationalidDoc && touched.nationalidDoc && (
-                  <p className="mt-1 text-sm text-red-600">{errors.nationalidDoc}</p>
-                )}
-                {customer.nationalidUrl && !errors.nationalidDoc && (
-                  <p className="mt-1 text-sm text-green-600">✓ Document uploaded successfully</p>
-                )}
-              </div>
             </div>
 
             {/* Right Column */}
@@ -399,33 +346,6 @@ export default function DocumentsPage() {
                   <p className="mt-1 text-sm text-red-600">{errors.financialProfileDoc}</p>
                 )}
                 {customer.financialProfileUrl && !errors.financialProfileDoc && (
-                  <p className="mt-1 text-sm text-green-600">✓ Document uploaded successfully</p>
-                )}
-              </div>
-
-              {/* Agreement Form */}
-              <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-100">
-                <h3 className="text-lg font-medium mb-3">
-                  Agreement Form *
-                </h3>
-                <input
-                  type="file"
-                  onChange={(e) => handleDocumentUpload(e, 'agreementForm')}
-                  className={`w-full p-2 border rounded-md ${
-                    errors.agreementFormDoc && touched.agreementFormDoc
-                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  }`}
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                  required
-                />
-                {uploading === 'agreementForm' && (
-                  <p className="mt-1 text-sm text-blue-600">Uploading...</p>
-                )}
-                {errors.agreementFormDoc && touched.agreementFormDoc && (
-                  <p className="mt-1 text-sm text-red-600">{errors.agreementFormDoc}</p>
-                )}
-                {customer.agreementFormUrl && !errors.agreementFormDoc && (
                   <p className="mt-1 text-sm text-green-600">✓ Document uploaded successfully</p>
                 )}
               </div>

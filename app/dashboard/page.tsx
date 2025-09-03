@@ -1,6 +1,13 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -52,6 +59,8 @@ interface UserSession {
 }
 
 interface Customer {
+  companyName: string;
+  customerNumber: any;
   id: string;
   applicationReferenceNumber: string;
   firstName: string;
@@ -97,9 +106,6 @@ export default function Dashboard() {
             "COMMITTE_MEMBER",
             "BANNED",
             "APPROVAL_COMMITTE",
-            
-
-            
           ].includes(sessionData.user.role)
         ) {
           router.push("/sign-in");
@@ -173,7 +179,7 @@ export default function Dashboard() {
       approved: "APPROVED",
       rejected: "REJECTED",
       under_review: "UNDER_REVIEW",
-      committee_review: "COMMITTEE_REVIEW",
+      committee_review: "COMMITTE_REVIEW",
       supervised: "SUPERVISED",
       analysis_completed: "ANALYSIS_COMPLETED",
       rm_recomendation: "RM_RECOMMENDATION",
@@ -235,6 +241,7 @@ export default function Dashboard() {
     const committee_review = customers.filter(
       (c) => c.applicationStatus.toLowerCase() === "committee_review"
     ).length;
+    
     return {
       total,
       pending,
@@ -886,54 +893,66 @@ export default function Dashboard() {
         </div>
       )}
       {session.user.role === "SUPERVISOR" && (
-        <><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
-          <Link href="/dashboard/supervisor-review">
-            <Card
-              className={stats.analysis_completed > 0
-                ? "animate-pulse ring-3 ring-green-500"
-                : ""}
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Avaliable Applications
-                </CardTitle>
-                <Users
-                  className={`h-4 w-6 text-red-600 ${stats.analysis_completed > 0 ? "animate-bounce" : ""}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {stats.analysis_completed}
-                </div>
-                <p className="text-xs text-gray-600">
-                  All Avaliable applications
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/dashboard/supervisor-review/supervisor">
-            <Card
-              className={stats.supervisor_reviewing > 0
-                ? "animate-pulse ring-3 ring-red-500"
-                : ""}
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  In Progress
-                </CardTitle>
-                <Clock
-                  className={`h-4 w-6 text-red-600 ${stats.supervisor_reviewing > 0 ? "animate-bounce" : ""}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {stats.supervisor_reviewing}
-                </div>
-                <p className="text-xs text-gray-600">
-                  finish your review ASAP!
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        </div><div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+            <Link href="/dashboard/supervisor-review">
+              <Card
+                className={
+                  stats.analysis_completed > 0
+                    ? "animate-pulse ring-3 ring-green-500"
+                    : ""
+                }
+              >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Avaliable Applications
+                  </CardTitle>
+                  <Users
+                    className={`h-4 w-6 text-red-600 ${
+                      stats.analysis_completed > 0 ? "animate-bounce" : ""
+                    }`}
+                  />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {stats.analysis_completed}
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    All Avaliable applications
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/dashboard/supervisor-review/supervisor">
+              <Card
+                className={
+                  stats.supervisor_reviewing > 0
+                    ? "animate-pulse ring-3 ring-red-500"
+                    : ""
+                }
+              >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    In Progress
+                  </CardTitle>
+                  <Clock
+                    className={`h-4 w-6 text-red-600 ${
+                      stats.supervisor_reviewing > 0 ? "animate-bounce" : ""
+                    }`}
+                  />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {stats.supervisor_reviewing}
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    finish your review ASAP!
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
                 <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-3 rounded-xl mr-4 shadow-md">
@@ -966,7 +985,9 @@ export default function Dashboard() {
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-purple-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-purple-800">1</span>
+                      <span className="text-xs font-bold text-purple-800">
+                        1
+                      </span>
                     </div>
                     <span>
                       Review and approve or reject applications within{" "}
@@ -977,18 +998,24 @@ export default function Dashboard() {
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-purple-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-purple-800">2</span>
+                      <span className="text-xs font-bold text-purple-800">
+                        2
+                      </span>
                     </div>
                     <span>
-                      Provide feedback to analysts on revised applications in 24 hours
+                      Provide feedback to analysts on revised applications in 24
+                      hours
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-purple-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-purple-800">3</span>
+                      <span className="text-xs font-bold text-purple-800">
+                        3
+                      </span>
                     </div>
                     <span>
-                      Prioritize urgent cases and ensure completion within 4 hours
+                      Prioritize urgent cases and ensure completion within 4
+                      hours
                     </span>
                   </li>
                 </ul>
@@ -1009,7 +1036,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-rose-800">1</span>
                     </div>
                     <span>
-                      Escalate any unaddressed analyst issues to the head of credit within 2 days
+                      Escalate any unaddressed analyst issues to the head of
+                      credit within 2 days
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1017,7 +1045,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-rose-800">2</span>
                     </div>
                     <span>
-                      Flag high-risk applications immediately for committee review
+                      Flag high-risk applications immediately for committee
+                      review
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1025,7 +1054,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-rose-800">3</span>
                     </div>
                     <span>
-                      Review and document all reversed applications for future training
+                      Review and document all reversed applications for future
+                      training
                     </span>
                   </li>
                 </ul>
@@ -1045,26 +1075,35 @@ export default function Dashboard() {
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-green-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-green-800">1</span>
+                      <span className="text-xs font-bold text-green-800">
+                        1
+                      </span>
                     </div>
                     <span>
-                      Ensure all analyst reports are complete and follow the standard template
+                      Ensure all analyst reports are complete and follow the
+                      standard template
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-green-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-green-800">2</span>
+                      <span className="text-xs font-bold text-green-800">
+                        2
+                      </span>
                     </div>
                     <span>
-                      Conduct weekly audits of finalized applications for quality assurance
+                      Conduct weekly audits of finalized applications for
+                      quality assurance
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-green-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-green-800">3</span>
+                      <span className="text-xs font-bold text-green-800">
+                        3
+                      </span>
                     </div>
                     <span>
-                      Provide a monthly summary report on team performance and key metrics
+                      Provide a monthly summary report on team performance and
+                      key metrics
                     </span>
                   </li>
                 </ul>
@@ -1084,7 +1123,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-blue-800">1</span>
                     </div>
                     <span>
-                      Regularly monitor team workload and reassign tasks to balance distribution
+                      Regularly monitor team workload and reassign tasks to
+                      balance distribution
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1092,7 +1132,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-blue-800">2</span>
                     </div>
                     <span>
-                      Provide constructive feedback and mentorship to junior analysts
+                      Provide constructive feedback and mentorship to junior
+                      analysts
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1100,7 +1141,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-blue-800">3</span>
                     </div>
                     <span>
-                      Lead weekly team meetings to discuss complex cases and share insights
+                      Lead weekly team meetings to discuss complex cases and
+                      share insights
                     </span>
                   </li>
                 </ul>
@@ -1116,38 +1158,51 @@ export default function Dashboard() {
                 </span>
               </p>
               <div className="flex space-x-3">
-                <Button variant="outline" className="flex items-center border-gray-300">
+                <Button
+                  variant="outline"
+                  className="flex items-center border-gray-300"
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Supervisor Handbook
                 </Button>
               </div>
             </div>
-          </div></>
+          </div>
+        </>
       )}
       {session.user.role === "COMMITTE_MEMBER" && (
-        <><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 mb-8">
-          <Link href="/dashboard/members">
-            <Card
-              className={stats.member_review > 0
-                ? "animate-pulse ring-3 ring-green-500"
-                : ""}
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Available Applications
-                </CardTitle>
-                <Users
-                  className={`h-4 w-6 text-red-600 ${stats.member_review > 0 ? "animate-bounce" : ""}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.member_review}</div>
-                <p className="text-xs text-gray-600">
-                  All Available applications
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        </div><div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 mb-8">
+            <Link href="/dashboard/members">
+              <Card
+                className={
+                  stats.member_review > 0
+                    ? "animate-pulse ring-3 ring-green-500"
+                    : ""
+                }
+              >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Available Applications
+                  </CardTitle>
+                  <Users
+                    className={`h-4 w-6 text-red-600 ${
+                      stats.member_review > 0 ? "animate-bounce" : ""
+                    }`}
+                  />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {stats.member_review}
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    All Available applications
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
                 <div className="bg-gradient-to-r from-slate-500 to-gray-700 p-3 rounded-xl mr-4 shadow-md">
@@ -1180,7 +1235,9 @@ export default function Dashboard() {
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-slate-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-slate-800">1</span>
+                      <span className="text-xs font-bold text-slate-800">
+                        1
+                      </span>
                     </div>
                     <span>
                       All applications must receive a final decision of{" "}
@@ -1191,18 +1248,24 @@ export default function Dashboard() {
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-slate-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-slate-800">2</span>
+                      <span className="text-xs font-bold text-slate-800">
+                        2
+                      </span>
                     </div>
                     <span>
-                      Provide a clear and concise justification for all final decisions
+                      Provide a clear and concise justification for all final
+                      decisions
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-slate-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-slate-800">3</span>
+                      <span className="text-xs font-bold text-slate-800">
+                        3
+                      </span>
                     </div>
                     <span>
-                      Decisions on high-value loans must be unanimous among all members
+                      Decisions on high-value loans must be unanimous among all
+                      members
                     </span>
                   </li>
                 </ul>
@@ -1220,26 +1283,35 @@ export default function Dashboard() {
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-orange-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-orange-800">1</span>
+                      <span className="text-xs font-bold text-orange-800">
+                        1
+                      </span>
                     </div>
                     <span>
-                      Carefully review analysis from both the analyst and supervisor
+                      Carefully review analysis from both the analyst and
+                      supervisor
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-orange-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-orange-800">2</span>
+                      <span className="text-xs font-bold text-orange-800">
+                        2
+                      </span>
                     </div>
                     <span>
-                      Ensure all necessary documentation and due diligence have been completed
+                      Ensure all necessary documentation and due diligence have
+                      been completed
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-orange-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-orange-800">3</span>
+                      <span className="text-xs font-bold text-orange-800">
+                        3
+                      </span>
                     </div>
                     <span>
-                      Monitor a sample of approved loans to maintain quality control
+                      Monitor a sample of approved loans to maintain quality
+                      control
                     </span>
                   </li>
                 </ul>
@@ -1259,26 +1331,35 @@ export default function Dashboard() {
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-green-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-green-800">1</span>
+                      <span className="text-xs font-bold text-green-800">
+                        1
+                      </span>
                     </div>
                     <span>
-                      Ensure all lending activities are compliant with federal and state regulations
+                      Ensure all lending activities are compliant with federal
+                      and state regulations
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-green-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-green-800">2</span>
+                      <span className="text-xs font-bold text-green-800">
+                        2
+                      </span>
                     </div>
                     <span>
-                      Continuously review and update internal loan policies as needed
+                      Continuously review and update internal loan policies as
+                      needed
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-green-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-green-800">3</span>
+                      <span className="text-xs font-bold text-green-800">
+                        3
+                      </span>
                     </div>
                     <span>
-                      Document any exceptions to policy and the reasons for their approval
+                      Document any exceptions to policy and the reasons for
+                      their approval
                     </span>
                   </li>
                 </ul>
@@ -1298,7 +1379,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-cyan-800">1</span>
                     </div>
                     <span>
-                      Identify trends in loan applications and portfolio performance
+                      Identify trends in loan applications and portfolio
+                      performance
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1306,7 +1388,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-cyan-800">2</span>
                     </div>
                     <span>
-                      Provide feedback to senior management on market conditions and lending risks
+                      Provide feedback to senior management on market conditions
+                      and lending risks
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1314,7 +1397,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-cyan-800">3</span>
                     </div>
                     <span>
-                      Participate in quarterly reviews of the overall lending strategy
+                      Participate in quarterly reviews of the overall lending
+                      strategy
                     </span>
                   </li>
                 </ul>
@@ -1330,40 +1414,52 @@ export default function Dashboard() {
                 </span>
               </p>
               <div className="flex space-x-3">
-                <Button variant="outline" className="flex items-center border-gray-300">
+                <Button
+                  variant="outline"
+                  className="flex items-center border-gray-300"
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Committee Charter
                 </Button>
               </div>
             </div>
-          </div></>
+          </div>
+        </>
       )}
       {session.user.role === "APPROVAL_COMMITTE" && (
-        <><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 mb-8">
-          <Link href="/dashboard/members">
-            <Card
-              className={stats.member_review > 0
-                ? "animate-pulse ring-3 ring-green-500"
-                : ""}
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Available Applications
-                </CardTitle>
-                <Users
-                  className={`h-4 w-6 text-red-600 ${stats.member_review > 0 ? "animate-bounce" : ""}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {stats.member_review}
-                </div>
-                <p className="text-xs text-gray-600">
-                  All Available applications
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        </div><div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-1 gap-6 mb-8">
+            <Link href="/dashboard/view">
+              <Card
+                className={
+                  stats.member_review > 0
+                    ? "animate-pulse ring-3 ring-green-500"
+                    : ""
+                }
+              >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Available Applications
+                  </CardTitle>
+                  <Users
+                    className={`h-4 w-6 text-red-600 ${
+                      stats.member_review > 0 ? "animate-bounce" : ""
+                    }`}
+                  />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {stats.member_review}
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    All Available applications
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
                 <div className="bg-gradient-to-r from-blue-800 to-indigo-900 p-3 rounded-xl mr-4 shadow-md">
@@ -1399,7 +1495,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-blue-800">1</span>
                     </div>
                     <span>
-                      Schedule and chair all committee meetings, ensuring all required members are present.
+                      Schedule and chair all committee meetings, ensuring all
+                      required members are present.
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1407,7 +1504,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-blue-800">2</span>
                     </div>
                     <span>
-                      Distribute meeting agendas and relevant documents at least 24 hours in advance.
+                      Distribute meeting agendas and relevant documents at least
+                      24 hours in advance.
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1415,7 +1513,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-blue-800">3</span>
                     </div>
                     <span>
-                      Maintain and update the official record of all committee decisions and minutes.
+                      Maintain and update the official record of all committee
+                      decisions and minutes.
                     </span>
                   </li>
                 </ul>
@@ -1433,26 +1532,35 @@ export default function Dashboard() {
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-yellow-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-yellow-800">1</span>
+                      <span className="text-xs font-bold text-yellow-800">
+                        1
+                      </span>
                     </div>
                     <span>
-                      Analyze loan portfolio performance and identify emerging risk trends.
+                      Analyze loan portfolio performance and identify emerging
+                      risk trends.
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-yellow-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-yellow-800">2</span>
+                      <span className="text-xs font-bold text-yellow-800">
+                        2
+                      </span>
                     </div>
                     <span>
-                      Lead discussions on policy adjustments to adapt to market conditions.
+                      Lead discussions on policy adjustments to adapt to market
+                      conditions.
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-yellow-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-yellow-800">3</span>
+                      <span className="text-xs font-bold text-yellow-800">
+                        3
+                      </span>
                     </div>
                     <span>
-                      Provide strategic recommendations to senior management based on committee findings.
+                      Provide strategic recommendations to senior management
+                      based on committee findings.
                     </span>
                   </li>
                 </ul>
@@ -1472,26 +1580,35 @@ export default function Dashboard() {
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-green-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-green-800">1</span>
+                      <span className="text-xs font-bold text-green-800">
+                        1
+                      </span>
                     </div>
                     <span>
-                      Ensure all committee decisions are fully documented and in compliance with company policy.
+                      Ensure all committee decisions are fully documented and in
+                      compliance with company policy.
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-green-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-green-800">2</span>
+                      <span className="text-xs font-bold text-green-800">
+                        2
+                      </span>
                     </div>
                     <span>
-                      Act as the final internal authority on any policy exceptions.
+                      Act as the final internal authority on any policy
+                      exceptions.
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-green-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-green-800">3</span>
+                      <span className="text-xs font-bold text-green-800">
+                        3
+                      </span>
                     </div>
                     <span>
-                      Review and approve all changes to the company's lending policy.
+                      Review and approve all changes to the company's lending
+                      policy.
                     </span>
                   </li>
                 </ul>
@@ -1512,7 +1629,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-red-800">1</span>
                     </div>
                     <span>
-                      Mentor and guide committee members to ensure consistent decision-making.
+                      Mentor and guide committee members to ensure consistent
+                      decision-making.
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1520,7 +1638,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-red-800">2</span>
                     </div>
                     <span>
-                      Address any internal disputes or procedural issues within the committee.
+                      Address any internal disputes or procedural issues within
+                      the committee.
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1528,7 +1647,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-red-800">3</span>
                     </div>
                     <span>
-                      Conduct regular performance reviews for all committee members.
+                      Conduct regular performance reviews for all committee
+                      members.
                     </span>
                   </li>
                 </ul>
@@ -1538,95 +1658,104 @@ export default function Dashboard() {
             <div className="flex flex-col sm:flex-row justify-between items-center pt-5 border-t border-gray-200 gap-4">
               <p className="text-sm text-gray-600 flex items-center">
                 <HelpCircle className="h-4 w-4 mr-1 text-gray-500" />
-                For policy or procedural questions, contact the Head of Credit at{" "}
+                For policy or procedural questions, contact the Head of Credit
+                at{" "}
                 <span className="text-blue-700 font-medium ml-1">
                   head-of-credit@company.com
                 </span>
               </p>
               <div className="flex space-x-3">
-                <Button variant="outline" className="flex items-center border-gray-300">
+                <Button
+                  variant="outline"
+                  className="flex items-center border-gray-300"
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Credit Policy Manual
                 </Button>
               </div>
             </div>
-          </div></>
+          </div>
+        </>
       )}
 
       {session.user.role === "ADMIN" && (
-        <><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
-          {/* User Management Card */}
-          <Link href="/dashboard/user">
-            <Card className="border-2 border-blue-300 hover:border-blue-500 transition-colors">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  User Management
-                </CardTitle>
-                <svg
-                  className="h-5 w-5 text-blue-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">
-                  Manage Users
-                </div>
-                <p className="text-xs text-gray-600 mt-2">
-                  Create, edit, and manage system users
-                </p>
-                <div className="flex items-center mt-3">
-                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                    Admin only
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+            {/* User Management Card */}
+            <Link href="/dashboard/user">
+              <Card className="border-2 border-blue-300 hover:border-blue-500 transition-colors">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    User Management
+                  </CardTitle>
+                  <svg
+                    className="h-5 w-5 text-blue-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600">
+                    Manage Users
+                  </div>
+                  <p className="text-xs text-gray-600 mt-2">
+                    Create, edit, and manage system users
+                  </p>
+                  <div className="flex items-center mt-3">
+                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                      Admin only
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
 
-          {/* User Registration Card */}
-          <Link href="/dashboard/user/register">
-            <Card className="border-2 border-green-300 hover:border-green-500 transition-colors">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  User Registration
-                </CardTitle>
-                <svg
-                  className="h-5 w-5 text-green-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  Register Users
-                </div>
-                <p className="text-xs text-gray-600 mt-2">
-                  Add new users to the system
-                </p>
-                <div className="flex items-center mt-3">
-                  <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                    Admin Only
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div><div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            {/* User Registration Card */}
+            <Link href="/dashboard/user/register">
+              <Card className="border-2 border-green-300 hover:border-green-500 transition-colors">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    User Registration
+                  </CardTitle>
+                  <svg
+                    className="h-5 w-5 text-green-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                    />
+                  </svg>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">
+                    Register Users
+                  </div>
+                  <p className="text-xs text-gray-600 mt-2">
+                    Add new users to the system
+                  </p>
+                  <div className="flex items-center mt-3">
+                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                      Admin Only
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
                 <div className="bg-gradient-to-r from-gray-700 to-gray-900 p-3 rounded-xl mr-4 shadow-md">
@@ -1637,7 +1766,8 @@ export default function Dashboard() {
                     System Administrator Guidelines
                   </h3>
                   <p className="text-gray-600">
-                    System management, user administration, and security oversight
+                    System management, user administration, and security
+                    oversight
                   </p>
                 </div>
               </div>
@@ -1662,7 +1792,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-gray-800">1</span>
                     </div>
                     <span>
-                      Create and manage user accounts and assign appropriate roles and permissions.
+                      Create and manage user accounts and assign appropriate
+                      roles and permissions.
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1670,7 +1801,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-gray-800">2</span>
                     </div>
                     <span>
-                      Deactivate user accounts promptly upon employee termination or role change.
+                      Deactivate user accounts promptly upon employee
+                      termination or role change.
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1678,7 +1810,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-gray-800">3</span>
                     </div>
                     <span>
-                      Regularly audit user access logs to ensure compliance and prevent unauthorized access.
+                      Regularly audit user access logs to ensure compliance and
+                      prevent unauthorized access.
                     </span>
                   </li>
                 </ul>
@@ -1699,7 +1832,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-blue-800">1</span>
                     </div>
                     <span>
-                      Monitor system performance and address any uptime or latency issues immediately.
+                      Monitor system performance and address any uptime or
+                      latency issues immediately.
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1707,7 +1841,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-blue-800">2</span>
                     </div>
                     <span>
-                      Schedule and oversee system updates and patches during off-peak hours.
+                      Schedule and oversee system updates and patches during
+                      off-peak hours.
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -1725,7 +1860,6 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div className="bg-green-50 p-5 rounded-xl border border-green-100">
                 <div className="flex items-center mb-3">
-                 
                   <h4 className="font-semibold text-gray-800">
                     Security & Compliance
                   </h4>
@@ -1733,26 +1867,35 @@ export default function Dashboard() {
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-green-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-green-800">1</span>
+                      <span className="text-xs font-bold text-green-800">
+                        1
+                      </span>
                     </div>
                     <span>
-                      Enforce strong password policies and multi-factor authentication for all users.
+                      Enforce strong password policies and multi-factor
+                      authentication for all users.
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-green-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-green-800">2</span>
+                      <span className="text-xs font-bold text-green-800">
+                        2
+                      </span>
                     </div>
                     <span>
-                      Monitor for and respond to security threats and vulnerabilities.
+                      Monitor for and respond to security threats and
+                      vulnerabilities.
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-green-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-green-800">3</span>
+                      <span className="text-xs font-bold text-green-800">
+                        3
+                      </span>
                     </div>
                     <span>
-                      Ensure all system operations adhere to relevant data protection and financial regulations.
+                      Ensure all system operations adhere to relevant data
+                      protection and financial regulations.
                     </span>
                   </li>
                 </ul>
@@ -1770,26 +1913,35 @@ export default function Dashboard() {
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-purple-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-purple-800">1</span>
+                      <span className="text-xs font-bold text-purple-800">
+                        1
+                      </span>
                     </div>
                     <span>
-                      Generate regular reports on system usage, performance, and user activity.
+                      Generate regular reports on system usage, performance, and
+                      user activity.
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-purple-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-purple-800">2</span>
+                      <span className="text-xs font-bold text-purple-800">
+                        2
+                      </span>
                     </div>
                     <span>
-                      Analyze system data to identify potential bottlenecks and areas for improvement.
+                      Analyze system data to identify potential bottlenecks and
+                      areas for improvement.
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-purple-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-purple-800">3</span>
+                      <span className="text-xs font-bold text-purple-800">
+                        3
+                      </span>
                     </div>
                     <span>
-                      Provide executive summaries on system health and security to senior management.
+                      Provide executive summaries on system health and security
+                      to senior management.
                     </span>
                   </li>
                 </ul>
@@ -1805,119 +1957,130 @@ export default function Dashboard() {
                 </span>
               </p>
               <div className="flex space-x-3">
-                <Button variant="outline" className="flex items-center border-gray-300">
+                <Button
+                  variant="outline"
+                  className="flex items-center border-gray-300"
+                >
                   <Download className="h-4 w-4 mr-2" />
                   System Architecture Guide
                 </Button>
               </div>
             </div>
-          </div></>
+          </div>
+        </>
       )}
       {session.user.role === "RELATIONSHIP_MANAGER" && (
-        <><Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle>All Applications</CardTitle>
-            <div className="flex items-center gap-2">
-              <>
-                <Filter className="h-4 w-4 text-gray-500" />
-                <select
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  className="border rounded-md p-2 text-sm"
-                >
-                  <option value="all">All Applications</option>
-                  <option value="pending">Pending Review</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </>
-
-              <span className="text-sm font-normal text-gray-500">
-                {filteredCustomers.length} application(s)
-              </span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-12 w-12 animate-spin text-gray-400" />
-              </div>
-            ) : error ? (
-              <div className="text-center py-12 text-red-600">
-                <AlertCircle className="h-12 w-12 mx-auto mb-4" />
-                <p>{error}</p>
-                <Button onClick={fetchCustomers} className="mt-4">
-                  Try Again
-                </Button>
-              </div>
-            ) : filteredCustomers.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <FileText className="h-12 w-12 mx-auto mb-4" />
-                <p>No applications found</p>
-
-                <Link href="/dashboard/fetch">
-                  <Button className="mt-4">Create First Application</Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredCustomers.map((customer) => (
-                  <div
-                    key={customer.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+        <>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle>All Applications</CardTitle>
+              <div className="flex items-center gap-2">
+                <>
+                  <Filter className="h-4 w-4 text-gray-500" />
+                  <select
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    className="border rounded-md p-2 text-sm"
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <p className="font-medium text-lg">
-                          {customer.firstName} {customer.lastName}
-                        </p>
-                        <Badge
-                          className={getStatusBadge(customer.applicationStatus)}
-                        >
-                          {formatStatusText(customer.applicationStatus)}
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                        <div>
-                          <span className="font-medium">Loan: </span>
-                          {customer.loanType}
-                        </div>
-                        <div>
-                          <span className="font-medium">Amount: </span>
-                          {formatCurrency(customer.loanAmount)}
-                        </div>
-                        <div>
-                          <span className="font-medium">Applied: </span>
-                          {formatDate(customer.createdAt)}
-                        </div>
-                      </div>
-                      <div className="mt-2 text-sm text-gray-500">
-                        <span className="font-medium">Ref: </span>
-                        {customer.applicationReferenceNumber}
-                        {customer.email && (
-                          <>
-                            <span className="mx-2">•</span>
-                            <span className="font-medium">Email: </span>
-                            {customer.email}
-                          </>
-                        )}
-                        <span className="mx-2">•</span>
-                        <span className="font-medium">Phone: </span>
-                        {customer.phone}
-                      </div>
-                    </div>
-                    <Link href={`/dashboard/manage`}>
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4 mr-2" />
-                        View
-                      </Button>
-                    </Link>
-                  </div>
-                ))}
+                    <option value="all">All Applications</option>
+                    <option value="pending">Pending Review</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </>
+
+                <span className="text-sm font-normal text-gray-500">
+                  {filteredCustomers.length} application(s)
+                </span>
               </div>
-            )}
-          </CardContent>
-        </Card><div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-12 w-12 animate-spin text-gray-400" />
+                </div>
+              ) : error ? (
+                <div className="text-center py-12 text-red-600">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-4" />
+                  <p>{error}</p>
+                  <Button onClick={fetchCustomers} className="mt-4">
+                    Try Again
+                  </Button>
+                </div>
+              ) : filteredCustomers.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <FileText className="h-12 w-12 mx-auto mb-4" />
+                  <p>No applications found</p>
+
+                  <Link href="/dashboard/fetch">
+                    <Button className="mt-4">Create First Application</Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredCustomers.map((customer) => (
+                    <div
+                      key={customer.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <p className="font-medium text-lg">
+                            {customer.customerNumber?.startsWith("COMP")
+                              ? customer.companyName
+                              : `${customer.firstName} ${customer.lastName}`}
+                          </p>
+
+                          <Badge
+                            className={getStatusBadge(
+                              customer.applicationStatus
+                            )}
+                          >
+                            {formatStatusText(customer.applicationStatus)}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                          <div>
+                            <span className="font-medium">Loan: </span>
+                            {customer.loanType}
+                          </div>
+                          <div>
+                            <span className="font-medium">Amount: </span>
+                            {formatCurrency(customer.loanAmount)}
+                          </div>
+                          <div>
+                            <span className="font-medium">Applied: </span>
+                            {formatDate(customer.createdAt)}
+                          </div>
+                        </div>
+                        <div className="mt-2 text-sm text-gray-500">
+                          <span className="font-medium">Ref: </span>
+                          {customer.applicationReferenceNumber}
+                          {customer.email && (
+                            <>
+                              <span className="mx-2">•</span>
+                              <span className="font-medium">Email: </span>
+                              {customer.email}
+                            </>
+                          )}
+                          <span className="mx-2">•</span>
+                          <span className="font-medium">Phone: </span>
+                          {customer.phone}
+                        </div>
+                      </div>
+                      <Link href={`/dashboard/manage`}>
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
                 <div className="bg-gradient-to-r from-orange-500 to-amber-600 p-3 rounded-xl mr-4 shadow-md">
@@ -1950,26 +2113,35 @@ export default function Dashboard() {
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-orange-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-orange-800">1</span>
+                      <span className="text-xs font-bold text-orange-800">
+                        1
+                      </span>
                     </div>
                     <span>
-                      Ensure all client applications are complete and accurately filled out.
+                      Ensure all client applications are complete and accurately
+                      filled out.
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-orange-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-orange-800">2</span>
+                      <span className="text-xs font-bold text-orange-800">
+                        2
+                      </span>
                     </div>
                     <span>
-                      Verify that all required supporting documents are attached before submission.
+                      Verify that all required supporting documents are attached
+                      before submission.
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-orange-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-orange-800">3</span>
+                      <span className="text-xs font-bold text-orange-800">
+                        3
+                      </span>
                     </div>
                     <span>
-                      Educate clients on the loan process and set realistic expectations for timelines.
+                      Educate clients on the loan process and set realistic
+                      expectations for timelines.
                     </span>
                   </li>
                 </ul>
@@ -1990,7 +2162,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-teal-800">1</span>
                     </div>
                     <span>
-                      Provide timely updates to clients on their application status.
+                      Provide timely updates to clients on their application
+                      status.
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -2006,7 +2179,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-teal-800">3</span>
                     </div>
                     <span>
-                      Maintain a professional and empathetic tone in all client interactions.
+                      Maintain a professional and empathetic tone in all client
+                      interactions.
                     </span>
                   </li>
                 </ul>
@@ -2029,7 +2203,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-cyan-800">1</span>
                     </div>
                     <span>
-                      Actively seek new leads and business opportunities to grow the loan portfolio.
+                      Actively seek new leads and business opportunities to grow
+                      the loan portfolio.
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -2037,7 +2212,8 @@ export default function Dashboard() {
                       <span className="text-xs font-bold text-cyan-800">2</span>
                     </div>
                     <span>
-                      Cross-sell additional products and services to existing clients.
+                      Cross-sell additional products and services to existing
+                      clients.
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -2063,70 +2239,77 @@ export default function Dashboard() {
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-indigo-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-indigo-800">1</span>
+                      <span className="text-xs font-bold text-indigo-800">
+                        1
+                      </span>
                     </div>
                     <span>
-                      Serve as the primary liaison between the client and the credit analysis team.
+                      Serve as the primary liaison between the client and the
+                      credit analysis team.
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-indigo-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-indigo-800">2</span>
+                      <span className="text-xs font-bold text-indigo-800">
+                        2
+                      </span>
                     </div>
                     <span>
-                      Clearly communicate any client concerns or specific needs to the team.
+                      Clearly communicate any client concerns or specific needs
+                      to the team.
                     </span>
                   </li>
                   <li className="flex items-start">
                     <div className="h-5 w-5 rounded-full bg-indigo-200 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                      <span className="text-xs font-bold text-indigo-800">3</span>
+                      <span className="text-xs font-bold text-indigo-800">
+                        3
+                      </span>
                     </div>
                     <span>
-                      Proactively coordinate with analysts to gather updates on application progress.
+                      Proactively coordinate with analysts to gather updates on
+                      application progress.
                     </span>
                   </li>
                 </ul>
               </div>
             </div>
-
           </div>
-              <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-500 text-sm">
-        &copy; {new Date().getFullYear()} Dashen Bank. All rights reserved.
-      </div>
-          </>
+          <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-500 text-sm">
+            &copy; {new Date().getFullYear()} Dashen Bank. All rights reserved.
+          </div>
+        </>
       )}
 
       {session.user.role === "BANNED" && (
-      <div className="min-h-screen flex items-start justify-center bg-gray-50 sm:p-6">
-      <title>Account Disabled</title>
-      <Card className="w-full max-w-2xl bg-white rounded-xl shadow-lg border-0">
-        <CardHeader className="text-center space-y-2 p-6 bg-red-50 rounded-t-xl">
-          <Ban className="h-16 w-16 text-red-500 mx-auto" />
-          <CardTitle className="text-2xl font-bold text-red-800">
-            Account Disabled
-          </CardTitle>
-          <CardDescription className="text-red-700">
-            Your access to this system has been suspended.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6 text-center space-y-4">
-          <p className="text-gray-600">
-            This action may have been taken due to a violation of our terms of
-            service or security protocols. Please contact support for more
-            information and assistance with your account.
-            
-          </p>
-          <p>For more information communicate the system admin </p>
-         
-        </CardContent>
-        <CardFooter>
-           <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-500 text-sm">
-        &copy; {new Date().getFullYear()} Dashen Bank. All rights reserved.
-      </div>
-        </CardFooter>
-      </Card>
-    </div>
-   )}
+        <div className="min-h-screen flex items-start justify-center bg-gray-50 sm:p-6">
+          <title>Account Disabled</title>
+          <Card className="w-full max-w-2xl bg-white rounded-xl shadow-lg border-0">
+            <CardHeader className="text-center space-y-2 p-6 bg-red-50 rounded-t-xl">
+              <Ban className="h-16 w-16 text-red-500 mx-auto" />
+              <CardTitle className="text-2xl font-bold text-red-800">
+                Account Disabled
+              </CardTitle>
+              <CardDescription className="text-red-700">
+                Your access to this system has been suspended.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 text-center space-y-4">
+              <p className="text-gray-600">
+                This action may have been taken due to a violation of our terms
+                of service or security protocols. Please contact support for
+                more information and assistance with your account.
+              </p>
+              <p>For more information communicate the system admin </p>
+            </CardContent>
+            <CardFooter>
+              <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-500 text-sm">
+                &copy; {new Date().getFullYear()} Dashen Bank. All rights
+                reserved.
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
