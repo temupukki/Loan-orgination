@@ -4,16 +4,17 @@ import prisma from "@/lib/prisma";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     const body = await request.json();
-    const { newStatus,   rmRecommendation    } = body;
+    const { newStatus, rmRecommendation } = body;
 
-    if (!newStatus || !  rmRecommendation   ) {
+    if (!newStatus || !rmRecommendation) {
       return NextResponse.json(
-        { error: "Both newStatus and assignedTo are required." },
+        { error: "Both newStatus and rmRecommendation are required." },
         { status: 400 }
       );
     }
@@ -21,8 +22,8 @@ export async function PATCH(
     const updatedCustomer = await prisma.customer.update({
       where: { id },
       data: {
-        applicationStatus: "UNDER_REVIEW", // e.g. "UNDER_REVIEW"
-         rmRecommendation   :   rmRecommendation   ,       // make sure your schema has this column
+        applicationStatus: "UNDER_REVIEW",
+        rmRecommendation: rmRecommendation,
       },
     });
 
