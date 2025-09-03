@@ -1,4 +1,4 @@
-
+// app/api/customer/[id]/take/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
