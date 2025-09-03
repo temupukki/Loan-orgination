@@ -4,10 +4,11 @@ import prisma from "@/lib/prisma";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
 
     // Atomically update the customer's status only if it is PENDING
     const result = await prisma.customer.updateMany({
