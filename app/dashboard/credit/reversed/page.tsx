@@ -440,20 +440,6 @@ export default function PendingCustomersPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
-        <div className="flex flex-col items-center mb-8">
-          <Skeleton className="h-10 w-64 mb-2" />
-          <Skeleton className="h-6 w-80" />
-        </div>
-        <div className="grid grid-cols-1 gap-6">
-          <CardSkeleton />
-          <CardSkeleton />
-        </div>
-      </div>
-    );
-  }
-  if (isLoading) {
-    return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="flex flex-col items-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -462,9 +448,38 @@ export default function PendingCustomersPage() {
       </div>
     );
   }
+
   if (!isCREDIT_ANALYST) {
     return null;
   }
+
+  const documentFields = [
+    {
+      field: "financialProfileUrl" as keyof LoanAnalysis,
+      label: "Financial Profile Doc",
+    },
+    {
+      field: "pestelAnalysisUrl" as keyof LoanAnalysis,
+      label: "PESTEL Analysis Doc",
+    },
+    {
+      field: "swotAnalysisUrl" as keyof LoanAnalysis,
+      label: "SWOT Analysis Doc",
+    },
+    {
+      field: "riskAssessmentUrl" as keyof LoanAnalysis,
+      label: "Risk Assessment Doc",
+    },
+    {
+      field: "esgAssessmentUrl" as keyof LoanAnalysis,
+      label: "ESG Assessment Doc",
+    },
+    {
+      field: "financialNeedUrl" as keyof LoanAnalysis,
+      label: "Financial Need Doc",
+    },
+  ];
+
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col items-center mb-8">
@@ -786,7 +801,7 @@ export default function PendingCustomersPage() {
                           {formatData(customer.majorLineBusiness)}
                         </p>
                       </div>
-                      <div className="flex justify-between items-center text-sm">
+                                            <div className="flex justify-between items-center text-sm">
                         <p className="text-gray-600 flex items-center gap-1">
                           <Calendar size={14} />
                           Established:
@@ -924,32 +939,7 @@ export default function PendingCustomersPage() {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                       {/* Document Uploads for Analysis */}
-                      {[
-                        {
-                          field: "financialProfileUrl",
-                          label: "Financial Profile Doc",
-                        },
-                        {
-                          field: "pestelAnalysisUrl",
-                          label: "PESTEL Analysis Doc",
-                        },
-                        {
-                          field: "swotAnalysisUrl",
-                          label: "SWOT Analysis Doc",
-                        },
-                        {
-                          field: "riskAssessmentUrl",
-                          label: "Risk Assessment Doc",
-                        },
-                        {
-                          field: "esgAssessmentUrl",
-                          label: "ESG Assessment Doc",
-                        },
-                        {
-                          field: "financialNeedUrl",
-                          label: "Financial Need Doc",
-                        },
-                      ].map(({ field, label }) => (
+                      {documentFields.map(({ field, label }) => (
                         <div key={field} className="space-y-2">
                           <label
                             htmlFor={`${field}-${customer.id}`}
@@ -966,7 +956,7 @@ export default function PendingCustomersPage() {
                                 handleFileUpload(
                                   e,
                                   customer.applicationReferenceNumber,
-                                  field as keyof LoanAnalysis
+                                  field
                                 )
                               }
                               className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
