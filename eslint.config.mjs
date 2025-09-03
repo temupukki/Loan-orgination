@@ -81,6 +81,15 @@ export default [
       '@typescript-eslint/no-misused-promises': [
         'error',
         { checksVoidReturn: false }
+      ],
+      // Add the specific rule to allow unused variables that start with underscore
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { 
+          argsIgnorePattern: '^_', 
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_'
+        }
       ]
     }
   },
@@ -115,7 +124,30 @@ export default [
             'index'
           ],
           'newlines-between': 'always',
-          alphabetize: { order: 'asc', caseInsensitive: true }
+          alphabetize: { order: 'asc', caseInsensitive: true },
+          pathGroups: [
+            {
+              pattern: '@/components/**',
+              group: 'internal',
+              position: 'before'
+            },
+            {
+              pattern: '@/lib/**',
+              group: 'internal',
+              position: 'before'
+            },
+            {
+              pattern: '@/hooks/**',
+              group: 'internal',
+              position: 'before'
+            },
+            {
+              pattern: '@/utils/**',
+              group: 'internal',
+              position: 'before'
+            }
+          ],
+          pathGroupsExcludedImportTypes: ['builtin']
         }
       ],
       'import/no-duplicates': 'error',
@@ -133,7 +165,18 @@ export default [
       'prefer-const': 'error',
       'arrow-body-style': ['error', 'as-needed'],
       'quotes': ['error', 'single', { avoidEscape: true }],
-      'semi': ['error', 'always']
+      'semi': ['error', 'always'],
+      // Add single quote enforcement
+      'quotes': ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
+      // Ensure proper import order
+      'import/order': [
+        'error',
+        {
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          'newlines-between': 'always',
+          alphabetize: { order: 'asc', caseInsensitive: true }
+        }
+      ]
     }
   },
 
@@ -143,5 +186,22 @@ export default [
       'plugin:react/recommended',
       'plugin:react/jsx-runtime'
     ]
-  })
+  }),
+
+  // Add specific file overrides if needed
+  {
+    files: ['**/*.tsx'],
+    rules: {
+      // Allow unused variables that start with underscore in JSX files
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { 
+          argsIgnorePattern: '^_', 
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          ignoreRestSiblings: true
+        }
+      ]
+    }
+  }
 ]
