@@ -4,10 +4,11 @@ import prisma from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { applicationReferenceNumber: string } }
+  { params }: { params: Promise<{ applicationReferenceNumber: string }> }
 ) {
   try {
-    const { applicationReferenceNumber } = params;
+    const resolvedParams = await params;
+    const { applicationReferenceNumber } = resolvedParams;
 
     const decision = await prisma.decision.findUnique({
       where: { applicationReferenceNumber },

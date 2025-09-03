@@ -6,10 +6,11 @@ import { headers } from "next/headers";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { applicationReferenceNumber: string } }
+  { params }: { params: Promise<{ applicationReferenceNumber: string }> }
 ) {
   try {
-    const { applicationReferenceNumber } = params;
+    const resolvedParams = await params;
+    const { applicationReferenceNumber } = resolvedParams;
 
     // Get current user from session
     const session = await auth.api.getSession({
