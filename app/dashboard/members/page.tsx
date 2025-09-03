@@ -60,7 +60,7 @@ interface LoanAnalysis {
 
 interface Customer {
   annualRevenue: number;
-  companyName: ReactNode;
+  companyName: string;
   id: string;
   applicationReferenceNumber: string;
   customerNumber: string;
