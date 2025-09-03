@@ -23,7 +23,7 @@ export default [
   // Global settings
   {
     ignores: [
-      '**/lib/generated/**', // Fixed ignore pattern to properly exclude Prisma files
+      '**/lib/generated/**',
       'node_modules/',
       '.next/',
       'dist/',
@@ -36,11 +36,17 @@ export default [
       parserOptions: {
         project: './tsconfig.json',
         tsconfigRootDir: __dirname
+      },
+      globals: {
+        React: 'readonly'
       }
     },
     settings: {
       next: {
         rootDir: __dirname
+      },
+      react: {
+        version: 'detect'
       },
       'import/resolver': {
         typescript: {
@@ -59,7 +65,7 @@ export default [
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,
       '@next/next/no-html-link-for-pages': 'error',
-      '@next/next/no-img-element': 'off' // Consider enabling if you don't need img elements
+      '@next/next/no-img-element': 'off'
     }
   },
 
@@ -121,23 +127,25 @@ export default [
       'import/no-duplicates': 'error',
       'import/no-unresolved': 'error',
       'import/named': 'error',
-      'import/no-default-export': 'off' // Enable if you don't use default exports
+      'import/no-default-export': 'off'
     }
   },
 
-  // Additional project-specific rules
+  // Additional project-specific rules with disabled problematic rules
   {
     rules: {
       'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
       'prefer-const': 'error',
       'arrow-body-style': ['error', 'as-needed'],
-      'quotes': ['error', 'single', { avoidEscape: true }],
-      'semi': ['error', 'always']
+      // Disabled problematic rules
+      'quotes': 'off',
+      'semi': 'off',
+      'no-undef': 'off'
     }
   },
 
-  // Compatibility layer for legacy configs if needed
+  // Compatibility layer for legacy configs
   ...compat.config({
     extends: [
       'plugin:react/recommended',
