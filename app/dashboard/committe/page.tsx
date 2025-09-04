@@ -456,6 +456,7 @@ export default function CommitteeDecisionPage() {
   }
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
+       <title>Final Decision | Loan Orgination</title>
       <div className="flex flex-col items-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-2">
           Committee Decisions 📋

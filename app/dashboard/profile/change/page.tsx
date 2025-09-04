@@ -94,6 +94,7 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 sm:p-6 lg:p-8">
+       <title>Change Password | Loan Orgination</title>
       <div className="max-w-md mx-auto">
         {/* Back Button */}
         <Link href="/dashboard/profile" className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 mb-6 transition-colors duration-200">
