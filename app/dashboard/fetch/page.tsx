@@ -73,9 +73,9 @@ export default function HomePage() {
       let apiUrl = "";
       
       if (searchType === "customer") {
-        apiUrl = `http://localhost:3000/api/loan?customerNumber=${customerNumber}`;
+        apiUrl = `https://temporary-cbs.vercel.app/api/loan?customerNumber=${customerNumber}`;
       } else {
-        apiUrl = `http://localhost:3000/api/company-loan?customerNumber=${companyNumber}`;
+        apiUrl = `https://temporary-cbs.vercel.app/api/company-loan?customerNumber=${companyNumber}`;
       }
       
       const res = await fetch(apiUrl);
