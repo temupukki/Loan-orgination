@@ -1607,7 +1607,7 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <span>
-                      Review and approve all changes to the company's lending
+                      Review and approve all changes to the company&apos;s lending
                       policy.
                     </span>
                   </li>
