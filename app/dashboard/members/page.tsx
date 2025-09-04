@@ -504,7 +504,7 @@ if (isLoading) {
   }
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
-      <title>Avaliable | Loan Orgination</title>
+      <title>Decision | Loan Orgination</title>
       <div className="flex flex-col items-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-2">
           Committee Decisions 📋
@@ -529,7 +529,7 @@ if (isLoading) {
 
       {error && (
         <div className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto border-4 border-dashed border-gray-200 text-gray-700 mb-8">
-          <div className="mb-6 p-4 bg-red-100 rounded-full">
+          <div className="mb-6 p-4 bg-green-100 rounded-full">
             <CheckCircle2 className="text-green-600" size={48} />
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
