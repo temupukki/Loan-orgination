@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Search, ArrowUpDown, Edit, Save, X, Filter } from "lucide-react";
+import { Loader2, Search, ArrowUpDown, Edit, Save, X, Filter, Trash2 } from "lucide-react";
 
 interface UserSession {
   user: {
@@ -39,6 +39,7 @@ export default function UsersPage() {
   const [sortField, setSortField] = useState<SortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const router = useRouter();
 
   // Available roles for filtering
@@ -115,7 +116,6 @@ export default function UsersPage() {
       result = result.filter(user => 
         user.name.toLowerCase().includes(query) || 
         user.email.toLowerCase().includes(query) ||
-         
         user.role.toLowerCase().includes(query)
       );
     }
@@ -190,6 +190,32 @@ export default function UsersPage() {
     setEditingId(null);
   };
 
+  const handleDeleteClick = async (userId: number) => {
+    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+      return;
+    }
+
+    setDeletingId(userId);
+    try {
+      const res = await fetch(`/api/users/${userId}/delete`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to delete user");
+      }
+
+      // Remove the user from the local state
+      setUsers(users.filter(user => user.id !== userId));
+      toast.success("User deleted successfully");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete user");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -226,6 +252,7 @@ export default function UsersPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+      <title>Manage Employee | Loan Origination</title>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
         <p className="text-gray-600 mt-2">Manage user roles and permissions</p>
@@ -390,13 +417,27 @@ export default function UsersPage() {
                           </button>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => handleEditClick(user)}
-                          className="text-indigo-600 hover:text-indigo-900 bg-indigo-100 hover:bg-indigo-200 px-3 py-1 rounded-md text-sm flex items-center"
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit Role
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditClick(user)}
+                            className="text-indigo-600 hover:text-indigo-900 bg-indigo-100 hover:bg-indigo-200 px-3 py-1 rounded-md text-sm flex items-center"
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(user.id)}
+                            disabled={deletingId === user.id}
+                            className="text-red-600 hover:text-red-900 bg-red-100 hover:bg-red-200 px-3 py-1 rounded-md text-sm flex items-center disabled:opacity-50"
+                          >
+                            {deletingId === user.id ? (
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 mr-1" />
+                            )}
+                            Delete
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
