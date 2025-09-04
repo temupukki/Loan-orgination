@@ -138,6 +138,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 px-4">
+       <title>New | Loan Orgination</title>
       <div className="max-w-3xl mx-auto">
         {/* Stepper Header */}
         <div className="flex items-center justify-center mb-10">
@@ -265,17 +266,6 @@ export default function HomePage() {
                 )}
               </button>
 
-              <div className="mt-6 text-center">
-                <p className="text-sm text-gray-600">
-                  Don&apos;t have a {searchType === "company" ? "company" : "customer"} number?{" "}
-                  <a 
-                    href={searchType === "company" ? "/new-company" : "/new-customer"} 
-                    className="text-blue-600 hover:underline"
-                  >
-                    Create new {searchType === "company" ? "company" : "customer"}
-                  </a>
-                </p>
-              </div>
             </>
           ) : (
             <>

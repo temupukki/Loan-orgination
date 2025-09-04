@@ -25,7 +25,7 @@ export async function PATCH(
 
     if (session.user.id === userId) {
       return NextResponse.json(
-        { error: "Cannot delete your own account" },
+        { error: "Cannot update your own account" },
         { status: 400 }
       );
     }

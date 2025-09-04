@@ -866,29 +866,6 @@ export default function Dashboard() {
                 </ul>
               </div>
             </div>
-
-            <div className="flex flex-col sm:flex-row justify-between items-center pt-5 border-t border-gray-200 gap-4">
-              <p className="text-sm text-gray-600 flex items-center">
-                <HelpCircle className="h-4 w-4 mr-1 text-gray-500" />
-                Need assistance? Contact{" "}
-                <span className="text-blue-700 font-medium ml-1">
-                  credit-support@company.com
-                </span>
-              </p>
-              <div className="flex space-x-3">
-                <Button
-                  variant="outline"
-                  className="flex items-center border-gray-300"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Process Handbook
-                </Button>
-                <Button className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex items-center">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Quick Reference Guide
-                </Button>
-              </div>
-            </div>
           </div>
         </div>
       )}
