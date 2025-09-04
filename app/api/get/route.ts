@@ -38,9 +38,7 @@ export async function GET(request: NextRequest) {
       case "MEMBER_REVIEW":
         status = ApplicationStatus.MEMBER_REVIEW;
         break;
-      case "ANALYSIS_COMPLETED":
-        status = ApplicationStatus.ANALYSIS_COMPLETED;
-        break;
+     
       case "APPROVED":
         status = ApplicationStatus.APPROVED;
         break;

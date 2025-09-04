@@ -267,7 +267,7 @@ export default function HomePage() {
 
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">
-                  Don't have a {searchType === "company" ? "company" : "customer"} number?{" "}
+                  Don&apos;t have a {searchType === "company" ? "company" : "customer"} number?{" "}
                   <a 
                     href={searchType === "company" ? "/new-company" : "/new-customer"} 
                     className="text-blue-600 hover:underline"

@@ -233,7 +233,7 @@ export default function BasicInfoPage() {
               Loan Origination – Step 2
             </h1>
             <p className="text-gray-600">
-              Provide the customer's basic information to continue
+              Provide the customer&apos;s basic information to continue
             </p>
           </div>
 
