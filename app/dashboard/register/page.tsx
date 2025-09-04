@@ -34,7 +34,7 @@ const RegisterEmployeeSchema = z.object({
     "CREDIT_ANALYST",
     "SUPERVISOR",
     "COMMITTE_MEMBER",
-    "COMMITTE_MANAGER"
+    "APPROVAL_COMMITTE"
   ]),
 });
 type SignupFormData = z.infer<typeof RegisterEmployeeSchema>;
@@ -262,7 +262,7 @@ export default function BankSignupPage() {
                   <option value="CREDIT_ANALYST">Credit Analyst</option>
                   <option value="SUPERVISOR">Supervisor</option>
                   <option value="COMMITTE_MEMBER">Committee Member</option>
-                  <option value="COMMITTE_MANAGER">Committee Manager</option>
+                  <option value="APPROVAL_COMMITTE">Approval Committee</option>
                 </select>
                 {errors.role && (
                   <p className="text-xs text-blue-600">{errors.role.message}</p>

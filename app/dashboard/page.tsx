@@ -1718,7 +1718,7 @@ export default function Dashboard() {
             </Link>
 
             {/* User Registration Card */}
-            <Link href="/dashboard/user/register">
+            <Link href="/dashboard/register">
               <Card className="border-2 border-green-300 hover:border-green-500 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
