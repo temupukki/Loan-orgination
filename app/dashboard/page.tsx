@@ -241,7 +241,7 @@ export default function Dashboard() {
     const committee_review = customers.filter(
       (c) => c.applicationStatus.toLowerCase() === "committee_review"
     ).length;
-    
+
     return {
       total,
       pending,
@@ -330,7 +330,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <title>Customer Dashboard | Loan System</title>
+      <title>Dashboard | Loan Orgination</title>
 
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
@@ -1457,7 +1457,6 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </Link>
-
           </div>
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-6">
@@ -1607,8 +1606,8 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <span>
-                      Review and approve all changes to the company&apos;s lending
-                      policy.
+                      Review and approve all changes to the company&apos;s
+                      lending policy.
                     </span>
                   </li>
                 </ul>
@@ -1945,25 +1944,6 @@ export default function Dashboard() {
                     </span>
                   </li>
                 </ul>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row justify-between items-center pt-5 border-t border-gray-200 gap-4">
-              <p className="text-sm text-gray-600 flex items-center">
-                <HelpCircle className="h-4 w-4 mr-1 text-gray-500" />
-                For urgent technical issues, contact the IT Support team at{" "}
-                <span className="text-gray-700 font-medium ml-1">
-                  it-support@company.com
-                </span>
-              </p>
-              <div className="flex space-x-3">
-                <Button
-                  variant="outline"
-                  className="flex items-center border-gray-300"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  System Architecture Guide
-                </Button>
               </div>
             </div>
           </div>
