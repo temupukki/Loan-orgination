@@ -5,8 +5,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -17,7 +17,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = params.id; // Keep as string since your DB uses string IDs
+    const userId = (await params).id; // Keep as string since your DB uses string IDs
     
     if (!userId) {
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
