@@ -14,6 +14,7 @@ const requestSchema = z.object({
     "CREDIT_ANALYST",
     "SUPERVISOR",
     "COMMITTE_MEMBER",
+    "APPROVAL_COMMITTE"
   ]),
 });
 
