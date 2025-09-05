@@ -132,7 +132,7 @@ export default function PendingCustomersPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if the current user is a relationship manager
+    // Check if the current user is a supervisor
     const checkRoleStatus = async () => {
       try {
         // Get the current user's role from your API
@@ -150,11 +150,11 @@ export default function PendingCustomersPage() {
           return;
         }
 
-        // Check if user has relationship manager role
+        // Check if user has supervisor role
         if (data.user.role === "SUPERVISOR") {
           setIsSupervisor(true);
         } else {
-          // Redirect non-relationship manager users to dashboard
+          // Redirect non-supervisor users to dashboard
           router.push("/dashboard");
         }
       } catch (error) {
@@ -266,24 +266,39 @@ export default function PendingCustomersPage() {
     const errors: string[] = [];
     const review = reviewData[refNumber];
 
-    // Check all required fields
-    if (!review?.pestelanalysisScore) {
-      errors.push("PESTEL Analysis document is required");
+    // Check all required score fields
+    if (review?.pestelanalysisScore === undefined || review.pestelanalysisScore === null) {
+      errors.push("PESTEL Analysis score is required");
+    } else if (review.pestelanalysisScore < 0 || review.pestelanalysisScore > 100) {
+      errors.push("PESTEL Analysis score must be between 0 and 100");
     }
-    if (!review?.swotanalysisScore) {
-      errors.push("SWOT Analysis document is required");
+    
+    if (review?.swotanalysisScore === undefined || review.swotanalysisScore === null) {
+      errors.push("SWOT Analysis score is required");
+    } else if (review.swotanalysisScore < 0 || review.swotanalysisScore > 100) {
+      errors.push("SWOT Analysis score must be between 0 and 100");
     }
-    if (!review?.riskassesmentScore) {
-      errors.push("Risk Assessment document is required");
+    
+    if (review?.riskassesmentScore === undefined || review.riskassesmentScore === null) {
+      errors.push("Risk Assessment score is required");
+    } else if (review.riskassesmentScore < 0 || review.riskassesmentScore > 100) {
+      errors.push("Risk Assessment score must be between 0 and 100");
     }
-    if (!review?.esgassesmentScore) {
-      errors.push("ESG Assessment document is required");
+    
+    if (review?.esgassesmentScore === undefined || review.esgassesmentScore === null) {
+      errors.push("ESG Assessment score is required");
+    } else if (review.esgassesmentScore < 0 || review.esgassesmentScore > 100) {
+      errors.push("ESG Assessment score must be between 0 and 100");
     }
-    if (!review?.financialneedScore) {
-      errors.push("Financial Need document is required");
+    
+    if (review?.financialneedScore === undefined || review.financialneedScore === null) {
+      errors.push("Financial Need score is required");
+    } else if (review.financialneedScore < 0 || review.financialneedScore > 100) {
+      errors.push("Financial Need score must be between 0 and 100");
     }
+    
     if (!review?.reviewNotes || review?.reviewNotes.trim() === "") {
-      errors.push("Analyst Conclusion is required");
+      errors.push("Review notes are required");
     }
 
     return errors;
@@ -418,20 +433,6 @@ export default function PendingCustomersPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
-        <div className="flex flex-col items-center mb-8">
-          <Skeleton className="h-10 w-64 mb-2" />
-          <Skeleton className="h-6 w-80" />
-        </div>
-        <div className="grid grid-cols-1 gap-6">
-          <CardSkeleton />
-          <CardSkeleton />
-        </div>
-      </div>
-    );
-  }
-  if (isLoading) {
-    return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="flex flex-col items-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -440,12 +441,14 @@ export default function PendingCustomersPage() {
       </div>
     );
   }
+  
   if (!isSupervisor) {
     return null;
   }
+
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
-       <title>In Progress | Loan Orgination</title>
+      <title>In Progress | Loan Origination</title>
       <div className="flex flex-col items-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-2">
           Supervisor Review Dashboard
@@ -470,15 +473,14 @@ export default function PendingCustomersPage() {
 
       {error && (
         <div className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto border-4 border-dashed border-gray-200 text-gray-700 mb-8">
-          <div className="mb-6 p-4 bg-green-100 rounded-full">
-            <CheckCircle2 className="text-green-600" size={48} />
+          <div className="mb-6 p-4 bg-red-100 rounded-full">
+            <AlertCircle className="text-red-600" size={48} />
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
-            All Clear!
+            Error Loading Data
           </h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
-            No applications pending supervisor review. Check back later for new
-            submissions.
+            {error}
           </p>
           <Button
             onClick={fetchPendingCustomers}
@@ -962,10 +964,10 @@ export default function PendingCustomersPage() {
                               parseInt(e.target.value)
                             )
                           }
-                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
-                      <div className="space-y-2">
+                                            <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700  items-center gap-1">
                           <Percent size={14} />
                           Financial Need
@@ -1028,6 +1030,7 @@ export default function PendingCustomersPage() {
                         customerId={customer.id}
                         refNumber={customer.applicationReferenceNumber}
                         reviewData={reviewData}
+                        validateData={validateSupervisorData}
                         onSuccess={() => {
                           console.log("Analysis saved successfully");
                           toast.success("Review saved successfully!");

@@ -8,6 +8,7 @@ interface SaveReviewButtonProps {
   customerId: string;
   refNumber?: string;
   reviewData?: Record<string, any>;
+  validateData?: (refNumber: string) => string[];
   onSuccess: () => void;
   buttonText?: string;
   newStatus?: string;
@@ -17,33 +18,49 @@ export function SaveReviewButton({
   customerId,
   refNumber,
   reviewData,
+  validateData,
   onSuccess,
   buttonText,
   newStatus
 }: SaveReviewButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  // ✅ Internal validation function
+  // ✅ Internal validation function (fallback if validateData is not provided)
   const validateSupervisorData = (refNumber: string) => {
     const errors: string[] = [];
     const review = reviewData?.[refNumber];
 
-    // Check all required fields with correct field names
-    if (!review?.pestelAnalysisScore) {
+    // Check all required fields with correct field names (matching the main component)
+    if (review?.pestelanalysisScore === undefined || review.pestelanalysisScore === null) {
       errors.push("PESTEL Analysis score is required");
+    } else if (review.pestelanalysisScore < 0 || review.pestelanalysisScore > 100) {
+      errors.push("PESTEL Analysis score must be between 0 and 100");
     }
-    if (!review?.swotAnalysisScore) {
+    
+    if (review?.swotanalysisScore === undefined || review.swotanalysisScore === null) {
       errors.push("SWOT Analysis score is required");
+    } else if (review.swotanalysisScore < 0 || review.swotanalysisScore > 100) {
+      errors.push("SWOT Analysis score must be between 0 and 100");
     }
-    if (!review?.riskAssessmentScore) {
+    
+    if (review?.riskassesmentScore === undefined || review.riskassesmentScore === null) {
       errors.push("Risk Assessment score is required");
+    } else if (review.riskassesmentScore < 0 || review.riskassesmentScore > 100) {
+      errors.push("Risk Assessment score must be between 0 and 100");
     }
-    if (!review?.esgAssessmentScore) {
+    
+    if (review?.esgassesmentScore === undefined || review.esgassesmentScore === null) {
       errors.push("ESG Assessment score is required");
+    } else if (review.esgassesmentScore < 0 || review.esgassesmentScore > 100) {
+      errors.push("ESG Assessment score must be between 0 and 100");
     }
-    if (!review?.financialNeedScore) {
+    
+    if (review?.financialneedScore === undefined || review.financialneedScore === null) {
       errors.push("Financial Need score is required");
+    } else if (review.financialneedScore < 0 || review.financialneedScore > 100) {
+      errors.push("Financial Need score must be between 0 and 100");
     }
+    
     if (!review?.reviewNotes || review.reviewNotes.trim() === "") {
       errors.push("Review Notes are required");
     }
@@ -62,8 +79,8 @@ export function SaveReviewButton({
       return;
     }
 
-    // ✅ Run validation
-    const errors = validateSupervisorData(refNumber);
+    // ✅ Run validation (use provided validateData function or fallback to internal)
+    const errors = validateData ? validateData(refNumber) : validateSupervisorData(refNumber);
     if (errors.length > 0) {
       errors.forEach((err) => toast.error(err));
       return;
