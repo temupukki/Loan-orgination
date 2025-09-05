@@ -1405,7 +1405,7 @@ export default function Dashboard() {
               </Card>
             </Link>
 
-             <Link href="/dashboard/view">
+             <Link href="/dashboard/committe">
               <Card
                 className={
                   stats.committee_review> 0
