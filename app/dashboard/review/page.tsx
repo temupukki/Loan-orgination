@@ -35,7 +35,7 @@ export default function ReviewPage() {
   }, []);
 
   const generateApplicationReference = (): string => {
-    const prefix = "PUKKI";
+    const prefix = "DASHEN";
     const timestamp = Date.now().toString().slice(-6);
     const random = Math.floor(Math.random() * 1000)
       .toString()

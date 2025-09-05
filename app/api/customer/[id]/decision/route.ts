@@ -21,7 +21,7 @@ export async function PATCH(
     }
 
     // Validate decision value
-    const validDecisions = ["APPROVED", "COMMITTEE_REVERSED", "REJECTED"];
+    const validDecisions = ["APPROVED", "COMMITTE_REVERSED", "REJECTED"];
     if (!validDecisions.includes(decision)) {
       return NextResponse.json(
         { error: "Invalid decision value" },
