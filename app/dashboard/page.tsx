@@ -238,9 +238,12 @@ export default function Dashboard() {
     const member_review = customers.filter(
       (c) => c.applicationStatus.toLowerCase() === "member_review"
     ).length;
-    const committee_review = customers.filter(
-      (c) => c.applicationStatus.toLowerCase() === "committee_review"
-    ).length;
+     const committee_review = customers.filter((c) => 
+    c.applicationStatus && (
+      c.applicationStatus.toLowerCase().includes("committee") || 
+      c.applicationStatus.toLowerCase().includes("committe")
+    )
+  ).length;
 
     return {
       total,
@@ -1372,7 +1375,7 @@ export default function Dashboard() {
       )}
       {session.user.role === "APPROVAL_COMMITTE" && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-1 gap-6 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
             <Link href="/dashboard/view">
               <Card
                 className={
@@ -1397,6 +1400,35 @@ export default function Dashboard() {
                   </div>
                   <p className="text-xs text-gray-600">
                     All Available applications
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+
+             <Link href="/dashboard/view">
+              <Card
+                className={
+                  stats.committee_review> 0
+                    ? "animate-pulse ring-3 ring-red-500"
+                    : ""
+                }
+              >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    In Progress Applications
+                  </CardTitle>
+                  <Users
+                    className={`h-4 w-6 text-red-600 ${
+                      stats.committee_review > 0 ? "animate-bounce" : ""
+                    }`}
+                  />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {stats.committee_review}
+                  </div>
+                  <p className="text-xs text-gray-600">
+                   Make Your Final Decision ASAP!
                   </p>
                 </CardContent>
               </Card>
