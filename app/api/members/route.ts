@@ -10,12 +10,21 @@ export async function POST(request: NextRequest) {
   });
   const userId = session?.user.id;
   const responsibleUnitName = session?.user.name;
-  const image:any= session?.user.image;
-  const parts = image.split("-");
-  const responsibleUnitPhone=parts[1];
-  const responsibleUnitEmail=session?.user.email
-
-
+  const responsibleUnitEmail = session?.user.email;
+  
+  // Safe handling of image field with null check
+  let responsibleUnitPhone = "";
+  const image = session?.user.image;
+  
+  if (image) {
+    try {
+      const parts = image.split("-");
+      responsibleUnitPhone = parts[1] || "";
+    } catch (error) {
+      console.error("Error parsing image field:", error);
+      responsibleUnitPhone = "";
+    }
+  }
 
   try {
     const body = await request.json();
@@ -41,7 +50,6 @@ export async function POST(request: NextRequest) {
         responsibleUnitName,
         responsibleUnitEmail,
         responsibleUnitPhone,
-
         applicationReferenceNumber,
         decision,
         decisionReason,
@@ -55,8 +63,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (err: any) {
     console.error("Error creating/updating decision record:", err);
-
-
 
     return NextResponse.json(
       { error: "Failed to create decision record" },

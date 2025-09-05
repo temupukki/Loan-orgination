@@ -317,7 +317,7 @@ export default function CommitteeDecisionPage() {
           applicationReferenceNumber: applicationRef,
           decision,
           decisionReason: decisionReasons[applicationRef] || "",
-          committeeMember: "Current User", // Replace with actual user data
+         
         }),
       });
 
