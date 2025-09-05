@@ -1636,7 +1636,7 @@ export default function Dashboard() {
               <Card className="border-2 border-blue-300 hover:border-blue-500 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    User Management
+                    Employee Management
                   </CardTitle>
                   <svg
                     className="h-5 w-5 text-blue-500"
@@ -1654,7 +1654,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-blue-600">
-                    Manage Users
+                    Manage Employee
                   </div>
                   <p className="text-xs text-gray-600 mt-2">
                     Create, edit, and manage system users
@@ -1673,7 +1673,7 @@ export default function Dashboard() {
               <Card className="border-2 border-green-300 hover:border-green-500 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    User Registration
+                   Employee Registration
                   </CardTitle>
                   <svg
                     className="h-5 w-5 text-green-500"
@@ -1691,10 +1691,10 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-600">
-                    Register Users
+                    Register Employee
                   </div>
                   <p className="text-xs text-gray-600 mt-2">
-                    Add new users to the system
+                    Add new employees to the system
                   </p>
                   <div className="flex items-center mt-3">
                     <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
@@ -1733,7 +1733,7 @@ export default function Dashboard() {
                     <UserCog className="h-5 w-5 text-gray-600" />
                   </div>
                   <h4 className="font-semibold text-gray-800">
-                    User & Access Management
+                    Employee & Access Management
                   </h4>
                 </div>
                 <ul className="space-y-2 text-sm text-gray-700">
