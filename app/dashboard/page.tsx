@@ -238,12 +238,12 @@ export default function Dashboard() {
     const member_review = customers.filter(
       (c) => c.applicationStatus.toLowerCase() === "member_review"
     ).length;
-     const committee_review = customers.filter((c) => 
-    c.applicationStatus && (
-      c.applicationStatus.toLowerCase().includes("committee") || 
-      c.applicationStatus.toLowerCase().includes("committe")
-    )
-  ).length;
+    const committee_review = customers.filter(
+      (c) =>
+        c.applicationStatus &&
+        (c.applicationStatus.toLowerCase().includes("committee") ||
+          c.applicationStatus.toLowerCase().includes("committe"))
+    ).length;
 
     return {
       total,
@@ -1128,9 +1128,6 @@ export default function Dashboard() {
                 </ul>
               </div>
             </div>
-
-           
-            
           </div>
         </>
       )}
@@ -1368,8 +1365,6 @@ export default function Dashboard() {
                 </ul>
               </div>
             </div>
-
-   
           </div>
         </>
       )}
@@ -1405,10 +1400,10 @@ export default function Dashboard() {
               </Card>
             </Link>
 
-             <Link href="/dashboard/committe">
+            <Link href="/dashboard/committe">
               <Card
                 className={
-                  stats.committee_review> 0
+                  stats.committee_review > 0
                     ? "animate-pulse ring-3 ring-red-500"
                     : ""
                 }
@@ -1428,7 +1423,7 @@ export default function Dashboard() {
                     {stats.committee_review}
                   </div>
                   <p className="text-xs text-gray-600">
-                   Make Your Final Decision ASAP!
+                    Make Your Final Decision ASAP!
                   </p>
                 </CardContent>
               </Card>
@@ -1629,7 +1624,6 @@ export default function Dashboard() {
                 </ul>
               </div>
             </div>
-
           </div>
         </>
       )}
@@ -2211,9 +2205,6 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-500 text-sm">
-            &copy; {new Date().getFullYear()} Dashen Bank. All rights reserved.
-          </div>
         </>
       )}
 
@@ -2247,6 +2238,9 @@ export default function Dashboard() {
           </Card>
         </div>
       )}
+      <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-500 text-sm">
+        &copy; {new Date().getFullYear()} Dashen Bank. All rights reserved.
+      </div>
     </div>
   );
 }
