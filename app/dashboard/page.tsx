@@ -335,48 +335,51 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50 p-6">
       <title>Dashboard | Loan Orgination</title>
 
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Loan Applications
-            </h1>
-            <Badge variant="outline" className="flex items-center gap-1">
-              <Shield className="h-3 w-3" />
-              {session.user.role
-                .split("_")
-                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(" ")}
-            </Badge>
-          </div>
-          <p className="text-gray-600 mt-1">Manage and review applications</p>
-        </div>
-        <div className="flex gap-4">
-          <Button
-            onClick={fetchCustomers}
-            variant="outline"
-            className="flex items-center gap-2"
-            disabled={isLoading}
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
-          {/* Only show "New Application" button for Relationship Managers and Admins */}
-          {session.user.role === "RELATIONSHIP_MANAGER" && (
-            <Link href="/dashboard/fetch">
-              <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
-                <Plus className="h-4 w-4" />
-                New Application
-              </Button>
-            </Link>
-          )}
-        </div>
-      </div>
+    
+     <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+  {/* Left side */}
+  <div>
+    <div className="flex items-center gap-2 flex-wrap">
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+        Loan Applications
+      </h1>
+      <Badge variant="outline" className="flex items-center gap-1">
+        <Shield className="h-3 w-3" />
+        {session.user.role
+          .split("_")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")}
+      </Badge>
+    </div>
+    <p className="text-gray-600 mt-1 text-sm md:text-base">
+      Manage and review applications
+    </p>
+  </div>
 
-      {/* Stats Overview - Only show for Relationship Managers */}
+  {/* Right side */}
+  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+    <Button
+      onClick={fetchCustomers}
+      variant="outline"
+      className="flex items-center gap-2"
+      disabled={isLoading}
+    >
+      <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+      Refresh
+    </Button>
+
+    {session.user.role === "RELATIONSHIP_MANAGER" && (
+      <Link href="/dashboard/fetch" className="w-full sm:w-auto">
+        <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+          <Plus className="h-4 w-4" />
+          New Application
+        </Button>
+      </Link>
+    )}
+  </div>
+</div>
+
+
       {session.user.role === "RELATIONSHIP_MANAGER" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
