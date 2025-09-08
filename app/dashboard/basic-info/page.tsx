@@ -8,7 +8,7 @@ import {
   customerSegmentations,
   creditInitiationCenters,
 } from "@/app/utils/constants";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BasicInfoPage() {
@@ -21,29 +21,23 @@ export default function BasicInfoPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if the current user is a relationship manager
     const checkRoleStatus = async () => {
       try {
-        // Get the current user's role from your API
         const response = await fetch("/api/session");
-        
+
         if (!response.ok) {
           throw new Error("Failed to fetch user session");
         }
-        
+
         const data = await response.json();
-        
-        // Check if we have a valid session with user data
+
         if (!data || !data.user) {
           router.push("/");
           return;
         }
-        
-        // Check if user has relationship manager role
+
         if (data.user.role === "RELATIONSHIP_MANAGER") {
           setIsRelationshipManager(true);
-          
-          // Load customer data only if user has the correct role
           const customerData = localStorage.getItem("currentCustomer");
           if (customerData) {
             setCustomer(JSON.parse(customerData));
@@ -51,7 +45,6 @@ export default function BasicInfoPage() {
             router.push("/dashboard");
           }
         } else {
-          // Redirect non-relationship manager users to dashboard
           router.push("/dashboard");
         }
       } catch (error) {
@@ -159,85 +152,82 @@ export default function BasicInfoPage() {
     router.push("/dashboard");
   };
 
-  // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="flex flex-col items-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="mt-4 text-gray-700">Checking permissions...</p>
+          <p className="mt-4 text-gray-700 text-center">Checking permissions...</p>
         </div>
       </div>
     );
   }
 
-  // Don't render anything if not relationship manager (will redirect due to useEffect)
   if (!isRelationshipManager) {
     return null;
   }
 
   if (!customer)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="flex flex-col items-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="mt-4 text-gray-700">Loading customer data...</p>
+          <p className="mt-4 text-gray-700 text-center">Loading customer data...</p>
         </div>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-6 px-4 sm:py-10 sm:px-6">
+      <title>Basic Info | Loan Origination</title>
       <div className="max-w-4xl mx-auto">
-        {/* Stepper Header */}
-        <div className="flex items-center justify-center mb-10">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center opacity-70">
-              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
-                1
-              </div>
-              <span className="ml-2 font-semibold text-blue-700">
-                Search Customer
-              </span>
+        {/* Stepper Header - Mobile-friendly */}
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-10">
+          <div className="flex items-center opacity-70">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold text-sm sm:text-base">
+              1
             </div>
-            <div className="w-12 h-0.5 bg-gray-300"></div>
-            <div className="flex items-center">
-              <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold">
-                2
-              </div>
-              <span className="ml-2 font-semibold text-blue-700">
-                Basic Info
-              </span>
+            <span className="ml-2 font-semibold text-blue-700 text-sm sm:text-base">
+              Search Customer
+            </span>
+          </div>
+          <div className="hidden sm:block w-8 md:w-12 h-0.5 bg-gray-300"></div>
+          <div className="flex items-center">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold text-sm sm:text-base">
+              2
             </div>
-            <div className="w-12 h-0.5 bg-gray-300"></div>
-            <div className="flex items-center opacity-40">
-              <div className="h-10 w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold">
-                3
-              </div>
-              <span className="ml-2 text-gray-500">Business Info</span>
+            <span className="ml-2 font-semibold text-blue-700 text-sm sm:text-base">
+              Basic Info
+            </span>
+          </div>
+          <div className="hidden sm:block w-8 md:w-12 h-0.5 bg-gray-300"></div>
+          <div className="flex items-center opacity-40">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold text-sm sm:text-base">
+              3
             </div>
-            <div className="w-12 h-0.5 bg-gray-300"></div>
-            <div className="flex items-center opacity-40">
-              <div className="h-10 w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold">
-                4
-              </div>
-              <span className="ml-2 text-gray-500">Documents</span>
+            <span className="ml-2 text-gray-500 text-sm sm:text-base">Business Info</span>
+          </div>
+          <div className="hidden sm:block w-8 md:w-12 h-0.5 bg-gray-300"></div>
+          <div className="flex items-center opacity-40">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-500 font-bold text-sm sm:text-base">
+              4
             </div>
+            <span className="ml-2 text-gray-500 text-sm sm:text-base">Documents</span>
           </div>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
               Loan Origination – Step 2
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-sm sm:text-base">
               Provide the customer&apos;s basic information to continue
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Customer Segmentation */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -248,7 +238,7 @@ export default function BasicInfoPage() {
                 value={customer.customerSegmentation || ""}
                 onChange={handleFieldChange}
                 onBlur={() => handleBlur("customerSegmentation")}
-                className={`w-full p-3 border rounded-lg ${
+                className={`w-full p-3 border rounded-lg text-sm sm:text-base ${
                   errors.customerSegmentation && touched.customerSegmentation
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                     : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
@@ -280,7 +270,7 @@ export default function BasicInfoPage() {
                 value={customer.creditInitiationCenter || ""}
                 onChange={handleFieldChange}
                 onBlur={() => handleBlur("creditInitiationCenter")}
-                className={`w-full p-3 border rounded-lg ${
+                className={`w-full p-3 border rounded-lg text-sm sm:text-base ${
                   errors.creditInitiationCenter &&
                   touched.creditInitiationCenter
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500"
@@ -313,7 +303,7 @@ export default function BasicInfoPage() {
                 value={customer.economicSector || ""}
                 onChange={handleFieldChange}
                 onBlur={() => handleBlur("economicSector")}
-                className={`w-full p-3 border rounded-lg ${
+                className={`w-full p-3 border rounded-lg text-sm sm:text-base ${
                   errors.economicSector && touched.economicSector
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                     : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
@@ -343,23 +333,25 @@ export default function BasicInfoPage() {
             </p>
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-between mt-8">
+          {/* Actions - Mobile-friendly layout */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-8">
             <button
               onClick={goBack}
-              className="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+              className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-6 rounded-lg transition-colors flex items-center justify-center text-sm"
             >
+              <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </button>
             <button
               onClick={saveAndContinue}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
               disabled={
                 Object.values(errors).some((error) => error) &&
                 Object.keys(touched).length > 0
               }
             >
               Next: Business Information
+              <ArrowRight className="h-4 w-4 ml-2" />
             </button>
           </div>
         </div>
