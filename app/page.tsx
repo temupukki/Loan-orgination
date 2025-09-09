@@ -10,6 +10,7 @@ const HomePage = async () => {
     headers: await headers(),
   });
   if (session) return redirect("/dashboard");
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 p-8 text-gray-800">
       <div className="flex flex-col items-center space-y-8 text-center">
@@ -30,17 +31,29 @@ const HomePage = async () => {
           Welcome to the new system. Your gateway to efficient credit application management.
         </p>
 
-        {/* The prominent "Get Started" button in the middle */}
-        <div className="mt-8">
+        {/* Action buttons */}
+        <div className="mt-8 flex flex-col md:flex-row gap-4">
+          {/* Employee Portal */}
           <Link href="/sign-in">
             <Button
               className="group relative inline-flex h-16 items-center justify-center overflow-hidden rounded-[50px] bg-gradient-to-r from-blue-700 to-indigo-800 px-10 text-lg font-bold text-white shadow-lg transition-all duration-500 hover:scale-110 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-300"
               size="lg"
             >
               <span className="relative z-10 transition-transform duration-500 group-hover:-translate-y-1">
-                Get Started
+                Employee Portal
               </span>
               <span className="absolute inset-0 z-0 bg-gradient-to-l from-indigo-800 to-blue-700 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
+            </Button>
+          </Link>
+
+          {/* Check Status */}
+          <Link href="/check-status">
+            <Button
+              variant="outline"
+              className="h-16 px-10 text-lg font-semibold border-2 border-gray-400 text-gray-700 hover:border-indigo-700 hover:text-indigo-800 transition-all duration-300 rounded-[50px]"
+              size="lg"
+            >
+              Check Status
             </Button>
           </Link>
         </div>
