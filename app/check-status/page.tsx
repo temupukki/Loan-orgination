@@ -281,7 +281,7 @@ export default function CustomerSearchPage() {
             <p className="text-gray-600 mb-4">{error}</p>
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-sm text-gray-500">
-                💡 Please ensure you've entered the correct reference number. 
+                💡 Please ensure you&apos;ve entered the correct reference number. 
                 If you need assistance, please contact our support team.
               </p>
             </div>
