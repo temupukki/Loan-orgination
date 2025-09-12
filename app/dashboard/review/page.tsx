@@ -34,14 +34,17 @@ export default function ReviewPage() {
     }
   }, []);
 
-  const generateApplicationReference = (): string => {
-    const prefix = "DASHEN";
-    const timestamp = Date.now().toString().slice(-6);
-    const random = Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, "0");
-    return `${prefix}-${timestamp}-${random}`;
-  };
+const generateApplicationReference = (): string => {
+  const prefix = "DASHEN";
+  const now = new Date();
+  const year = now.getFullYear().toString();
+  const month = (now.getMonth() + 1).toString().padStart(2, "0");
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, "0");
+  return `${prefix}-${year}${month}-${random}`;
+};
+// Example: DASHEN-202412-5837
 
   const saveCustomerToDB = async () => {
     if (!customer) {

@@ -51,6 +51,33 @@ export default function HomePage() {
     checkRoleStatus();
   }, [router]);
 
+  // API to check if customer/company exists
+  const checkEntityExists = async (number: string, type: "customer" | "company") => {
+    try {
+      const response = await fetch("/api/check-entity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          number,
+          type,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to check entity");
+      }
+
+      const data = await response.json();
+      return data.exists;
+    } catch (error) {
+      console.error("Error checking entity:", error);
+      throw error;
+    }
+  };
+
   const fetchEntity = async () => {
     if (searchType === "customer" && !customerNumber.trim()) {
       setError("Please enter a customer number");
@@ -65,6 +92,23 @@ export default function HomePage() {
     setLoading(true);
     setError("");
     try {
+      // First check if entity exists in our database
+      const entityExists = await checkEntityExists(
+        searchType === "customer" ? customerNumber : companyNumber,
+        searchType
+      );
+
+      if (entityExists) {
+        setError(
+          searchType === "customer" 
+            ? "Customer already exists in our LOS" 
+            : "Company already exists in our LOS"
+        );
+        setLoading(false);
+        return;
+      }
+
+      // If not in our database, fetch from external API
       let apiUrl = "";
 
       if (searchType === "customer") {
