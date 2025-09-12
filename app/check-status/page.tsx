@@ -409,17 +409,7 @@ export default function CustomerSearchPage() {
                         <span className="font-medium text-gray-900">{formatDate(decision.decisionDate)}</span>
                       </div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <h4 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-blue-600" />
-                        Responsible Committee Manager
-                      </h4>
-                      <div className="space-y-2 text-sm">
-                        <p><strong>Name:</strong> {decision.responsibleUnitName}</p>
-                        <p><strong>Email:</strong> {decision.responsibleUnitEmail}</p>
-                        <p><strong>Phone:</strong> {decision.responsibleUnitPhone}</p>
-                      </div>
-                    </div>
+                 
                   </div>
                 </div>
               )}

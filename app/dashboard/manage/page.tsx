@@ -65,51 +65,47 @@ export default function CustomerManagementPage() {
     null
   );
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
-   const [isRelationshipManager, setIsRelationshipManager] = useState(false);
- 
-   const router = useRouter();
+  const [isRelationshipManager, setIsRelationshipManager] = useState(false);
 
+  const router = useRouter();
 
+  useEffect(() => {
+    // Check if the current user is a relationship manager
+    const checkRoleStatus = async () => {
+      try {
+        // Get the current user's role from your API
+        const response = await fetch("/api/session");
 
-
-
-    useEffect(() => {
-      // Check if the current user is a relationship manager
-      const checkRoleStatus = async () => {
-        try {
-          // Get the current user's role from your API
-          const response = await fetch("/api/session");
-          
-          if (!response.ok) {
-            throw new Error("Failed to fetch user session");
-          }
-          
-          const data = await response.json();
-          
-          // Check if we have a valid session with user data
-          if (!data || !data.user) {
-            router.push("/");
-            return;
-          }
-          
-          // Check if user has relationship manager role
-          if (data.user.role === "RELATIONSHIP_MANAGER") {
-            setIsRelationshipManager(true);
-          } else {
-            // Redirect non-relationship manager users to dashboard
-            router.push("/dashboard");
-          }
-        } catch (error) {
-          console.error("Error checking role status:", error);
-          toast.error("Authentication check failed");
-          router.push("/dashboard");
-        } finally {
-          setIsLoading(false);
+        if (!response.ok) {
+          throw new Error("Failed to fetch user session");
         }
-      };
-  
-      checkRoleStatus();
-    }, [router]);
+
+        const data = await response.json();
+
+        // Check if we have a valid session with user data
+        if (!data || !data.user) {
+          router.push("/");
+          return;
+        }
+
+        // Check if user has relationship manager role
+        if (data.user.role === "RELATIONSHIP_MANAGER") {
+          setIsRelationshipManager(true);
+        } else {
+          // Redirect non-relationship manager users to dashboard
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        console.error("Error checking role status:", error);
+        toast.error("Authentication check failed");
+        router.push("/dashboard");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkRoleStatus();
+  }, [router]);
 
   useEffect(() => {
     fetchCustomers();
@@ -323,13 +319,13 @@ export default function CustomerManagementPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
+    <div className="container mx-auto p-4 sm:p-6 bg-gray-50 min-h-screen">
       <title>Manage | Loan Orgination</title>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
           Customer Management
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-gray-600 mt-2 text-sm sm:text-base">
           Manage and review all customer applications
         </p>
       </div>
@@ -350,7 +346,7 @@ export default function CustomerManagementPage() {
                 placeholder="Search customers..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-8 w-full p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -359,7 +355,7 @@ export default function CustomerManagementPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Statuses</option>
               <option value="PENDING">Pending</option>
@@ -383,7 +379,7 @@ export default function CustomerManagementPage() {
             <select
               value={loanTypeFilter}
               onChange={(e) => setLoanTypeFilter(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Loan Types</option>
               {getUniqueLoanTypes().map((lt) => (
@@ -402,7 +398,7 @@ export default function CustomerManagementPage() {
                   type="date"
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
-                  className="pl-8 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="pl-8 w-full p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               {dateFilter && (
@@ -420,7 +416,7 @@ export default function CustomerManagementPage() {
       </div>
 
       {/* Results count and refresh button */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
         <div>
           <h2 className="text-xl font-semibold">Customer Applications</h2>
           <p className="text-sm text-gray-500">
@@ -430,7 +426,7 @@ export default function CustomerManagementPage() {
         </div>
         <button
           onClick={fetchCustomers}
-          className="flex items-center gap-2 border border-gray-300 bg-white px-4 py-2 rounded-md hover:bg-gray-50 transition-colors"
+          className="mt-2 sm:mt-0 flex items-center gap-2 border border-gray-300 bg-white px-4 py-2 rounded-md hover:bg-gray-50 transition-colors"
         >
           <RefreshCw size={16} />
           Refresh
@@ -439,49 +435,53 @@ export default function CustomerManagementPage() {
 
       {/* Table */}
       {filteredCustomers.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-md p-12 flex flex-col items-center justify-center">
+        <div className="bg-white rounded-lg shadow-md p-8 sm:p-12 flex flex-col items-center justify-center">
           <FileText className="h-12 w-12 text-gray-300 mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
             No applications found
           </h3>
-          <p className="text-gray-500 text-center">
+          <p className="text-gray-500 text-center text-sm">
             {customers.length === 0
               ? "No customer applications in the system yet."
               : "Try adjusting your search or filters."}
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-lg shadow-md overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
             <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="p-3 text-left text-sm font-semibold">
+              <tr className="border-b bg-gray-50 text-left text-xs sm:text-sm text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="p-3 font-semibold">
                   Reference #
                 </th>
-                <th className="p-3 text-left text-sm font-semibold">
+                <th scope="col" className="p-3 font-semibold">
                   Customer
                 </th>
-                <th className="p-3 text-left text-sm font-semibold">Contact</th>
-                <th className="p-3 text-left text-sm font-semibold">
+                <th scope="col" className="p-3 font-semibold">
+                  Contact
+                </th>
+                <th scope="col" className="p-3 font-semibold">
                   Loan Details
                 </th>
-                <th className="p-3 text-left text-sm font-semibold">Status</th>
-                <th className="p-3 text-left text-sm font-semibold">
+                <th scope="col" className="p-3 font-semibold">
+                  Status
+                </th>
+                <th scope="col" className="p-3 font-semibold">
                   Date Applied
                 </th>
-                <th className="p-3 text-right text-sm font-semibold">
+                <th scope="col" className="p-3 text-right font-semibold">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200">
               {filteredCustomers.map((customer) => (
-                <tr key={customer.id} className="border-b hover:bg-gray-50">
-                  <td className="p-3 font-medium">
+                <tr key={customer.id} className="hover:bg-gray-50">
+                  <td className="p-3 font-medium text-xs sm:text-sm">
                     {customer.applicationReferenceNumber}
                   </td>
                   <td className="p-3">
-                    <div className="font-medium">
+                    <div className="font-medium text-xs sm:text-sm">
                       {customer.firstName} {customer.middleName}{" "}
                       {customer.lastName}
                     </div>
@@ -490,7 +490,7 @@ export default function CustomerManagementPage() {
                     </div>
                   </td>
                   <td className="p-3">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 text-xs sm:text-sm">
                       <Phone size={14} />
                       {customer.phone}
                     </div>
@@ -502,8 +502,10 @@ export default function CustomerManagementPage() {
                     )}
                   </td>
                   <td className="p-3">
-                    <div className="font-medium">{customer.loanType}</div>
-                    <div className="text-sm">
+                    <div className="font-medium text-xs sm:text-sm">
+                      {customer.loanType}
+                    </div>
+                    <div className="text-xs">
                       {formatCurrency(customer.loanAmount)}
                     </div>
                   </td>
@@ -513,10 +515,12 @@ export default function CustomerManagementPage() {
                       {getStatusBadge(customer.applicationStatus)}
                     </div>
                   </td>
-                  <td className="p-3">{formatDate(customer.createdAt)}</td>
+                  <td className="p-3 text-xs sm:text-sm">
+                    {formatDate(customer.createdAt)}
+                  </td>
                   <td className="p-3 text-right">
                     <button
-                      className="flex items-center gap-1 border border-gray-300 bg-white px-3 py-1 rounded-md text-sm hover:bg-gray-50 transition-colors"
+                      className="flex items-center justify-end gap-1 border border-gray-300 bg-white px-3 py-1 rounded-md text-sm hover:bg-gray-50 transition-colors"
                       onClick={() => viewCustomerDetails(customer)}
                     >
                       <Eye size={14} />
@@ -532,12 +536,12 @@ export default function CustomerManagementPage() {
 
       {/* Customer Details Modal */}
       {selectedCustomer && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto border-2 border-gray-300">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[95vh] overflow-y-auto border-2 border-gray-300">
             <div className="flex justify-between items-center p-4 border-b">
               <div>
                 <h2 className="text-xl font-bold">Application Details</h2>
-                <p className="text-gray-600">
+                <p className="text-gray-600 text-sm">
                   Reference: {selectedCustomer.applicationReferenceNumber}
                 </p>
               </div>
@@ -548,7 +552,7 @@ export default function CustomerManagementPage() {
                 <X size={20} />
               </button>
             </div>
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 text-sm sm:text-base">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h3 className="font-semibold mb-2 flex items-center gap-2">
@@ -658,25 +662,24 @@ export default function CustomerManagementPage() {
                             .decisionDate
                         )}
                       </p>
-                      <p className="font-medium mt-2 mb-1">Responsible Committee Manager:</p>
+                      <p className="font-medium mt-2 mb-1">
+                        Responsible Committee Manager:
+                      </p>
                       <p>
-                       <strong className="mr-2">Name: </strong> {
+                        <strong className="mr-2">Name: </strong>{" "}
+                        {
                           decisions[selectedCustomer.applicationReferenceNumber]
                             .responsibleUnitName
                         }
                       </p>
-                         <p>
-                       <strong className="mr-2">Email: </strong> {
+                      <p>
+                        <strong className="mr-2">Email: </strong>{" "}
+                        {
                           decisions[selectedCustomer.applicationReferenceNumber]
                             .responsibleUnitEmail
                         }
                       </p>
-                         <p>
-                       <strong className="mr-2">Phone: </strong> {
-                          decisions[selectedCustomer.applicationReferenceNumber]
-                            .responsibleUnitPhone
-                        }
-                      </p>
+                     
                     </div>
                   </div>
                 )}
