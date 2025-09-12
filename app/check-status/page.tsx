@@ -70,23 +70,26 @@ export default function CustomerSearchPage() {
     setDecision(null);
 
     try {
-      const response = await fetch(`/api/check?ref=${encodeURIComponent(searchTerm.trim())}`);
-      
+      const response = await fetch(
+        `/api/check?ref=${encodeURIComponent(searchTerm.trim())}`
+      );
+
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error("Application not found with this reference number");
         }
         throw new Error("Failed to search for application");
       }
-      
+
       const customerData: Customer = await response.json();
       setCustomer(customerData);
 
-      if (customerData.applicationStatus === "APPROVED" || 
-          customerData.applicationStatus === "REJECTED") {
+      if (
+        customerData.applicationStatus === "APPROVED" ||
+        customerData.applicationStatus === "REJECTED"
+      ) {
         await fetchDecision(customerData.applicationReferenceNumber);
       }
-      
     } catch (err: any) {
       setError(err.message);
       toast.error(err.message);
@@ -111,7 +114,8 @@ export default function CustomerSearchPage() {
     const statusClasses: Record<string, string> = {
       PENDING: "bg-yellow-100 text-yellow-800 border border-yellow-300",
       UNDER_REVIEW: "bg-blue-100 text-blue-800 border border-blue-300",
-      COMMITTEE_REVIEW: "bg-purple-100 text-purple-800 border border-purple-300",
+      COMMITTEE_REVIEW:
+        "bg-purple-100 text-purple-800 border border-purple-300",
       APPROVED: "bg-green-100 text-green-800 border border-green-300",
       REJECTED: "bg-red-100 text-red-800 border border-red-300",
     };
@@ -130,11 +134,15 @@ export default function CustomerSearchPage() {
       REJECTED: "Rejected",
     };
 
-    const className = statusClasses[status] || "bg-gray-100 text-gray-800 border border-gray-300";
+    const className =
+      statusClasses[status] ||
+      "bg-gray-100 text-gray-800 border border-gray-300";
     const label = statusLabels[status] || status;
 
     return (
-      <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${className}`}>
+      <span
+        className={`px-3 py-1.5 rounded-full text-sm font-medium ${className}`}
+      >
         {label}
       </span>
     );
@@ -159,7 +167,7 @@ export default function CustomerSearchPage() {
       month: "short",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
   };
 
@@ -217,8 +225,8 @@ export default function CustomerSearchPage() {
             </p>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex-1">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-end">
+            <div className="flex-1 w-full">
               <label className="text-sm font-medium text-gray-700 block mb-2">
                 Application Reference Number
               </label>
@@ -229,16 +237,17 @@ export default function CustomerSearchPage() {
                   placeholder="e.g., DASHEN-123456-123"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && searchCustomer()}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg placeholder-gray-400"
+                  onKeyPress={(e) => e.key === "Enter" && searchCustomer()}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg placeholder-gray-400 transition-colors duration-200"
                 />
               </div>
             </div>
+
             <div className="flex gap-2 w-full md:w-auto">
               <button
                 onClick={searchCustomer}
                 disabled={isLoading}
-                className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2 min-w-[120px] h-[52px]"
               >
                 {isLoading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -247,10 +256,11 @@ export default function CustomerSearchPage() {
                 )}
                 {isLoading ? "Searching..." : "Search"}
               </button>
+
               {searchTerm && (
                 <button
                   onClick={clearSearch}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-3 rounded-xl transition-colors duration-200"
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-3 rounded-xl transition-colors duration-200 flex items-center justify-center w-12 h-[52px]"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -281,8 +291,8 @@ export default function CustomerSearchPage() {
             <p className="text-gray-600 mb-4">{error}</p>
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-sm text-gray-500">
-                💡 Please ensure you&apos;ve entered the correct reference number. 
-                If you need assistance, please contact our support team.
+                💡 Please ensure you&apos;ve entered the correct reference
+                number. If you need assistance, please contact our support team.
               </p>
             </div>
           </div>
@@ -295,7 +305,9 @@ export default function CustomerSearchPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <h2 className="text-2xl font-bold">Application Details</h2>
-                  <p className="text-blue-100">Reference: {customer.applicationReferenceNumber}</p>
+                  <p className="text-blue-100">
+                    Reference: {customer.applicationReferenceNumber}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 self-start">
                   {getStatusIcon(customer.applicationStatus)}
@@ -317,12 +329,15 @@ export default function CustomerSearchPage() {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Full Name:</span>
                       <span className="font-medium text-gray-900">
-                        {customer.firstName} {customer.middleName} {customer.lastName}
+                        {customer.firstName} {customer.middleName}{" "}
+                        {customer.lastName}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Customer ID:</span>
-                      <span className="font-mono text-gray-900">{customer.customerNumber}</span>
+                      <span className="font-mono text-gray-900">
+                        {customer.customerNumber}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -335,11 +350,15 @@ export default function CustomerSearchPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Phone:</span>
-                      <span className="font-medium text-gray-900">{customer.phone}</span>
+                      <span className="font-medium text-gray-900">
+                        {customer.phone}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Email:</span>
-                      <span className="font-medium text-gray-900">{customer.email || "N/A"}</span>
+                      <span className="font-medium text-gray-900">
+                        {customer.email || "N/A"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -355,11 +374,15 @@ export default function CustomerSearchPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Loan Type:</span>
-                      <span className="font-medium text-gray-900">{customer.loanType}</span>
+                      <span className="font-medium text-gray-900">
+                        {customer.loanType}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Loan Amount:</span>
-                      <span className="font-bold text-blue-600">{formatCurrency(customer.loanAmount)}</span>
+                      <span className="font-bold text-blue-600">
+                        {formatCurrency(customer.loanAmount)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -372,58 +395,71 @@ export default function CustomerSearchPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Applied On:</span>
-                      <span className="font-medium text-gray-900">{formatDate(customer.createdAt)}</span>
+                      <span className="font-medium text-gray-900">
+                        {formatDate(customer.createdAt)}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Last Updated:</span>
-                      <span className="font-medium text-gray-900">{formatDate(customer.updatedAt)}</span>
+                      <span className="font-medium text-gray-900">
+                        {formatDate(customer.updatedAt)}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Decision Details */}
-              {(customer.applicationStatus === "APPROVED" || 
-                customer.applicationStatus === "REJECTED") && decision && (
-                <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-5 border border-green-200">
-                  <h3 className={`font-semibold mb-4 flex items-center gap-2 ${
-                    customer.applicationStatus === "APPROVED" 
-                      ? "text-green-700" 
-                      : "text-red-700"
-                  }`}>
-                    <BadgeCheck className="h-5 w-5" />
-                    {customer.applicationStatus === "APPROVED" 
-                      ? "Approval Details" 
-                      : "Rejection Details"}
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <span className="font-medium text-gray-700">Decision Reason:</span>
-                      <p className="mt-2 p-3 bg-white rounded-lg border border-gray-200">
-                        {decision.decisionReason}
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Decision Date:</span>
-                        <span className="font-medium text-gray-900">{formatDate(decision.decisionDate)}</span>
+              {(customer.applicationStatus === "APPROVED" ||
+                customer.applicationStatus === "REJECTED") &&
+                decision && (
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-5 border border-green-200">
+                    <h3
+                      className={`font-semibold mb-4 flex items-center gap-2 ${
+                        customer.applicationStatus === "APPROVED"
+                          ? "text-green-700"
+                          : "text-red-700"
+                      }`}
+                    >
+                      <BadgeCheck className="h-5 w-5" />
+                      {customer.applicationStatus === "APPROVED"
+                        ? "Approval Details"
+                        : "Rejection Details"}
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <span className="font-medium text-gray-700">
+                          Decision Reason:
+                        </span>
+                        <p className="mt-2 p-3 bg-white rounded-lg border border-gray-200">
+                          {decision.decisionReason}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Decision Date:</span>
+                          <span className="font-medium text-gray-900">
+                            {formatDate(decision.decisionDate)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                 
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Status Messages */}
               {customer.applicationStatus === "PENDING" && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-5">
                   <div className="flex items-center gap-3 text-yellow-800 mb-3">
                     <Clock className="h-6 w-6" />
-                    <span className="font-semibold">Application is Pending Review</span>
+                    <span className="font-semibold">
+                      Application is Pending Review
+                    </span>
                   </div>
                   <p className="text-yellow-700">
-                    Your application has been received and is currently in the queue for processing. 
-                    Our team will review it shortly. Please check back later for updates.
+                    Your application has been received and is currently in the
+                    queue for processing. Our team will review it shortly.
+                    Please check back later for updates.
                   </p>
                 </div>
               )}
@@ -432,11 +468,14 @@ export default function CustomerSearchPage() {
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
                   <div className="flex items-center gap-3 text-blue-800 mb-3">
                     <AlertCircle className="h-6 w-6" />
-                    <span className="font-semibold">Application Under Review</span>
+                    <span className="font-semibold">
+                      Application Under Review
+                    </span>
                   </div>
                   <p className="text-blue-700">
-                    Your application is currently being reviewed by our team. 
-                    This process may take a few days. We appreciate your patience.
+                    Your application is currently being reviewed by our team.
+                    This process may take a few days. We appreciate your
+                    patience.
                   </p>
                 </div>
               )}
@@ -451,11 +490,13 @@ export default function CustomerSearchPage() {
               Ready to Check Your Application?
             </h3>
             <p className="text-gray-500 mb-6">
-              Enter your application reference number in the search field above to get started.
+              Enter your application reference number in the search field above
+              to get started.
             </p>
             <div className="bg-blue-50 rounded-lg p-4 max-w-md mx-auto">
               <p className="text-sm text-blue-700">
-                📋 Your reference number can be found in your application confirmation email or document.
+                📋 Your reference number can be found in your application
+                confirmation email or document.
               </p>
             </div>
           </div>
