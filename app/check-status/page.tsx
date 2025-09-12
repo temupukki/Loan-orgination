@@ -70,7 +70,7 @@ export default function CustomerSearchPage() {
     setDecision(null);
 
     try {
-      const response = await fetch(`/api/manage?ref=${encodeURIComponent(searchTerm.trim())}`);
+      const response = await fetch(`/api/check?ref=${encodeURIComponent(searchTerm.trim())}`);
       
       if (!response.ok) {
         if (response.status === 404) {
