@@ -20,6 +20,22 @@ export default function BusinessInfoPage() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  // Calculate max date (one month ago from today)
+  const getMaxDate = () => {
+    const today = new Date();
+    const oneMonthAgo = new Date(today);
+    oneMonthAgo.setMonth(today.getMonth() - 1);
+    return oneMonthAgo.toISOString().split('T')[0];
+  };
+
+  // Calculate min date (reasonable past date - 100 years ago)
+  const getMinDate = () => {
+    const today = new Date();
+    const hundredYearsAgo = new Date(today);
+    hundredYearsAgo.setFullYear(today.getFullYear() - 100);
+    return hundredYearsAgo.toISOString().split('T')[0];
+  };
+
   useEffect(() => {
     const checkRoleStatus = async () => {
       try {
@@ -133,6 +149,18 @@ export default function BusinessInfoPage() {
         if (!customer?.dateOfEstablishmentMLB) {
           errorMessage = "Date of establishment is required";
           isValid = false;
+        } else {
+          const selectedDate = new Date(customer.dateOfEstablishmentMLB);
+          const maxDate = new Date(getMaxDate());
+          const minDate = new Date(getMinDate());
+          
+          if (selectedDate > maxDate) {
+            errorMessage = "Date cannot be later than one month ago";
+            isValid = false;
+          } else if (selectedDate < minDate) {
+            errorMessage = "Please enter a valid date";
+            isValid = false;
+          }
         }
         break;
 
@@ -167,6 +195,18 @@ export default function BusinessInfoPage() {
     if (!customer?.dateOfEstablishmentMLB) {
       newErrors.dateOfEstablishmentMLB = "Date of establishment is required";
       isValid = false;
+    } else {
+      const selectedDate = new Date(customer.dateOfEstablishmentMLB);
+      const maxDate = new Date(getMaxDate());
+      const minDate = new Date(getMinDate());
+      
+      if (selectedDate > maxDate) {
+        newErrors.dateOfEstablishmentMLB = "Date cannot be later than one month ago";
+        isValid = false;
+      } else if (selectedDate < minDate) {
+        newErrors.dateOfEstablishmentMLB = "Please enter a valid date";
+        isValid = false;
+      }
     }
 
     if (!customer?.majorLineBusinessUrl) {
@@ -425,6 +465,8 @@ export default function BusinessInfoPage() {
                     value={customer.dateOfEstablishmentMLB ? new Date(customer.dateOfEstablishmentMLB).toISOString().split('T')[0] : ""}
                     onChange={handleCustomerFieldChange}
                     onBlur={() => handleBlur("dateOfEstablishmentMLB")}
+                    min={getMinDate()}
+                    max={getMaxDate()}
                     className={`w-full p-2 text-sm border rounded-md ${
                       errors.dateOfEstablishmentMLB &&
                       touched.dateOfEstablishmentMLB
@@ -438,6 +480,9 @@ export default function BusinessInfoPage() {
                         {errors.dateOfEstablishmentMLB}
                       </p>
                     )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    Must be at least one month ago (max: {getMaxDate()})
+                  </p>
                 </div>
 
                 <div>
@@ -513,8 +558,13 @@ export default function BusinessInfoPage() {
                     name="dateOfEstablishmentOLB"
                     value={customer.dateOfEstablishmentOLB ? new Date(customer.dateOfEstablishmentOLB).toISOString().split('T')[0] : ""}
                     onChange={handleCustomerFieldChange}
+                    min={getMinDate()}
+                    max={getMaxDate()}
                     className="w-full p-2 text-sm border border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
                   />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Must be at least one month ago (max: {getMaxDate()})
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -561,7 +611,7 @@ export default function BusinessInfoPage() {
             <p className="text-blue-700">
               <span className="font-medium">Note:</span> Fields marked with * are
               required. Major Line of Business information must be provided to
-              continue.
+              continue. Establishment dates cannot be in the future and must be at least one month ago.
             </p>
           </div>
 

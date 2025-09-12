@@ -98,16 +98,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if TIN number already exists
-    const existingTin = await prisma.customer.findUnique({
-      where: { tinNumber }
-    });
 
-    if (existingTin) {
-      return NextResponse.json(
-        { error: 'Customer with this TIN number already exists' },
-        { status: 400 }
-      );
-    }
+    
 
  
     const parsedDateEstablishmentMLB = parseDateSafe(dateOfEstablishmentMLB);

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Customer, CompanyCustomer } from "@/app/types/loan";
 import { formatCurrency } from "@/app/utils/formatters";
 import { formatDateForDisplay } from "../../utils/dateUtils";
+import { toast } from "sonner";
 
 export default function ReviewPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -70,7 +71,7 @@ const generateApplicationReference = (): string => {
       }
 
       const result = await res.json();
-      setSuccess("Loan application submitted successfully!");
+      toast.success("Loan application submitted successfully!");
 
       // Clear localStorage after successful submission
       localStorage.removeItem("currentCustomer");
