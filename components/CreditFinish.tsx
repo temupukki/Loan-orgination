@@ -27,7 +27,7 @@ export function CreditFinish({ customerId, onSuccess }: CreditFinishProps) {
         throw new Error(errorData.error || 'Failed to take application.');
       }
 
-      toast.success("Application successfully assigned to you and status updated to 'Under Review'.");
+      toast.success("Analysis Completed Successfully'.");
       onSuccess();
     } catch (err: any) {
       toast.error(err.message || 'An unexpected error occurred.');
