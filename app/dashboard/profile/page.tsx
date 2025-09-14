@@ -1,4 +1,4 @@
-// app/dashboard/profile/page.tsx
+
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
@@ -77,7 +77,7 @@ export default async function ProfilePage() {
                       {user.name || "User Profile"}
                     </CardTitle>
                     <CardDescription className="text-blue-100 mt-1">
-                      Welcome back to your account
+                      Welcome to your account
                     </CardDescription>
                   </div>
                 </div>
