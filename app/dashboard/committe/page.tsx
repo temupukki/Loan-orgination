@@ -531,7 +531,7 @@ export default function CommitteeDecisionPage() {
             <div className="col-span-2">Customer</div>
             <div className="col-span-2">Reference No</div>
             <div className="col-span-2">Loan Details</div>
-            <div className="col-span-2">Business</div>
+            
             <div className="col-span-2">Status</div>
             <div className="col-span-2 text-right">Actions</div>
           </div>
@@ -565,12 +565,7 @@ export default function CommitteeDecisionPage() {
                     </div>
                     <div className="text-gray-500">{customer.loanType}</div>
                   </div>
-                  <div className="col-span-2 text-sm">
-                    <div>{customer.majorLineBusiness}</div>
-                    <div className="text-gray-500">
-                      {customer.economicSector}
-                    </div>
-                  </div>
+                 
                   <div className="col-span-2">
                     {getStatusBadge(customer.applicationStatus)}
                   </div>
