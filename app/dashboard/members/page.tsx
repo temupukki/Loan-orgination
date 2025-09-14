@@ -579,7 +579,7 @@ if (isLoading) {
             <div className="col-span-2">Customer</div>
             <div className="col-span-2">Reference No</div>
             <div className="col-span-2">Loan Details</div>
-          
+           
             <div className="col-span-2">Status</div>
             <div className="col-span-2 text-right">Actions</div>
           </div>
@@ -617,7 +617,7 @@ if (isLoading) {
                     </div>
                     <div className="text-gray-500">{customer.loanType}</div>
                   </div>
-                  
+                
                   <div className="col-span-2 flex items-center gap-2">
                     {existingDecisions[customer.applicationReferenceNumber] && (
                       <Badge className="bg-green-100 text-green-800 border-green-200">
