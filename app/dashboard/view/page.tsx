@@ -137,53 +137,48 @@ export default function CommitteeDecisionPage() {
   const [decisions, setDecisions] = useState<Record<string, Decision[]>>({});
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
-
   const [isAPPROVAL_COMMITTE, setIsAPPROVAL_COMMITTE] = useState(false);
-      
-       const router = useRouter();
-    
-      useEffect(() => {
-        // Check if the current user is a relationship manager
-        const checkRoleStatus = async () => {
-          try {
-            // Get the current user's role from your API
-            const response = await fetch("/api/session");
-            
-            if (!response.ok) {
-              throw new Error("Failed to fetch user session");
-            }
-            
-            const data = await response.json();
-            
-            
-            if (!data || !data.user) {
-              router.push("/");
-              return;
-            }
-            
-            
-            if (data.user.role === "APPROVAL_COMMITTE") {
-              setIsAPPROVAL_COMMITTE(true);
-            } else {
-       
-              router.push("/dashboard");
-            }
-          } catch (error) {
-            console.error("Error checking role status:", error);
-            toast.error("Authentication check failed");
-            router.push("/dashboard");
-          } finally {
-            setIsLoading(false);
-          }
-        };
-    
-        checkRoleStatus();
-      }, [router]);
-  
-    useEffect(() => {
-      fetchPendingCustomers();
-    }, []);
-  
+
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if the current user is a relationship manager
+    const checkRoleStatus = async () => {
+      try {
+        // Get the current user's role from your API
+        const response = await fetch("/api/session");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch user session");
+        }
+
+        const data = await response.json();
+
+        if (!data || !data.user) {
+          router.push("/");
+          return;
+        }
+
+        if (data.user.role === "APPROVAL_COMMITTE") {
+          setIsAPPROVAL_COMMITTE(true);
+        } else {
+          router.push("/dashboard");
+        }
+      } catch (error) {
+        console.error("Error checking role status:", error);
+        toast.error("Authentication check failed");
+        router.push("/dashboard");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkRoleStatus();
+  }, [router]);
+
+  useEffect(() => {
+    fetchPendingCustomers();
+  }, []);
 
   useEffect(() => {
     fetchPendingCustomers();
@@ -381,7 +376,7 @@ export default function CommitteeDecisionPage() {
       </div>
     );
   }
-if (isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="flex flex-col items-center">
@@ -391,12 +386,12 @@ if (isLoading) {
       </div>
     );
   }
-   if (!isAPPROVAL_COMMITTE) {
+  if (!isAPPROVAL_COMMITTE) {
     return null;
   }
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
-       <title>Avaliable| Loan Orgination</title>
+      <title>Avaliable| Loan Orgination</title>
       <div className="flex flex-col items-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-2">
           Committee Decisions 📋
@@ -424,10 +419,10 @@ if (isLoading) {
             <CheckCircle2 className="text-green-600" size={48} />
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
-           All Clear!
+            All Clear!
           </h2>
           <p className="text-lg text-gray-600 text-center mb-6 max-w-md">
-              No applications pending committee review. Check back later for new
+            No applications pending committee review. Check back later for new
             submissions.
           </p>
           <Button
@@ -470,7 +465,7 @@ if (isLoading) {
             <div className="col-span-2">Customer</div>
             <div className="col-span-2">Reference No</div>
             <div className="col-span-2">Loan Details</div>
-            <div className="col-span-2">Business</div>
+
             <div className="col-span-2">Status</div>
             <div className="col-span-2 text-right">Actions</div>
           </div>
@@ -492,11 +487,10 @@ if (isLoading) {
                   <div className="col-span-2 flex items-center">
                     <User size={16} className="text-blue-600 mr-2" />
                     <span className="font-medium">
-  {customer.customerNumber?.startsWith("COMP")
-    ? customer.companyName
-    : `${customer.firstName} ${customer.lastName}`}
-</span>
-
+                      {customer.customerNumber?.startsWith("COMP")
+                        ? customer.companyName
+                        : `${customer.firstName} ${customer.lastName}`}
+                    </span>
                   </div>
                   <div className="col-span-2 text-sm text-gray-600">
                     {customer.applicationReferenceNumber}
@@ -507,12 +501,7 @@ if (isLoading) {
                     </div>
                     <div className="text-gray-500">{customer.loanType}</div>
                   </div>
-                  <div className="col-span-2 text-sm">
-                    <div>{customer.majorLineBusiness}</div>
-                    <div className="text-gray-500">
-                      {customer.economicSector}
-                    </div>
-                  </div>
+
                   <div className="col-span-2 flex items-center gap-2">
                     {appDecisions.length > 0 && (
                       <Badge className="bg-green-100 text-green-800 border-green-200">
@@ -594,7 +583,6 @@ if (isLoading) {
                                 {formatData(customer.maritalStatus)}
                               </p>
                             </div>
-                        
                           </div>
                         </div>
 
@@ -636,18 +624,19 @@ if (isLoading) {
                               </p>
                             </div>
                             <div className="flex justify-between items-center text-sm">
-                        <p className="text-gray-600 flex items-center gap-1">
-  <DollarSign size={14} />
-  {customer.customerNumber?.startsWith("COMP") ? "Annual Revenue:" : "Monthly Income:"}
-</p>
-<p className="font-medium text-gray-800">
-  {formatData(
-    customer.customerNumber?.startsWith("COMP")
-      ? customer.annualRevenue || 0
-      : customer.monthlyIncome || 0
-  )}
-</p>
-
+                              <p className="text-gray-600 flex items-center gap-1">
+                                <DollarSign size={14} />
+                                {customer.customerNumber?.startsWith("COMP")
+                                  ? "Annual Revenue:"
+                                  : "Monthly Income:"}
+                              </p>
+                              <p className="font-medium text-gray-800">
+                                {formatData(
+                                  customer.customerNumber?.startsWith("COMP")
+                                    ? customer.annualRevenue || 0
+                                    : customer.monthlyIncome || 0
+                                )}
+                              </p>
                             </div>
                             <div className="flex justify-between items-center text-sm">
                               <p className="text-gray-600">Account Type:</p>
@@ -971,7 +960,6 @@ if (isLoading) {
                               ))}
                             </div>
                           )}
-                         
 
                           <div className="flex justify-end gap-3">
                             <Button
@@ -984,14 +972,14 @@ if (isLoading) {
                               <ChevronUp size={16} />
                             </Button>
                           </div>
-                           <div className="flex justify-start gap-3">
+                          <div className="flex justify-start gap-3">
                             <ToFinale
                               customerId={customer.id}
                               onSuccess={() => {
                                 console.log(
                                   "Finish action completed successfully"
                                 );
-                                
+
                                 fetchPendingCustomers();
                               }}
                             ></ToFinale>
@@ -1006,7 +994,6 @@ if (isLoading) {
           })}
         </div>
       )}
-
     </div>
   );
 }
