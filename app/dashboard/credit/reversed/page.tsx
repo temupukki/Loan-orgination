@@ -696,12 +696,7 @@ export default function PendingCustomersPage() {
                                 {formatData(decision.responsibleUnitEmail)}
                               </span>
                             </div>
-                            <div className="flex justify-between items-center mt-1 ml-3">
-                              <span className="text-gray-600">Phone:</span>
-                              <span className="font-medium text-gray-800">
-                                {formatData(decision.responsibleUnitPhone)}
-                              </span>
-                            </div>
+                          
                           </div>
                         </div>
                       )}
