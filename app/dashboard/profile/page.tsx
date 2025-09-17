@@ -1,4 +1,4 @@
-
+// app/dashboard/profile/page.tsx
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
@@ -19,7 +19,6 @@ import {
   LogOut,
   Edit3,
   CheckCircle,
-  Calendar,
   UserCheck,
 } from "lucide-react";
 import Link from "next/link";
@@ -36,16 +35,9 @@ export default async function ProfilePage() {
   // Function to capitalize the first letter of a string
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-  // Mock user metadata (replace with actual data from your auth system)
-  const userMetadata = {
-    memberSince: "2023",
-    lastLogin: "2 hours ago",
-    accountStatus: "verified",
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4 sm:p-6 lg:p-8">
-       <title>Profile | Loan Orgination</title>
+      <title>Profile | Loan Origination</title>
       <div className="max-w-4xl mx-auto">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
@@ -61,7 +53,7 @@ export default async function ProfilePage() {
           <Card className="lg:col-span-2 shadow-xl border-0 overflow-hidden">
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
               <CardHeader className="p-0">
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-6 flex-wrap sm:flex-nowrap">
                   <div className="relative">
                     <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center text-4xl font-bold text-white backdrop-blur-sm">
                       {user.name
@@ -122,9 +114,7 @@ export default async function ProfilePage() {
                     <span className="text-sm font-medium">Status</span>
                   </div>
                   <Badge className="px-3 py-1 text-sm bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-800">
-                    {userMetadata.accountStatus === "verified"
-                      ? "Verified"
-                      : "Active"}
+                    Verified
                   </Badge>
                 </div>
               </div>
@@ -132,10 +122,12 @@ export default async function ProfilePage() {
               <Separator className="my-6 bg-gray-200 dark:bg-gray-700" />
 
               <div className="flex flex-col sm:flex-row gap-4">
-            
-
+                <Button variant="outline" className="w-full gap-2 transition-all duration-300">
+                  <Edit3 className="h-4 w-4" />
+                  Edit Profile
+                </Button>
                 <form
-                  className="flex-1"
+                  className="w-full"
                   action={async () => {
                     "use server";
                     await auth.api.signOut({ headers: await headers() });
@@ -154,31 +146,8 @@ export default async function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Sidebar Cards */}
+          {/* Security Card */}
           <div className="space-y-6">
-            {/* Account Status Card */}
-            <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-800 dark:to-gray-700">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-green-100 dark:bg-green-900 rounded-full">
-                    <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-                  </div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
-                    Account Status
-                  </h3>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Your account is fully verified and in good standing.
-                </p>
-                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full w-full"></div>
-                </div>
-              </CardContent>
-            </Card>
-
-      
-
-            {/* Security Card */}
             <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-700">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
@@ -189,10 +158,11 @@ export default async function ProfilePage() {
                     Security
                   </h3>
                 </div>
-              <Link href="/dashboard/profile/change">
-                <Button variant="outline" className="w-full">
-                  Change Password
-                </Button></Link>
+                <Link href="/dashboard/profile/change">
+                  <Button variant="outline" className="w-full">
+                    Change Password
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>
