@@ -378,7 +378,7 @@ export default function UsersPage() {
                           <option value="SUPERVISOR">Supervisor</option>
                           <option value="COMMITTE_MEMBER">Committee Member</option>
                           <option value="APPROVAL_COMMITTE">Approval Committee</option>
-                          <option value="BANNED">Banned</option>
+                          <option value="BANNED">Ban Employee</option>
                         </select>
                       ) : (
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
