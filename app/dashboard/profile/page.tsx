@@ -122,10 +122,7 @@ export default async function ProfilePage() {
               <Separator className="my-6 bg-gray-200 dark:bg-gray-700" />
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button variant="outline" className="w-full gap-2 transition-all duration-300">
-                  <Edit3 className="h-4 w-4" />
-                  Edit Profile
-                </Button>
+               
                 <form
                   className="w-full"
                   action={async () => {
