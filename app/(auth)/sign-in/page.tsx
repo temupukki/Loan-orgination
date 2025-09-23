@@ -124,7 +124,7 @@ export default function BankSignin() {
                 htmlFor="bankCode"
                 className="font-semibold text-blue-700 text-sm sm:text-base"
               >
-                Enter Email
+                Enter User name
               </Label>
               <Input
                 id="lastName"
