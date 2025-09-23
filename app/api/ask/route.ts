@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // ✅ Fetch only "UNDER_REVIEW" applications assigned to this user
+  
     const customers = await prisma.customer.findMany({
       where: {
         applicationStatus: ApplicationStatus.RM_RECCOMENDATION,

@@ -91,7 +91,7 @@ export default async function ProfilePage() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                     <Mail className="h-5 w-5" />
-                    <span className="text-sm font-medium">Email Address</span>
+                    <span className="text-sm font-medium">User name</span>
                   </div>
                   <p className="text-lg font-semibold text-gray-900 dark:text-white">
                     {user.email}
